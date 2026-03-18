@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// Auth.js v5 Prisma Adapter 标准模型
+// ==========================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(USER)
+
+  accounts      Account[]
+  sessions      Session[]
+  registrations Registration[]
+  projects      Project[]
+  judgeScores   ProjectScore[]
+  judgeEvents   EventJudge[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==========================================
+// 业务模型
+// ==========================================
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum RegistrationStatus {
+  PENDING
+  ACCEPTED
+  CONFIRMED
+  REJECTED
+  CANCELLED
+}
+
+enum ProjectStatus {
+  DRAFT
+  FINAL
+}
+
+model Event {
+  id                String   @id @default(uuid())
+  name              String
+  slug              String   @unique
+  description       String   @db.Text
+  startDate         DateTime
+  endDate           DateTime
+  registrationStart DateTime
+  registrationEnd   DateTime
+  submissionStart   DateTime
+  submissionEnd     DateTime
+  reviewStart       DateTime
+  reviewEnd         DateTime
+  published         Boolean  @default(false)
+  rankingsPublished Boolean  @default(false)
+  tracks            Json     @default("[]")
+  challenges        Json     @default("[]")
+  prizes            Json     @default("[]")
+  scoringCriteria   Json     @default("[]")
+  customFields      Json     @default("[]")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  registrations Registration[]
+  projects      Project[]
+  projectScores ProjectScore[]
+  judges        EventJudge[]
+}
+
+model Registration {
+  id        String             @id @default(uuid())
+  eventId   String
+  userId    String
+  status    RegistrationStatus @default(PENDING)
+  teamName  String?
+  answers   Json               @default("{}")
+  createdAt DateTime           @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  eventId     String
+  submittedBy String
+  name        String
+  description String        @db.Text
+  teamName    String?
+  sourceUrl   String?
+  demoUrl     String?
+  videoUrl    String?
+  track       String?
+  challenges  Json          @default("[]")
+  status      ProjectStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  event  Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [submittedBy], references: [id], onDelete: Cascade)
+  scores ProjectScore[]
+
+  @@unique([eventId, submittedBy])
+}
+
+model ProjectScore {
+  id        String   @id @default(uuid())
+  projectId String
+  judgeId   String
+  eventId   String
+  scores    Json
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  judge   User    @relation(fields: [judgeId], references: [id], onDelete: Cascade)
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, judgeId])
+}
+
+model EventJudge {
+  id         String   @id @default(uuid())
+  eventId    String
+  userId     String
+  assignedAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+}

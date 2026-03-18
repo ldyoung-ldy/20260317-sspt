@@ -72,11 +72,12 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 
 ## 数据模型
 
-### 核心表 (5 张)
+### 核心表 (6 张)
 
 ```
   User ──────────< Registration >────────── Event
                                               │
+                                              ├──< EventJudge >──── User (judge)
                                               │
   User (judge) ──< ProjectScore >── Project ──┘
 ```
@@ -98,6 +99,7 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 | reviewStart | DateTime | 评审开始 |
 | reviewEnd | DateTime | 评审结束 |
 | published | Boolean | 是否公开 |
+| rankingsPublished | Boolean | 排名是否已发布 |
 | tracks | Json | 赛道配置 |
 | challenges | Json | 挑战/赛题 |
 | prizes | Json | 奖项/奖金 |
@@ -159,6 +161,17 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 
 **唯一约束**: `(projectId, judgeId)` — 每个评委对每个作品只能评一次
 
+#### EventJudge (评委分配)
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | UUID | 主键 |
+| eventId | UUID → Event | 关联赛事 |
+| userId | UUID → User | 评委用户 |
+| assignedAt | DateTime | 分配时间 |
+
+**唯一约束**: `(eventId, userId)` — 每个评委在每个赛事中只分配一次
+
 #### User (用户 — NextAuth 管理)
 
 | 字段 | 类型 | 说明 |
@@ -213,6 +226,9 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 - [ ] 安装并配置 NextAuth.js (GitHub + Google provider)
 - [ ] 实现 Admin 角色自动匹配 (ADMIN_EMAILS 环境变量)
 - [ ] 基础布局组件 (Header + Sidebar + Footer)
+- [ ] 配置 Vitest 测试框架
+- [ ] 实现 middleware.ts 路由保护 (/admin/* 需 admin 角色)
+- [ ] Server Action 统一返回类型 ActionResult<T> + safeAction wrapper
 - [ ] 验证: 本地 `npm run dev` 能启动，能通过 GitHub 登录
 
 ### Step 2: 赛事管理 (Day 2-3)
@@ -233,6 +249,9 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
   - 赛事描述、时间线、赛道、奖项
   - 报名按钮 (时间窗口内)
 - [ ] Server Actions: createEvent, updateEvent, togglePublish
+- [ ] 时间窗口顺序校验 (Zod refine: regStart < regEnd ≤ subStart < subEnd ≤ revStart < revEnd)
+- [ ] getEventPhase() 纯计算函数 (从时间窗口推断赛事阶段)
+- [ ] Slug 生成 + 冲突自动重试
 - [ ] 验证: 能创建赛事 → 发布 → 在前台看到
 
 ### Step 3: 报名流程 (Day 3-4)
@@ -253,6 +272,7 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
   - 导出报名数据 (CSV)
 - [ ] Server Actions: createRegistration, updateRegistrationStatus, confirmRegistration, cancelRegistration
 - [ ] 状态转换校验: 确保只能按合法路径转换
+- [ ] 抽取 lib/registration-status.ts 状态机纯函数 (canTransition, getAvailableTransitions)
 - [ ] 验证: 用户报名 → 管理员接受 → 用户确认 流程走通
 
 ### Step 4: 作品提交 (Day 4-5)
@@ -289,9 +309,11 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
   - 逐项评分 (按赛事配置的评分维度)
   - 填写评语 (可选)
   - 提交评分
-- [ ] Server Actions: assignJudge, submitScore, getScoreSummary
+- [ ] Server Actions: assignJudge (写入 EventJudge 表), submitScore, getScoreSummary
 - [ ] 唯一约束: 每个评委对每个作品只评一次
 - [ ] 评分时间窗口: reviewStart ≤ now ≤ reviewEnd
+- [ ] 评分维度匹配校验 (scores key 必须与 scoringCriteria name 一致)
+- [ ] 抽取 lib/scoring.ts 纯函数 (calculateWeightedScore, calculateRankings)
 - [ ] 验证: 评委打分 → 管理员查看评分结果
 
 ### Step 6: 排名系统 (Day 6-7)
@@ -311,26 +333,14 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
   - 显示排名、作品名、队伍名、总分
   - 按赛道/挑战分组展示
 - [ ] Server Actions: calculateRankings, publishRankings
+- [ ] 无评分作品不参与排名，管理员页面显示警告
 - [ ] 验证: 所有评委评分完成 → 查看排名 → 发布排名
 
 ### Step 7: 测试 (Day 7-8)
 
-**目标**: 核心业务逻辑有测试覆盖，端到端流程验证通过。
+**目标**: E2E 测试覆盖完整流程，CI 配置，补齐测试漏洞。
 
-- [ ] 安装配置 Vitest (单元 + 集成)
 - [ ] 安装配置 Playwright (E2E)
-- [ ] 单元测试:
-  - [ ] 注册状态机转换 (合法/非法转换)
-  - [ ] 评分计算 (加权平均、边界值)
-  - [ ] 排名排序 (同分处理、空评分处理)
-  - [ ] 时间窗口校验逻辑
-  - [ ] Admin 角色匹配逻辑
-- [ ] 集成测试:
-  - [ ] Event CRUD API
-  - [ ] Registration 状态流转 API
-  - [ ] Project 提交 API (权限 + 时间窗口)
-  - [ ] ProjectScore 提交 API (唯一约束)
-  - [ ] 排名计算 API
 - [ ] E2E 测试:
   - [ ] 管理员创建赛事 → 发布
   - [ ] 用户报名 → 管理员接受 → 用户确认
@@ -384,6 +394,29 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 | 静态页面 | 赛事详情页可 ISR (增量静态生成) |
 
 ---
+
+## 工程审查决策记录
+
+> 审查日期: 2026-03-19 | 模式: BIG CHANGE | 结果: 16 issues, 0 critical gaps
+
+| # | 决策 | 选项 | 结论 |
+|---|------|------|------|
+| 1 | 评委分配数据模型 | 联表/隐式推断/JSON字段 | 新增 EventJudge 联表 |
+| 2 | 排名发布状态 | 复用 published / 独立字段 | Event 加 rankingsPublished 字段 |
+| 3 | 赛事生命周期 | 显式 status / 时间窗口驱动 | 时间窗口驱动 + getEventPhase() 函数 |
+| 4 | JSONB 校验 | 拆表 / Zod 校验 | Zod schema 校验 |
+| 5 | Slug 冲突 | 手动输入 / 自动重试 | 自动生成 + 冲突重试 |
+| 6 | 时间窗口校验 | 无校验 / Zod refine | Zod refine 校验顺序 |
+| 7 | NextAuth role 集成 | — | 扩展 User + signIn/session callbacks |
+| 8 | 路由保护 | 单层 / 双层 | middleware + Server Action 双层防护 |
+| 9 | 错误处理 | throw / ActionResult | 统一 ActionResult<T> + safeAction |
+| 10 | 状态机逻辑 | 内联 / 独立模块 | 抽取 lib/registration-status.ts |
+| 11 | 评分计算 | 内联 / 独立模块 | 抽取 lib/scoring.ts |
+| 12 | 自定义字段 | 自由格式 / 类型规范 | 4 种字段类型 + Zod 校验 |
+| 13 | 新增测试项 | 忽略 / 补入 | 7 项补入各 Step |
+| 14 | 测试节奏 | 集中 Step 7 / 随 Step 编写 | 随 Step 同步编写 |
+| 15 | 排名查询 | 逐个查询 / 批量 include | Prisma include 一次查齐 |
+| 16 | 批量操作 | 逐个更新 / 事务 | Prisma $transaction |
 
 ## NOT in scope (MVP 明确排除)
 
