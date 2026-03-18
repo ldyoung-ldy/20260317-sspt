@@ -1,12 +1,28 @@
 # TODOS — AI 赛事管理平台 MVP (v2)
 
-> 进度跟踪文件 | 创建: 2026-03-19 | 关联: [PLAN.md](./PLAN.md)
+> 进度跟踪文件 | 创建: 2026-03-19 | 最后更新: 2026-03-19 | 关联: [PLAN.md](./PLAN.md)
 > 基于 CEO Review (SCOPE REDUCTION) 重写，从零搭建现代技术栈
+
+## 🎯 下一步计划 (Step 1 剩余任务)
+
+> 恢复开发时按以下顺序执行：
+
+1. **安装剩余依赖** — `@prisma/client`, `next-auth@beta`, `@auth/prisma-adapter`, `zod`
+2. **安装 shadcn/ui 剩余组件** — Input, Card, Table, Dialog, Form, Label, Select, Textarea, Badge, DropdownMenu, Separator, Sheet, Avatar, Tabs
+3. **配置 .env** — DATABASE_URL (Neon), NEXTAUTH_SECRET, GitHub/Google OAuth
+4. **运行 prisma migrate dev** — 创建数据库表
+5. **配置 NextAuth.js v5** — auth.ts, route handler, Prisma adapter
+6. **实现 Admin 角色自动匹配** — ADMIN_EMAILS 环境变量 + callbacks
+7. **基础布局组件** — Header + Admin Sidebar
+8. **配置 vitest.config.ts** — 测试框架就绪
+9. **实现 middleware.ts** — 路由保护
+10. **定义 ActionResult<T> + safeAction** — Server Action 工具函数
+11. **端到端验证** — dev server 启动 + OAuth 登录 + Admin 入口
 
 ## 进度总览
 
 ```
-  Step 1: 项目脚手架        [ ] 0/12   ░░░░░░░░░░  Day 1
+  Step 1: 项目脚手架        [~] 4/12   ████░░░░░░  Day 1  ← 进行中
   Step 2: 赛事管理          [ ] 0/11   ░░░░░░░░░░  Day 2-3
   Step 3: 报名流程          [ ] 0/8    ░░░░░░░░░░  Day 3-4
   Step 4: 作品提交          [ ] 0/7    ░░░░░░░░░░  Day 4-5
@@ -15,27 +31,39 @@
   Step 7: 测试              [ ] 0/7    ░░░░░░░░░░  Day 7-8
   Step 8: 部署上线          [ ] 0/5    ░░░░░░░░░░  Day 8
   ─────────────────────────────────────────────────
-  TOTAL                     [ ] 0/62   ░░░░░░░░░░
+  TOTAL                     [~] 4/62   █░░░░░░░░░
 ```
 
 ---
 
 ## Step 1: 项目脚手架 — Day 1
 
-> 优先级: P0 | 预估: 1 天 | 状态: ⬜ 未开始
+> 优先级: P0 | 预估: 1 天 | 状态: 🔄 进行中
 
-- [ ] 1.1 创建 Next.js 15 项目 (`create-next-app` + App Router + TypeScript)
-- [ ] 1.2 安装并配置 Tailwind CSS + shadcn/ui (基础组件: Button, Input, Card, Table, Dialog, Form)
-- [ ] 1.3 安装并配置 Prisma + 连接 Neon PostgreSQL
-- [ ] 1.4 定义 Prisma Schema (User, Event, Registration, Project, ProjectScore)
+- [x] 1.1 创建 Next.js 15 项目 (`create-next-app` + App Router + TypeScript)
+- [~] 1.2 安装并配置 Tailwind CSS + shadcn/ui (基础组件: Button, Input, Card, Table, Dialog, Form)
+  - ✅ Tailwind v4 已配置
+  - ✅ shadcn/ui 已初始化 (base-nova 风格)
+  - ✅ Button 组件已安装
+  - ⬜ 待安装: Input, Card, Table, Dialog, Form, Label, Select, Textarea, Badge, DropdownMenu, Separator, Sheet, Avatar, Tabs
+- [~] 1.3 安装并配置 Prisma + 连接 Neon PostgreSQL
+  - ✅ prisma (devDep) 已安装
+  - ⬜ @prisma/client 待安装
+  - ⬜ 连接 Neon PostgreSQL (.env 配置)
+- [x] 1.4 定义 Prisma Schema (User, Account, Session, VerificationToken, Event, Registration, Project, ProjectScore, EventJudge)
 - [ ] 1.5 运行 `prisma migrate dev` 创建表
 - [ ] 1.6 安装并配置 NextAuth.js v5 (GitHub + Google provider)
+  - ⬜ next-auth@beta 待安装
+  - ⬜ @auth/prisma-adapter 待安装
+  - ⬜ zod 待安装
 - [ ] 1.7 实现 Admin 角色自动匹配逻辑 (NextAuth callbacks 中检查 ADMIN_EMAILS)
 - [ ] 1.8 基础布局组件 (Header 含用户头像/登录按钮 + 管理后台 Sidebar)
-- [ ] 1.9 配置 Vitest 测试框架 (Step 2-6 的单元/集成测试基础)
+- [~] 1.9 配置 Vitest 测试框架 (Step 2-6 的单元/集成测试基础)
+  - ✅ vitest + @vitejs/plugin-react 已安装
+  - ⬜ vitest.config.ts 待配置
 - [ ] 1.10 实现 middleware.ts 路由保护 (/admin/* 需 admin 角色，未登录重定向)
 - [ ] 1.11 定义 Server Action 统一返回类型 ActionResult<T> + safeAction wrapper
-- [ ] 1.12 验证: `npm run dev` 启动 → GitHub 登录成功 → Admin 用户看到管理后台入口
+- [ ] 1.12 验证: `bun run dev` 启动 → GitHub 登录成功 → Admin 用户看到管理后台入口
 
 ### 完成标准
 - 本地开发服务器正常启动
