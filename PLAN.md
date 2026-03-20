@@ -14,7 +14,7 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 
 | 层 | 技术 | 理由 |
 |---|------|------|
-| 全栈框架 | Next.js 15 (App Router) | SSR + API Routes 一体化，零配置 |
+| 全栈框架 | Next.js 16 (App Router) | SSR + API Routes 一体化，零配置 |
 | UI | Tailwind CSS + shadcn/ui | 快速出页面，组件质量高 |
 | ORM | Prisma | 类型安全，迁移工具好 |
 | 数据库 | PostgreSQL (Neon) | JSONB 处理半结构化数据，免费 0.5GB |
@@ -41,7 +41,7 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
   ┌─────────────────────────────────────────────────────┐
   │                    Vercel                             │
   │  ┌───────────────────────────────────────────────┐   │
-  │  │           Next.js 15 (App Router)             │   │
+  │  │           Next.js 16 (App Router)             │   │
   │  │                                               │   │
   │  │  ┌─────────────┐    ┌──────────────────────┐  │   │
   │  │  │  前台页面     │    │  管理后台页面         │  │   │
@@ -236,37 +236,72 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 - 当前项目实际运行在 `Next.js 16.2.0`，因此将原计划中的 `middleware.ts` 调整为 `proxy.ts`
 - Neon 数据库已连通，Prisma schema 已验证通过，初始 SQL migration 已执行并创建核心表
 - Google / GitHub provider 已在 `/api/auth/providers` 返回，后台未登录保护已在本地冒烟验证通过
-- 唯一未做的是“人工点击并完成一次真实 OAuth 登录”，需要后续用浏览器完成账号授权
+- 已通过 `/setup-browser-cookies` 导入 `localhost` 管理员会话并验证 `/admin/events` 可访问；后续仍需系统化补齐 provider 细节、未登录回退与认证异常场景 QA
 
-**Step 2 起点**
+**Step 2 当前进度（2026-03-20）**
 
-1. 完成 `/admin/events` 列表页
-2. 完成 `/admin/events/new` 创建赛事表单
-3. 落地 `createEvent / updateEvent / togglePublish`
-4. 补前台首页赛事列表与赛事详情页
+1. `/admin/events` 列表页、`/admin/events/new` 创建页、首页赛事列表、赛事详情页已落地
+2. `createEvent / updateEvent / togglePublish`、slug 生成、赛事阶段计算、时间窗口顺序校验已实现
+3. 已完成一轮带管理员登录态的手工闭环验证：创建赛事 → 发布 → 前台首页出现 → 详情页可访问
+4. Step 2 仍缺编辑页、删除策略，以及完整 review / qa 收尾
 
 ### Step 2: 赛事管理 (Day 2-3)
 
-**目标**: 管理员可以创建、编辑、发布赛事，前台可以浏览赛事。
+**目标**: 管理员可以创建、编辑、发布赛事，前台可以浏览赛事；并在进入 Step 3 前补齐 review / qa 收尾。
 
-- [ ] 管理后台: 赛事列表页 (`/admin/events`)
-- [ ] 管理后台: 创建赛事表单 (`/admin/events/new`)
+- [x] 管理后台: 赛事列表页 (`/admin/events`)
+- [x] 管理后台: 创建赛事表单 (`/admin/events/new`)
   - 基础信息 (名称/描述/时间段)
   - 赛道/赛题配置 (JSON 编辑)
   - 奖项配置
   - 评分维度配置 [{name, maxScore, weight}]
   - 自定义报名表单字段
 - [ ] 管理后台: 编辑赛事 (`/admin/events/[id]/edit`)
-- [ ] 管理后台: 发布/取消发布赛事
-- [ ] 前台: 赛事列表页 (`/`) — 仅显示已发布赛事
-- [ ] 前台: 赛事详情页 (`/events/[slug]`)
+- [ ] 管理后台: 删除 / 归档赛事策略（当前尚未定义，避免误删真实赛事）
+- [x] 管理后台: 发布/取消发布赛事
+- [x] 前台: 赛事列表页 (`/`) — 仅显示已发布赛事
+- [x] 前台: 赛事详情页 (`/events/[slug]`)
   - 赛事描述、时间线、赛道、奖项
   - 报名按钮 (时间窗口内)
-- [ ] Server Actions: createEvent, updateEvent, togglePublish
-- [ ] 时间窗口顺序校验 (Zod refine: regStart < regEnd ≤ subStart < subEnd ≤ revStart < revEnd)
-- [ ] getEventPhase() 纯计算函数 (从时间窗口推断赛事阶段)
-- [ ] Slug 生成 + 冲突自动重试
-- [ ] 验证: 能创建赛事 → 发布 → 在前台看到
+- [x] Server Actions: createEvent, updateEvent, togglePublish
+- [x] 时间窗口顺序校验 (Zod refine: regStart < regEnd ≤ subStart < subEnd ≤ revStart < revEnd)
+- [x] getEventPhase() 纯计算函数 (从时间窗口推断赛事阶段)
+- [x] Slug 生成 + 冲突自动重试
+- [x] Happy path 验证: 管理员创建赛事 → 发布 → 在前台看到 → 详情页可访问
+
+#### Step 2 Review / QA 收尾计划
+
+- [ ] 跑一次 `/review`，重点检查：
+  - 时间窗口与 JSON 字段映射的结构性问题
+  - 赛事创建 / 发布 server actions 的错误处理与数据库边界
+  - slug 生成对中文、纯数字、符号名称的处理质量
+- [ ] 跑一次 authenticated admin `/qa`，至少覆盖：
+  - `localhost` 管理员登录态导入
+  - `/admin/events/new` 创建成功
+  - `/admin/events` 发布 / 取消发布
+  - `/` 首页发布态同步
+  - `/events/[slug]` 详情页同步
+- [ ] 补齐表单负向 QA：
+  - 非法时间顺序
+  - 重复评分维度名称
+  - `select` 类型自定义字段无选项
+  - 空赛道 / 空赛题 / 空奖项的展示与提交流程
+- [ ] 补齐 slug / 边界 QA：
+  - 中文名称
+  - 英文名称
+  - 含符号名称
+  - 纯数字名称（本次实测生成 `/2026`，需确认是否接受）
+- [ ] 收尾 acceptance：
+  - 将 review / qa 结果回写 `acceptance/`
+  - 标明“已通过 / 未覆盖 / 已知风险”
+  - 决定是否保留或回收验收测试赛事数据
+
+#### 当前风险 / 阻塞
+
+- 当前没有赛事编辑页，Step 2 仍未形成完整 CRUD
+- slug 对中文赛事名的结果偏弱（本次验收数据生成 `/2026`），可能影响产品可读性
+- 验收期间出现过一次 Neon 瞬时不可达，虽然重试后恢复，但仍需关注数据库稳定性与超时处理
+- 后台“取消发布后首页消失”与负向表单校验尚未形成完整 QA 证据链
 
 ### Step 3: 报名流程 (Day 3-4)
 
