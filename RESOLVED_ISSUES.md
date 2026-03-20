@@ -26,3 +26,11 @@
 - 解决方案：在 `src/lib/events/queries.ts` 中对公开查询和后台列表查询增加失败兜底，在 Prisma 不可用或查询异常时返回空数组 / `null`，让页面展示空状态而不是直接崩溃。
 - 验证：在数据库不可达条件下，项目已可成功执行 `bun run build`。
 - 涉及文件：`src/lib/events/queries.ts`
+
+## 2026-03-20 — 登录页错误展示占位 GitHub OAuth 入口
+
+- 现象：`/api/auth/signin` 页面会展示 GitHub 登录按钮，但点击后跳转到了带有 `client_id=replace-with-github-client-id` 的 GitHub 授权地址，属于无效配置暴露给真实用户。
+- 根因：`src/lib/auth-providers.ts` 仅判断环境变量是否“有值”，没有过滤 `.env.sample` 风格的占位值，导致占位 GitHub 配置被当成真实 Provider 注册。
+- 解决方案：在 `src/lib/auth-providers.ts` 中增加占位值识别逻辑，过滤 `YOUR_` / `replace-with-` 这类样例值；同时新增 `src/lib/auth-providers.test.ts` 作为回归测试，覆盖占位值与真实值混用场景。
+- 验证：`bun run lint && bun run typecheck && bun run test && bun run build` 全部通过；浏览器实测 `/api/auth/signin` 页面已只展示真实可用的 Google 登录按钮，不再暴露占位 GitHub 按钮。
+- 涉及文件：`src/lib/auth-providers.ts`、`src/lib/auth-providers.test.ts`
