@@ -1,1 +1,105 @@
-@AGENTS.md
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## 常用命令
+
+| 命令 | 说明 |
+|------|------|
+| `bun install` | 安装依赖 |
+| `bun run dev` | 启动开发服务器 |
+| `bun run lint` | 运行 ESLint |
+| `bun run typecheck` | 运行 TypeScript 类型检查 |
+| `bun run test` | 运行所有测试 |
+| `bunx vitest run src/lib/access-control.test.ts` | 运行单个测试文件 |
+| `bun run lint && bun run typecheck && bun run test` | 完整校验 |
+| `bun run db:generate` | 生成 Prisma Client |
+| `bun run db:migrate` | 创建并应用迁移 |
+| `bun run db:push` | 直接推送 schema 到数据库 |
+| `bun run db:studio` | 打开 Prisma Studio |
+
+## 技术栈
+
+- **框架**: Next.js 16.2.0 (App Router)
+- **包管理**: Bun
+- **数据库**: PostgreSQL + Prisma ORM
+- **认证**: Auth.js v5 (JWT + Prisma Adapter)
+- **UI**: Tailwind CSS v4 + shadcn/ui
+- **表单校验**: Zod
+- **测试**: Vitest
+
+## 架构要点
+
+### 认证系统（双层防护）
+
+1. **请求层** (`src/proxy.ts`): 拦截 `/admin/:path*`，未登录用户重定向到登录页
+2. **服务端层** (`src/lib/auth-guards.ts`): `requireUser()` 和 `requireAdmin()` 在页面/布局中再次校验
+
+Auth.js 配置分散在三处:
+- `src/auth.ts` — NextAuth 实例和 Prisma Adapter
+- `src/auth.config.ts` — Providers 与 JWT/session callbacks
+- `src/app/api/auth/[...nextauth]/route.ts` — 路由处理器导出
+
+管理员角色来自 `ADMIN_EMAILS` 环境变量，逻辑在 `src/lib/access-control.ts`。
+
+### 数据层
+
+- Prisma schema 在 `prisma/schema.prisma`
+- 获取 Prisma Client 统一走 `src/lib/prisma.ts`
+- 无 DATABASE_URL 时 `getOptionalPrismaClient()` 返回 null，不影响首页渲染
+
+### Server Action 返回约定
+
+使用 `src/lib/action-result.ts` 定义的标准模式:
+- `ok(data)` / `fail(code, message)` 构造返回结果
+- `safeAction(input, handler)` 自动捕获异常
+- `safeActionWithSchema(schema, input, handler)` 结合 Zod 校验
+- 所有 Server Action 应优先沿用这套约定
+
+### 路径别名
+
+`tsconfig.json` 配置了 `@/* -> src/*`，使用别名代替深层相对路径。
+
+### Admin 页面结构
+
+```
+src/app/admin/
+├── layout.tsx      # Admin 布局（含侧边栏）
+├── page.tsx       # Admin 首页
+└── events/
+    ├── page.tsx               # 赛事列表
+    ├── actions.ts             # 赛事 Server Actions
+    ├── new/page.tsx           # 新建赛事
+    └── [id]/
+        ├── edit/page.tsx      # 编辑赛事
+        └── registrations/
+            ├── page.tsx       # 报名列表
+            └── export/route.ts # 导出 CSV
+```
+
+## 关键文件
+
+| 文件 | 用途 |
+|------|------|
+| `src/proxy.ts` | Admin 请求层鉴权中间件 |
+| `src/lib/auth-guards.ts` | 服务端页面鉴权守卫 |
+| `src/lib/action-result.ts` | Server Action 返回类型和工具函数 |
+| `src/lib/prisma.ts` | Prisma Client 单例 |
+| `src/lib/access-control.ts` | 管理员角色判断逻辑 |
+| `src/lib/events/phase.ts` | 赛事阶段计算逻辑 |
+| `src/lib/events/schema.ts` | 赛事相关 Zod Schema |
+| `src/lib/registrations/schema.ts` | 报名相关 Zod Schema |
+
+## 环境变量
+
+必需 `.env` 配置: `DATABASE_URL`、`AUTH_SECRET`、`ADMIN_EMAILS`
+可选（OAuth 登录）: `AUTH_GITHUB_ID/SECRET`、`AUTH_GOOGLE_ID/SECRET`
+
+详情参考 `.env.sample`。
+
+## 项目约定
+
+- 使用 `logger`（项目内置）而非 `console.log` 调试
+- 所有 API 响应必须包含明确错误处理
+- 新增后台页面保留双层鉴权防护
+- 测试文件与实现文件相邻放置: `src/lib/foo.ts` → `src/lib/foo.test.ts`
