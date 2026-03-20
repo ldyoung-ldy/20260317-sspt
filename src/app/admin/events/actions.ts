@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { ActionResultError, safeActionWithSchema } from "@/lib/action-result";
+import { getEventDeletionBlockReason } from "@/lib/events/delete-policy";
 import { ensureUniqueEventSlug } from "@/lib/events/slug";
 import { eventFormSchema, toEventMutationData, type EventFormInput } from "@/lib/events/schema";
 import { getPrismaClient } from "@/lib/prisma";
@@ -15,6 +16,10 @@ const updateEventSchema = eventFormSchema.extend({
 const togglePublishSchema = z.object({
   eventId: z.string().uuid("赛事 ID 无效。"),
   published: z.boolean(),
+});
+
+const deleteEventSchema = z.object({
+  eventId: z.string().uuid("赛事 ID 无效。"),
 });
 
 export async function createEvent(input: EventFormInput) {
@@ -99,6 +104,60 @@ export async function togglePublish(input: { eventId: string; published: boolean
     revalidatePath(`/events/${event.slug}`);
 
     return event;
+  });
+}
+
+export async function deleteEvent(input: { eventId: string }) {
+  return safeActionWithSchema(deleteEventSchema, input, async ({ eventId }) => {
+    await requireAdminAction();
+
+    const prisma = getPrismaClient();
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        id: true,
+        slug: true,
+        published: true,
+        _count: {
+          select: {
+            registrations: true,
+            projects: true,
+            projectScores: true,
+            judges: true,
+          },
+        },
+      },
+    });
+
+    if (!event) {
+      throw new ActionResultError("NOT_FOUND", "赛事不存在或已被删除。");
+    }
+
+    const blockReason = getEventDeletionBlockReason({
+      published: event.published,
+      registrationsCount: event._count.registrations,
+      projectsCount: event._count.projects,
+      projectScoresCount: event._count.projectScores,
+      judgesCount: event._count.judges,
+    });
+
+    if (blockReason) {
+      throw new ActionResultError("CONFLICT", blockReason);
+    }
+
+    await prisma.event.delete({
+      where: { id: eventId },
+      select: { id: true },
+    });
+
+    revalidatePath("/admin/events");
+    revalidatePath("/");
+    revalidatePath(`/admin/events/${eventId}/edit`);
+    revalidatePath(`/events/${event.slug}`);
+
+    return {
+      id: eventId,
+    };
   });
 }
 

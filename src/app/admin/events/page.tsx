@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { togglePublish } from "@/app/admin/events/actions";
+import { EventDeleteButton } from "@/components/events/event-delete-button";
 import { EventPhaseBadge } from "@/components/events/event-phase-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,10 @@ export default async function AdminEventsPage() {
             <p className="text-sm font-medium text-muted-foreground">赛事管理</p>
             <h1 className="text-3xl font-semibold tracking-tight">赛事列表</h1>
             <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-              在这里创建赛事、查看当前阶段，并按需将草稿发布到前台首页。
+              在这里创建、编辑赛事，查看当前阶段，并按需将草稿发布到前台首页。
+            </p>
+            <p className="text-xs text-muted-foreground">
+              安全删除策略：仅未发布且没有报名、作品、评分、评委分配数据的赛事可删除。
             </p>
           </div>
 
@@ -88,7 +92,13 @@ export default async function AdminEventsPage() {
                     <div>{event.scoringCriteria.length} 个评分维度</div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end gap-2">
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Link
+                        href={`/admin/events/${event.id}/edit`}
+                        className={linkButtonClassName("outline", "sm")}
+                      >
+                        编辑
+                      </Link>
                       {event.published ? (
                         <Link
                           href={`/events/${event.slug}`}
@@ -118,6 +128,7 @@ export default async function AdminEventsPage() {
                           {event.published ? "取消发布" : "发布"}
                         </Button>
                       </form>
+                      {!event.published ? <EventDeleteButton eventId={event.id} /> : null}
                     </div>
                   </TableCell>
                 </TableRow>

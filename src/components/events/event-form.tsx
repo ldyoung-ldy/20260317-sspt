@@ -12,8 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import type { ActionResult } from "@/lib/action-result";
 import {
   getDefaultEventFormValues,
+  normalizeEventFormValues,
   type EventCustomFieldInput,
   type EventCustomFieldType,
+  type EventFormInitialValues,
   type EventFormInput,
 } from "@/lib/events/schema";
 
@@ -25,8 +27,9 @@ type EventMutationResult = {
 
 type EventFormProps = {
   action: (input: EventFormInput) => Promise<ActionResult<EventMutationResult>>;
-  initialValues?: EventFormInput;
+  initialValues?: EventFormInitialValues;
   submitLabel?: string;
+  helperText?: string;
 };
 
 type ArrayFieldName =
@@ -40,10 +43,13 @@ export function EventForm({
   action,
   initialValues,
   submitLabel = "创建赛事",
+  helperText = "创建后默认保存为草稿，可回到列表页发布。",
 }: EventFormProps) {
   const router = useRouter();
   const [values, setValues] = useState<EventFormInput>(() =>
-    initialValues ? cloneEventFormValues(initialValues) : getDefaultEventFormValues()
+    initialValues
+      ? cloneEventFormValues(normalizeEventFormValues(initialValues))
+      : getDefaultEventFormValues()
   );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[] | undefined>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -548,7 +554,7 @@ export function EventForm({
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            创建后默认保存为草稿，可回到列表页发布。
+            {helperText}
           </p>
           <div className="flex gap-3">
             <Button type="button" variant="outline" onClick={() => router.push("/admin/events") }>
