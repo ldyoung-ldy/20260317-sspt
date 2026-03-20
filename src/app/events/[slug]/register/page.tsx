@@ -37,6 +37,9 @@ export default async function EventRegistrationPage({
             <p className="text-sm leading-7 text-muted-foreground">
               报名窗口：{formatDateRange(event.registrationStart, event.registrationEnd)}
             </p>
+            <p className="text-sm leading-7 text-muted-foreground">
+              当前登录账号可直接填写下方报名表单并提交，管理员账号同样可以参与报名。
+            </p>
           </div>
 
           <div className="flex flex-wrap gap-3">

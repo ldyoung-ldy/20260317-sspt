@@ -8,6 +8,7 @@ import { getOptionalSession } from "@/lib/auth-session";
 import { linkButtonClassName } from "@/lib/button-link";
 import { canRegisterForEvent } from "@/lib/events/phase";
 import { getPublishedEventBySlug } from "@/lib/events/queries";
+import { getRegistrationEntryState } from "@/lib/registrations/entry-state";
 import { getUserEventRegistration } from "@/lib/registrations/queries";
 
 export default async function EventDetailPage({
@@ -28,6 +29,12 @@ export default async function EventDetailPage({
     : null;
   const authReady = Boolean(process.env.AUTH_SECRET?.trim()) && getConfiguredAuthProviders().length > 0;
   const registrationOpen = canRegisterForEvent(event);
+  const entryState = getRegistrationEntryState({
+    currentRegistrationStatus: currentRegistration?.status,
+    isAuthenticated: Boolean(session?.user),
+    registrationOpen,
+    authReady,
+  });
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 lg:px-8">
@@ -47,38 +54,41 @@ export default async function EventDetailPage({
           <div className="min-w-72 rounded-3xl border border-border bg-background p-5">
             <h2 className="text-sm font-semibold">报名状态</h2>
             <p className="mt-2 text-sm leading-7 text-muted-foreground">
-              {currentRegistration
-                ? getRegistrationStatusHint(currentRegistration.status)
-                : registrationOpen
-                  ? "报名窗口已开启，可立即提交报名。"
-                  : getRegistrationHint(event.registrationStart, event.registrationEnd)}
+              {getRegistrationEntryHint(
+                entryState,
+                event.registrationStart,
+                event.registrationEnd
+              )}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              {currentRegistration ? (
+              {entryState.kind === "existing" ? (
                 <>
-                  <RegistrationStatusBadge status={currentRegistration.status} />
+                  <RegistrationStatusBadge status={entryState.status} />
                   <Link href="/my/registrations" className={linkButtonClassName("outline", "sm")}>
                     查看我的报名
                   </Link>
                 </>
-              ) : registrationOpen && session?.user ? (
+              ) : entryState.kind === "can_register" ? (
                 <Link href={`/events/${event.slug}/register`} className={linkButtonClassName("default", "sm")}>
                   立即报名
                 </Link>
-              ) : registrationOpen && authReady ? (
-                <Link
-                  href={`/api/auth/signin?callbackUrl=${encodeURIComponent(`/events/${event.slug}/register`)}`}
-                  className={linkButtonClassName("default", "sm")}
-                >
-                  登录后报名
-                </Link>
-              ) : registrationOpen ? (
+              ) : entryState.kind === "auth_unavailable" ? (
                 <Button disabled>待配置登录能力</Button>
-              ) : (
+              ) : entryState.kind === "closed" ? (
                 <Link href="/" className={linkButtonClassName("outline", "sm")}>
                   返回赛事列表
                 </Link>
-              )}
+              ) : null}
+              {entryState.kind === "login_required" ? (
+                <span className="inline-flex items-center rounded-md border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground">
+                  请先登录后再报名
+                </span>
+              ) : null}
+              {entryState.kind === "can_register" && session?.user?.role === "ADMIN" ? (
+                <span className="inline-flex items-center rounded-md border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground">
+                  当前管理员账号也可直接报名
+                </span>
+              ) : null}
             </div>
           </div>
         </div>
@@ -217,6 +227,25 @@ function getRegistrationHint(registrationStart: Date, registrationEnd: Date) {
   }
 
   return "报名入口暂未开放。";
+}
+
+function getRegistrationEntryHint(
+  entryState: ReturnType<typeof getRegistrationEntryState>,
+  registrationStart: Date,
+  registrationEnd: Date
+) {
+  switch (entryState.kind) {
+    case "existing":
+      return getRegistrationStatusHint(entryState.status);
+    case "can_register":
+      return "报名窗口已开启，当前登录账号可立即提交报名表。";
+    case "login_required":
+      return "报名窗口已开启，请先登录后再进入报名表单。";
+    case "auth_unavailable":
+      return "报名窗口已开启，但当前环境尚未配置登录能力。";
+    case "closed":
+      return getRegistrationHint(registrationStart, registrationEnd);
+  }
 }
 
 function getRegistrationStatusHint(
