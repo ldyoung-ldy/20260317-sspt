@@ -238,12 +238,13 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 - Google / GitHub provider 已在 `/api/auth/providers` 返回，后台未登录保护已在本地冒烟验证通过
 - 已通过 `/setup-browser-cookies` 导入 `localhost` 管理员会话并验证 `/admin/events` 可访问；后续仍需系统化补齐 provider 细节、未登录回退与认证异常场景 QA
 
-**Step 2 当前进度（2026-03-20）**
+**Step 2 当前进度（2026-03-20，项目进度存档）**
 
-1. `/admin/events` 列表页、`/admin/events/new` 创建页、首页赛事列表、赛事详情页已落地
-2. `createEvent / updateEvent / togglePublish`、slug 生成、赛事阶段计算、时间窗口顺序校验已实现
-3. 已完成一轮带管理员登录态的手工闭环验证：创建赛事 → 发布 → 前台首页出现 → 详情页可访问
-4. Step 2 仍缺编辑页、删除策略，以及完整 review / qa 收尾
+1. 已完成功能：`/admin/events` 列表页、`/admin/events/new` 创建页、`/admin/events/[id]/edit` 编辑页、首页赛事列表、赛事详情页，以及 `createEvent / updateEvent / togglePublish / deleteEvent`、slug 生成、赛事阶段计算、时间窗口顺序校验、安全删除策略
+2. 已完成 review：pre-landing `/review` 已执行，发现并修复“编辑页时间字段因服务端时区导致的回填偏移”P1 问题；对应修复与回归测试已落地，并通过 `lint / typecheck / test`
+3. 已完成 QA：管理员登录态下已补跑 create / edit / publish / unpublish / delete 主链路、非法表单校验、slug 边界样本、空配置详情页展示，以及“存在关联数据时删除被阻止”的真实后台验证；acceptance 记录已同步回写
+4. 当前 Step 2 功能与使用层面的验收已完成；剩余事项仅为历史验收数据去留这类非阻塞收尾，不影响继续进入 Step 3
+5. 按当前决策，Step 2 剩余非阻塞收尾项统一延期到 Step 3 开发完成后处理
 
 ### Step 2: 赛事管理 (Day 2-3)
 
@@ -256,52 +257,61 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
   - 奖项配置
   - 评分维度配置 [{name, maxScore, weight}]
   - 自定义报名表单字段
-- [ ] 管理后台: 编辑赛事 (`/admin/events/[id]/edit`)
-- [ ] 管理后台: 删除 / 归档赛事策略（当前尚未定义，避免误删真实赛事）
+- [x] 管理后台: 编辑赛事 (`/admin/events/[id]/edit`)
+- [x] 管理后台: 删除 / 归档赛事策略（当前实现为“仅未发布且无关联数据的草稿可删除”）
 - [x] 管理后台: 发布/取消发布赛事
 - [x] 前台: 赛事列表页 (`/`) — 仅显示已发布赛事
 - [x] 前台: 赛事详情页 (`/events/[slug]`)
   - 赛事描述、时间线、赛道、奖项
   - 报名按钮 (时间窗口内)
 - [x] Server Actions: createEvent, updateEvent, togglePublish
+- [x] Server Actions: deleteEvent（安全删除草稿赛事）
 - [x] 时间窗口顺序校验 (Zod refine: regStart < regEnd ≤ subStart < subEnd ≤ revStart < revEnd)
 - [x] getEventPhase() 纯计算函数 (从时间窗口推断赛事阶段)
 - [x] Slug 生成 + 冲突自动重试
 - [x] Happy path 验证: 管理员创建赛事 → 发布 → 在前台看到 → 详情页可访问
+- [x] 编辑页时间回填时区问题修复（在客户端按浏览器时区标准化 `datetime-local`）
 
 #### Step 2 Review / QA 收尾计划
 
-- [ ] 跑一次 `/review`，重点检查：
-  - 时间窗口与 JSON 字段映射的结构性问题
-  - 赛事创建 / 发布 server actions 的错误处理与数据库边界
-  - slug 生成对中文、纯数字、符号名称的处理质量
-- [ ] 跑一次 authenticated admin `/qa`，至少覆盖：
-  - `localhost` 管理员登录态导入
-  - `/admin/events/new` 创建成功
-  - `/admin/events` 发布 / 取消发布
-  - `/` 首页发布态同步
-  - `/events/[slug]` 详情页同步
-- [ ] 补齐表单负向 QA：
-  - 非法时间顺序
-  - 重复评分维度名称
-  - `select` 类型自定义字段无选项
-  - 空赛道 / 空赛题 / 空奖项的展示与提交流程
-- [ ] 补齐 slug / 边界 QA：
-  - 中文名称
-  - 英文名称
-  - 含符号名称
-  - 纯数字名称（本次实测生成 `/2026`，需确认是否接受）
-- [ ] 收尾 acceptance：
-  - 将 review / qa 结果回写 `acceptance/`
-  - 标明“已通过 / 未覆盖 / 已知风险”
-  - 决定是否保留或回收验收测试赛事数据
+- [x] Pre-landing review / diff review：
+  - 已对 Step 2 相关改动执行结构化 review，范围覆盖 `actions / queries / schema / event-form / admin pages`
+  - review 结果中已确认并修复编辑页时区回填 P1 问题；修复已补测试并归档到 `RESOLVED_ISSUES.md`
+- [x] Authenticated admin flow QA：
+  - 已导入 `localhost` 管理员登录态并验证 `/admin/events`、`/admin/events/new`、`/admin/events/[id]/edit`
+  - 已完成 create → publish → home visible → detail visible → edit sync → unpublish → home hidden 回归
+  - 已验证未发布草稿可删除、已发布状态不展示删除按钮
+- [x] 非法表单校验 QA：
+  - 已覆盖非法时间顺序、重复评分维度名称、`select` 类型自定义字段无选项
+  - 已覆盖空赛道 / 空赛题 / 空奖项赛事发布后前台详情页不崩
+- [x] slug / 边界 QA：
+  - 已覆盖空白名称、英文名称、中文改名后 slug 更新、旧 slug 失效、纯符号名称 fallback 行为
+  - 已确认并接受当前策略：纯符号名称 `!!` 生成 `/event`；中文 / 纯数字名称可读性保持现状，不作为当前阻塞项
+- [x] acceptance 收尾：
+  - `acceptance/step-2-events-checklist.md` 与 `acceptance/step-2-events-manual-script.md` 已补齐三轮实际执行记录
+  - 已标明“已通过 / 未覆盖 / 已知风险 / 待确认策略”
+- [x] Step 2 最后一项 QA 缺口：
+  - 已补齐“已有报名 / 作品 / 评分 / 评委分配数据时删除被阻止”的真实手工验证
+  - 通过 QA 脚本构造报名关联数据，再经真实后台删除入口确认前端收到阻止提示，验证完成后已清理测试数据
 
-#### 当前风险 / 阻塞
+#### 当前非阻塞遗留 / 延期项
 
-- 当前没有赛事编辑页，Step 2 仍未形成完整 CRUD
-- slug 对中文赛事名的结果偏弱（本次验收数据生成 `/2026`），可能影响产品可读性
-- 验收期间出现过一次 Neon 瞬时不可达，虽然重试后恢复，但仍需关注数据库稳定性与超时处理
-- 后台“取消发布后首页消失”与负向表单校验尚未形成完整 QA 证据链
+- 数据库中仍保留一条历史验收赛事 `管理员流程回归赛 2026`（已发布），需决定保留还是清理
+- 上述遗留项不影响当前系统使用，按当前决策延期到 Step 3 开发完成后处理
+
+#### 下一步最高优先级
+
+1. 进入 Step 3 报名流程开发
+2. Step 3 完成后再回头处理历史验收赛事 `管理员流程回归赛 2026` 的去留
+3. 若 Step 3 开发中产生新的验收数据，再统一整理 Step 2 / Step 3 的测试数据清理策略
+
+#### 旧计划校正（与实际代码 / 验收记录对齐）
+
+- 旧计划中“编辑页未实现 / 删除策略未定义”已过期：这两项功能已实现并完成主要 QA
+- 旧计划中“authenticated admin flow QA 尚未执行”已过期：create / edit / publish / unpublish / delete / 负向校验已完成，当前只剩删除拦截真实数据场景
+- 旧计划中“acceptance 待补 edit / delete / unpublish 回写”已过期：对应 acceptance 文件已同步到第三轮 QA 结果
+- 旧计划中“slug 策略待确认”已过期：用户已接受当前 slug 行为，不再阻塞 Step 3
+- 旧计划中“Step 2 仍有功能级缺口”已过期：当前仅剩非阻塞收尾项，并已明确延期到 Step 3 完成后处理
 
 ### Step 3: 报名流程 (Day 3-4)
 
