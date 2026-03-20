@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  createEmptyEventCustomField,
   eventFormSchema,
   normalizeEventFormValues,
   parseEventJsonFields,
@@ -24,7 +25,9 @@ function createValidInput(): EventFormInput {
     challenges: [{ title: "流程自动化", description: "优化审批与运营流程" }],
     prizes: [{ title: "一等奖", description: "现金奖励", amount: "¥20,000" }],
     scoringCriteria: [{ name: "创新性", maxScore: 10, weight: 40 }],
-    customFields: [{ label: "团队官网", type: "url", required: false, options: [] }],
+    customFields: [
+      { id: "team-site", label: "团队官网", type: "url", required: false, options: [] },
+    ],
   };
 }
 
@@ -51,7 +54,9 @@ describe("event schema", () => {
   it("requires options for select custom fields", () => {
     const result = eventFormSchema.safeParse({
       ...createValidInput(),
-      customFields: [{ label: "参赛赛道", type: "select", required: true, options: [] }],
+      customFields: [
+        { id: "track", label: "参赛赛道", type: "select", required: true, options: [] },
+      ],
     });
 
     expect(result.success).toBe(false);
@@ -72,6 +77,33 @@ describe("event schema", () => {
       prizes: [],
       scoringCriteria: [],
       customFields: [],
+    });
+  });
+
+  it("adds deterministic ids to persisted custom fields without ids", () => {
+    const parsed = parseEventJsonFields({
+      tracks: [],
+      challenges: [],
+      prizes: [],
+      scoringCriteria: [{ name: "创新性", maxScore: 10, weight: 40 }],
+      customFields: [{ label: "团队官网", type: "url", required: false, options: [] }],
+    });
+
+    expect(parsed.customFields[0]?.id).toBeTruthy();
+    expect(parsed.customFields[0]).toMatchObject({
+      label: "团队官网",
+      type: "url",
+      required: false,
+      options: [],
+    });
+  });
+
+  it("creates runtime ids for new custom fields", () => {
+    expect(createEmptyEventCustomField()).toMatchObject({
+      label: "",
+      type: "text",
+      required: false,
+      options: [],
     });
   });
 
