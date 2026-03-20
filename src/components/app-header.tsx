@@ -39,6 +39,11 @@ export async function AppHeader() {
             <Link href="/" className="transition-colors hover:text-foreground">
               首页
             </Link>
+            {session?.user ? (
+              <Link href="/my/registrations" className="transition-colors hover:text-foreground">
+                我的报名
+              </Link>
+            ) : null}
             {session?.user.role === "ADMIN" ? (
               <Link
                 href="/admin"
