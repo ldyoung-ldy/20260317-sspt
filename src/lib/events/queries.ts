@@ -99,6 +99,29 @@ export async function getPublishedEventBySlug(slug: string) {
   }
 }
 
+export async function getAdminEventById(id: string) {
+  const prisma = getOptionalPrismaClient();
+
+  if (!prisma) {
+    return null;
+  }
+
+  try {
+    const event = await prisma.event.findUnique({
+      where: { id },
+      select: eventDetailsSelect,
+    });
+
+    if (!event) {
+      return null;
+    }
+
+    return mapEventDetails(event);
+  } catch {
+    return null;
+  }
+}
+
 function mapEventDetails(event: EventDetailsRecord): EventDetails {
   return {
     ...event,

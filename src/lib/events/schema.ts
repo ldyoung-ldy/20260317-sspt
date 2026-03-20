@@ -201,6 +201,26 @@ export type EventScoringCriterionInput = z.output<typeof eventScoringCriterionSc
 export type EventCustomFieldInput = z.output<typeof eventCustomFieldSchema>;
 export type EventCustomFieldType = (typeof customFieldTypes)[number];
 export type EventFormInput = z.output<typeof eventFormSchema>;
+export type EventFormInitialValues = Omit<
+  EventFormInput,
+  | "startDate"
+  | "endDate"
+  | "registrationStart"
+  | "registrationEnd"
+  | "submissionStart"
+  | "submissionEnd"
+  | "reviewStart"
+  | "reviewEnd"
+> & {
+  startDate: string | Date;
+  endDate: string | Date;
+  registrationStart: string | Date;
+  registrationEnd: string | Date;
+  submissionStart: string | Date;
+  submissionEnd: string | Date;
+  reviewStart: string | Date;
+  reviewEnd: string | Date;
+};
 
 export function getDefaultEventFormValues(now = new Date()): EventFormInput {
   const registrationStart = addDays(now, 1);
@@ -230,6 +250,26 @@ export function getDefaultEventFormValues(now = new Date()): EventFormInput {
       { name: "落地价值", maxScore: 10, weight: 25 },
     ],
     customFields: [],
+  };
+}
+
+export function normalizeEventFormValues(input: EventFormInitialValues): EventFormInput {
+  return {
+    name: input.name,
+    description: input.description,
+    startDate: toDateTimeLocalValue(toDate(input.startDate)),
+    endDate: toDateTimeLocalValue(toDate(input.endDate)),
+    registrationStart: toDateTimeLocalValue(toDate(input.registrationStart)),
+    registrationEnd: toDateTimeLocalValue(toDate(input.registrationEnd)),
+    submissionStart: toDateTimeLocalValue(toDate(input.submissionStart)),
+    submissionEnd: toDateTimeLocalValue(toDate(input.submissionEnd)),
+    reviewStart: toDateTimeLocalValue(toDate(input.reviewStart)),
+    reviewEnd: toDateTimeLocalValue(toDate(input.reviewEnd)),
+    tracks: input.tracks,
+    challenges: input.challenges,
+    prizes: input.prizes,
+    scoringCriteria: input.scoringCriteria,
+    customFields: input.customFields,
   };
 }
 
@@ -277,6 +317,10 @@ export function toDateTimeLocalValue(date: Date) {
 function parseJsonField<T>(schema: z.ZodType<T>, value: unknown, fallback: T) {
   const result = schema.safeParse(value);
   return result.success ? result.data : fallback;
+}
+
+function toDate(value: string | Date) {
+  return value instanceof Date ? value : new Date(value);
 }
 
 function addDays(date: Date, days: number) {

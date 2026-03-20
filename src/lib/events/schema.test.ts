@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { eventFormSchema, parseEventJsonFields } from "@/lib/events/schema";
+import {
+  eventFormSchema,
+  normalizeEventFormValues,
+  parseEventJsonFields,
+  toDateTimeLocalValue,
+  type EventFormInitialValues,
+  type EventFormInput,
+} from "@/lib/events/schema";
 
-function createValidInput() {
+function createValidInput(): EventFormInput {
   return {
     name: "AI Hackathon 2026",
     description: "面向企业创新团队的 AI 赛事，覆盖报名、提交与评审全流程。",
@@ -65,6 +72,32 @@ describe("event schema", () => {
       prizes: [],
       scoringCriteria: [],
       customFields: [],
+    });
+  });
+
+  it("normalizes persisted dates using the runtime timezone", () => {
+    const input: EventFormInitialValues = {
+      ...createValidInput(),
+      startDate: "2026-04-01T01:00:00.000Z",
+      endDate: "2026-04-20T10:00:00.000Z",
+      registrationStart: "2026-04-01T01:00:00.000Z",
+      registrationEnd: "2026-04-05T10:00:00.000Z",
+      submissionStart: "2026-04-05T10:00:00.000Z",
+      submissionEnd: "2026-04-12T10:00:00.000Z",
+      reviewStart: "2026-04-12T10:00:00.000Z",
+      reviewEnd: "2026-04-18T10:00:00.000Z",
+    };
+
+    expect(normalizeEventFormValues(input)).toEqual({
+      ...input,
+      startDate: toDateTimeLocalValue(new Date(input.startDate)),
+      endDate: toDateTimeLocalValue(new Date(input.endDate)),
+      registrationStart: toDateTimeLocalValue(new Date(input.registrationStart)),
+      registrationEnd: toDateTimeLocalValue(new Date(input.registrationEnd)),
+      submissionStart: toDateTimeLocalValue(new Date(input.submissionStart)),
+      submissionEnd: toDateTimeLocalValue(new Date(input.submissionEnd)),
+      reviewStart: toDateTimeLocalValue(new Date(input.reviewStart)),
+      reviewEnd: toDateTimeLocalValue(new Date(input.reviewEnd)),
     });
   });
 });
