@@ -56,6 +56,7 @@ export const eventScoringCriterionSchema = z
 
 export const eventCustomFieldSchema = z
   .object({
+    id: z.string().trim().min(1).optional(),
     label: requiredText("字段名称"),
     type: z.enum(customFieldTypes),
     required: z.boolean().default(false),
@@ -70,7 +71,8 @@ export const eventCustomFieldSchema = z
       });
     }
   })
-  .transform(({ label, type, required, options }) => ({
+  .transform(({ id, label, type, required, options }) => ({
+    id: id?.trim() || createEventCustomFieldId({ label, type, required, options }),
     label: label.trim(),
     type,
     required,
@@ -99,7 +101,10 @@ export const eventScoringCriteriaSchema = z
       names.add(item.name);
     });
   });
-export const eventCustomFieldListSchema = z.array(eventCustomFieldSchema).default([]);
+export const eventCustomFieldListSchema = z
+  .array(eventCustomFieldSchema)
+  .default([])
+  .transform((fields) => ensureUniqueCustomFieldIds(fields));
 
 export const eventFormSchema = z
   .object({
@@ -314,6 +319,16 @@ export function toDateTimeLocalValue(date: Date) {
   return localDate.toISOString().slice(0, 16);
 }
 
+export function createEmptyEventCustomField(): EventCustomFieldInput {
+  return {
+    id: createRuntimeEventCustomFieldId(),
+    label: "",
+    type: "text",
+    required: false,
+    options: [],
+  };
+}
+
 function parseJsonField<T>(schema: z.ZodType<T>, value: unknown, fallback: T) {
   const result = schema.safeParse(value);
   return result.success ? result.data : fallback;
@@ -325,4 +340,64 @@ function toDate(value: string | Date) {
 
 function addDays(date: Date, days: number) {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+function ensureUniqueCustomFieldIds(fields: EventCustomFieldInput[]) {
+  const counts = new Map<string, number>();
+
+  return fields.map((field) => {
+    const currentCount = (counts.get(field.id) ?? 0) + 1;
+    counts.set(field.id, currentCount);
+
+    if (currentCount === 1) {
+      return field;
+    }
+
+    return {
+      ...field,
+      id: `${field.id}-${currentCount}`,
+    };
+  });
+}
+
+function createEventCustomFieldId(input: {
+  label: string;
+  type: EventCustomFieldType;
+  required: boolean;
+  options: string[];
+}) {
+  const seed = [
+    input.label.trim().toLowerCase(),
+    input.type,
+    input.required ? "required" : "optional",
+    input.options.map((option) => option.trim().toLowerCase()).join("|"),
+  ].join("::");
+
+  const normalizedLabel =
+    input.label
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "custom-field";
+
+  return `${normalizedLabel}-${hashString(seed)}`;
+}
+
+function createRuntimeEventCustomFieldId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `custom-field-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function hashString(value: string) {
+  let hash = 0x811c9dc5;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+
+  return (hash >>> 0).toString(36);
 }
