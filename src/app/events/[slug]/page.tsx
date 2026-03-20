@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EventPhaseBadge } from "@/components/events/event-phase-badge";
+import { RegistrationStatusBadge } from "@/components/registrations/registration-status-badge";
 import { Button } from "@/components/ui/button";
+import { getConfiguredAuthProviders } from "@/lib/auth-providers";
+import { getOptionalSession } from "@/lib/auth-session";
 import { linkButtonClassName } from "@/lib/button-link";
 import { canRegisterForEvent } from "@/lib/events/phase";
 import { getPublishedEventBySlug } from "@/lib/events/queries";
+import { getUserEventRegistration } from "@/lib/registrations/queries";
 
 export default async function EventDetailPage({
   params,
@@ -18,6 +22,11 @@ export default async function EventDetailPage({
     notFound();
   }
 
+  const session = await getOptionalSession();
+  const currentRegistration = session?.user
+    ? await getUserEventRegistration(event.id, session.user.id)
+    : null;
+  const authReady = Boolean(process.env.AUTH_SECRET?.trim()) && getConfiguredAuthProviders().length > 0;
   const registrationOpen = canRegisterForEvent(event);
 
   return (
@@ -38,13 +47,33 @@ export default async function EventDetailPage({
           <div className="min-w-72 rounded-3xl border border-border bg-background p-5">
             <h2 className="text-sm font-semibold">报名状态</h2>
             <p className="mt-2 text-sm leading-7 text-muted-foreground">
-              {registrationOpen
-                ? "报名窗口已开启。报名表单会在 Step 3 接入，这里先展示入口状态。"
-                : getRegistrationHint(event.registrationStart, event.registrationEnd)}
+              {currentRegistration
+                ? getRegistrationStatusHint(currentRegistration.status)
+                : registrationOpen
+                  ? "报名窗口已开启，可立即提交报名。"
+                  : getRegistrationHint(event.registrationStart, event.registrationEnd)}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              {registrationOpen ? (
-                <Button disabled>报名功能即将开放</Button>
+              {currentRegistration ? (
+                <>
+                  <RegistrationStatusBadge status={currentRegistration.status} />
+                  <Link href="/my/registrations" className={linkButtonClassName("outline", "sm")}>
+                    查看我的报名
+                  </Link>
+                </>
+              ) : registrationOpen && session?.user ? (
+                <Link href={`/events/${event.slug}/register`} className={linkButtonClassName("default", "sm")}>
+                  立即报名
+                </Link>
+              ) : registrationOpen && authReady ? (
+                <Link
+                  href={`/api/auth/signin?callbackUrl=${encodeURIComponent(`/events/${event.slug}/register`)}`}
+                  className={linkButtonClassName("default", "sm")}
+                >
+                  登录后报名
+                </Link>
+              ) : registrationOpen ? (
+                <Button disabled>待配置登录能力</Button>
               ) : (
                 <Link href="/" className={linkButtonClassName("outline", "sm")}>
                   返回赛事列表
@@ -188,6 +217,23 @@ function getRegistrationHint(registrationStart: Date, registrationEnd: Date) {
   }
 
   return "报名入口暂未开放。";
+}
+
+function getRegistrationStatusHint(
+  status: "PENDING" | "ACCEPTED" | "CONFIRMED" | "REJECTED" | "CANCELLED"
+) {
+  switch (status) {
+    case "PENDING":
+      return "你已提交报名，当前等待管理员审核。";
+    case "ACCEPTED":
+      return "管理员已接受你的报名，请前往“我的报名”确认参赛。";
+    case "CONFIRMED":
+      return "你已确认参赛，可继续关注后续作品提交与评审安排。";
+    case "REJECTED":
+      return "本次报名未通过审核，如有疑问请联系管理员。";
+    case "CANCELLED":
+      return "你已取消本次报名，当前不会参与后续流程。";
+  }
 }
 
 function formatDate(value: Date) {
