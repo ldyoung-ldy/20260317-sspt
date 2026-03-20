@@ -19,6 +19,17 @@ export type ActionResult<T> =
       };
     };
 
+export class ActionResultError extends Error {
+  constructor(
+    public code: ActionErrorCode,
+    message: string,
+    public fieldErrors?: Record<string, string[] | undefined>
+  ) {
+    super(message);
+    this.name = "ActionResultError";
+  }
+}
+
 export function ok<T>(data: T): ActionResult<T> {
   return { success: true, data };
 }
@@ -68,6 +79,10 @@ export async function safeActionWithSchema<TSchema extends ZodType, TOutput>(
 }
 
 function toActionError(error: unknown): ActionResult<never> {
+  if (error instanceof ActionResultError) {
+    return fail(error.code, error.message, error.fieldErrors);
+  }
+
   if (error instanceof ZodError) {
     return fail(
       "VALIDATION_ERROR",

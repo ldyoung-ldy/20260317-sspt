@@ -3,26 +3,21 @@
 > 进度跟踪文件 | 创建: 2026-03-19 | 最后更新: 2026-03-19 | 关联: [PLAN.md](./PLAN.md)
 > 基于 CEO Review (SCOPE REDUCTION) 重写，从零搭建现代技术栈
 
-## 🎯 下一步计划 (Step 1 剩余任务)
+## 🎯 下一步计划 (Step 2 启动任务)
 
 > 恢复开发时按以下顺序执行：
 
-1. **安装剩余依赖** — `@prisma/client`, `next-auth@beta`, `@auth/prisma-adapter`, `zod`
-2. **安装 shadcn/ui 剩余组件** — Input, Card, Table, Dialog, Form, Label, Select, Textarea, Badge, DropdownMenu, Separator, Sheet, Avatar, Tabs
-3. **配置 .env** — DATABASE_URL (Neon), NEXTAUTH_SECRET, GitHub/Google OAuth
-4. **运行 prisma migrate dev** — 创建数据库表
-5. **配置 NextAuth.js v5** — auth.ts, route handler, Prisma adapter
-6. **实现 Admin 角色自动匹配** — ADMIN_EMAILS 环境变量 + callbacks
-7. **基础布局组件** — Header + Admin Sidebar
-8. **配置 vitest.config.ts** — 测试框架就绪
-9. **实现 middleware.ts** — 路由保护
-10. **定义 ActionResult<T> + safeAction** — Server Action 工具函数
-11. **端到端验证** — dev server 启动 + OAuth 登录 + Admin 入口
+1. **创建赛事数据模型输入层** — Zod schema、JSON 字段默认值、时间窗口顺序校验
+2. **实现 Server Actions** — `createEvent`, `updateEvent`, `togglePublish`, `getEventPhase`, slug 生成
+3. **完成管理后台列表页** — `/admin/events` 表格、状态展示、创建入口
+4. **完成创建赛事页** — `/admin/events/new` 基础信息、时间段、赛道/奖项/评分维度配置
+5. **补前台赛事浏览骨架** — `/` 赛事列表、`/events/[slug]` 详情页
+6. **验证 Step 2 第一阶段** — 创建赛事 → 发布 → 前台可见
 
 ## 进度总览
 
 ```
-  Step 1: 项目脚手架        [~] 4/12   ████░░░░░░  Day 1  ← 进行中
+  Step 1: 项目脚手架        [x] 12/12  ██████████  Day 1  ← 已完成
   Step 2: 赛事管理          [ ] 0/11   ░░░░░░░░░░  Day 2-3
   Step 3: 报名流程          [ ] 0/8    ░░░░░░░░░░  Day 3-4
   Step 4: 作品提交          [ ] 0/7    ░░░░░░░░░░  Day 4-5
@@ -31,43 +26,37 @@
   Step 7: 测试              [ ] 0/7    ░░░░░░░░░░  Day 7-8
   Step 8: 部署上线          [ ] 0/5    ░░░░░░░░░░  Day 8
   ─────────────────────────────────────────────────
-  TOTAL                     [~] 4/62   █░░░░░░░░░
+  TOTAL                     [~] 12/62  ██░░░░░░░░
 ```
 
 ---
 
 ## Step 1: 项目脚手架 — Day 1
 
-> 优先级: P0 | 预估: 1 天 | 状态: 🔄 进行中
+> 优先级: P0 | 预估: 1 天 | 状态: ✅ 已完成
 
-- [x] 1.1 创建 Next.js 15 项目 (`create-next-app` + App Router + TypeScript)
-- [~] 1.2 安装并配置 Tailwind CSS + shadcn/ui (基础组件: Button, Input, Card, Table, Dialog, Form)
-  - ✅ Tailwind v4 已配置
-  - ✅ shadcn/ui 已初始化 (base-nova 风格)
-  - ✅ Button 组件已安装
-  - ⬜ 待安装: Input, Card, Table, Dialog, Form, Label, Select, Textarea, Badge, DropdownMenu, Separator, Sheet, Avatar, Tabs
-- [~] 1.3 安装并配置 Prisma + 连接 Neon PostgreSQL
-  - ✅ prisma (devDep) 已安装
-  - ⬜ @prisma/client 待安装
-  - ⬜ 连接 Neon PostgreSQL (.env 配置)
+- [x] 1.1 创建 Next.js 16 项目 (`create-next-app` + App Router + TypeScript)
+- [x] 1.2 安装并配置 Tailwind CSS + shadcn/ui (基础组件已补齐: Button, Input, Card, Table, Dialog, Label, Select, Textarea, Badge, DropdownMenu, Separator, Sheet, Avatar, Tabs)
+- [x] 1.3 安装并配置 Prisma + 连接 Neon PostgreSQL
 - [x] 1.4 定义 Prisma Schema (User, Account, Session, VerificationToken, Event, Registration, Project, ProjectScore, EventJudge)
-- [ ] 1.5 运行 `prisma migrate dev` 创建表
-- [ ] 1.6 安装并配置 NextAuth.js v5 (GitHub + Google provider)
-  - ⬜ next-auth@beta 待安装
-  - ⬜ @auth/prisma-adapter 待安装
-  - ⬜ zod 待安装
-- [ ] 1.7 实现 Admin 角色自动匹配逻辑 (NextAuth callbacks 中检查 ADMIN_EMAILS)
-- [ ] 1.8 基础布局组件 (Header 含用户头像/登录按钮 + 管理后台 Sidebar)
-- [~] 1.9 配置 Vitest 测试框架 (Step 2-6 的单元/集成测试基础)
-  - ✅ vitest + @vitejs/plugin-react 已安装
-  - ⬜ vitest.config.ts 待配置
-- [ ] 1.10 实现 middleware.ts 路由保护 (/admin/* 需 admin 角色，未登录重定向)
-- [ ] 1.11 定义 Server Action 统一返回类型 ActionResult<T> + safeAction wrapper
-- [ ] 1.12 验证: `bun run dev` 启动 → GitHub 登录成功 → Admin 用户看到管理后台入口
+- [x] 1.5 生成首个 migration SQL，并将初始表结构应用到 Neon 开发库
+- [x] 1.6 安装并配置 NextAuth.js v5 (GitHub + Google provider)
+- [x] 1.7 实现 Admin 角色自动匹配逻辑 (NextAuth callbacks 中检查 ADMIN_EMAILS)
+- [x] 1.8 基础布局组件 (Header 含用户入口 + 管理后台 Sidebar + Admin Shell)
+- [x] 1.9 配置 Vitest 测试框架并补充 `access-control` / `action-result` 单测
+- [x] 1.10 实现 `proxy.ts` 路由保护 (/admin/* 需 admin 角色，未登录重定向)
+- [x] 1.11 定义 Server Action 统一返回类型 `ActionResult<T>` + `safeAction` wrapper
+- [x] 1.12 验证: `bun run dev/build/lint/typecheck/test` 通过，`/api/auth/providers` 返回 GitHub/Google
+
+### Step 1 收尾备注
+
+- 当前代码基于 `Next.js 16.2.0`，原计划中的 `middleware.ts` 已按官方约定替换为 `proxy.ts`
+- 由于 Prisma CLI 对当前 Neon 连接方式写库时报 `P1001`，已使用仓库内初始 `migration.sql` 直接创建开发库表结构；schema 校验、运行时连库和表结构均已验证通过
+- Google / GitHub provider 已在本地接口返回，后台未登录保护已验证；真实 OAuth 授权点击仍需后续在浏览器中完成一次人工登录
 
 ### 完成标准
 - 本地开发服务器正常启动
-- 能通过 GitHub OAuth 登录
+- OAuth provider 已正确加载，登录链路可继续浏览器联调
 - ADMIN_EMAILS 中的用户登录后自动获得 admin 角色
 - 数据库表已创建，Prisma Studio 可查看
 
@@ -75,7 +64,7 @@
 
 ## Step 2: 赛事管理 — Day 2-3
 
-> 优先级: P0 | 预估: 1.5 天 | 状态: ⬜ 未开始
+> 优先级: P0 | 预估: 1.5 天 | 状态: 🚀 下一步
 
 - [ ] 2.1 Server Actions: createEvent, updateEvent, deleteEvent, togglePublish
 - [ ] 2.2 管理后台: 赛事列表页 (表格 + 状态筛选 + 创建按钮)

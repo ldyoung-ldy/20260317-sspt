@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { auth, signOut } from "@/auth";
-import { buttonVariants, Button } from "@/components/ui/button";
+import { signOut } from "@/auth";
+import { Button } from "@/components/ui/button";
 import { getConfiguredAuthProviders } from "@/lib/auth-providers";
-import { cn } from "@/lib/utils";
+import { getOptionalSession } from "@/lib/auth-session";
 
 function getUserLabel(name?: string | null, email?: string | null) {
   if (name) {
@@ -17,12 +17,15 @@ function getUserLabel(name?: string | null, email?: string | null) {
 }
 
 export async function AppHeader() {
-  const session = await auth();
+  const session = await getOptionalSession();
   const providers = getConfiguredAuthProviders();
-  const initials = (session?.user.name ?? session?.user.email ?? "U")
+  const authReady = Boolean(process.env.AUTH_SECRET?.trim()) && providers.length > 0;
+  const initials = (session?.user?.name ?? session?.user?.email ?? "U")
     .trim()
     .charAt(0)
     .toUpperCase();
+  const linkButtonClassName =
+    "inline-flex h-7 items-center justify-center rounded-[min(var(--radius-md),12px)] bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground transition-colors hover:bg-primary/90";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
@@ -75,11 +78,8 @@ export async function AppHeader() {
                 </Button>
               </form>
             </>
-          ) : providers.length > 0 ? (
-            <Link
-              href="/api/auth/signin"
-              className={cn(buttonVariants({ size: "sm" }))}
-            >
+          ) : authReady ? (
+            <Link href="/api/auth/signin" className={linkButtonClassName}>
               登录
             </Link>
           ) : (

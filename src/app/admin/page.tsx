@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { getOptionalSession } from "@/lib/auth-session";
 
 const checkpoints = [
   {
@@ -16,7 +16,7 @@ const checkpoints = [
 ];
 
 export default async function AdminDashboardPage() {
-  const session = await auth();
+  const session = await getOptionalSession();
 
   return (
     <div className="space-y-6">

@@ -218,18 +218,32 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 
 **目标**: 项目初始化，核心基础设施就位，能跑起来。
 
-- [ ] 创建 Next.js 15 项目 (App Router + TypeScript)
-- [ ] 安装并配置 Tailwind CSS + shadcn/ui
-- [ ] 安装并配置 Prisma + 连接 Neon PostgreSQL
-- [ ] 定义 Prisma Schema (5 张核心表)
-- [ ] 运行 `prisma migrate dev` 创建表
-- [ ] 安装并配置 NextAuth.js (GitHub + Google provider)
-- [ ] 实现 Admin 角色自动匹配 (ADMIN_EMAILS 环境变量)
-- [ ] 基础布局组件 (Header + Sidebar + Footer)
-- [ ] 配置 Vitest 测试框架
-- [ ] 实现 middleware.ts 路由保护 (/admin/* 需 admin 角色)
-- [ ] Server Action 统一返回类型 ActionResult<T> + safeAction wrapper
-- [ ] 验证: 本地 `npm run dev` 能启动，能通过 GitHub 登录
+- [x] 创建 Next.js 16 项目 (App Router + TypeScript)
+- [x] 安装并配置 Tailwind CSS + shadcn/ui
+- [x] 安装并配置 Prisma + 连接 Neon PostgreSQL
+- [x] 定义 Prisma Schema (Auth + 赛事核心表)
+- [x] 生成首个 migration SQL，并将初始表结构写入 Neon 开发库
+- [x] 安装并配置 NextAuth.js v5 (GitHub + Google provider)
+- [x] 实现 Admin 角色自动匹配 (ADMIN_EMAILS 环境变量)
+- [x] 基础布局组件 (Header + Admin Sidebar + Admin Shell)
+- [x] 配置 Vitest 测试框架并补首批单测
+- [x] 实现 `proxy.ts` 路由保护 (`/admin/*` 需 admin 角色)
+- [x] Server Action 统一返回类型 `ActionResult<T>` + `safeAction` wrapper
+- [x] 验证: 本地 `dev/build/lint/typecheck/test` 通过，OAuth provider 已加载
+
+**Step 1 完成说明**
+
+- 当前项目实际运行在 `Next.js 16.2.0`，因此将原计划中的 `middleware.ts` 调整为 `proxy.ts`
+- Neon 数据库已连通，Prisma schema 已验证通过，初始 SQL migration 已执行并创建核心表
+- Google / GitHub provider 已在 `/api/auth/providers` 返回，后台未登录保护已在本地冒烟验证通过
+- 唯一未做的是“人工点击并完成一次真实 OAuth 登录”，需要后续用浏览器完成账号授权
+
+**Step 2 起点**
+
+1. 完成 `/admin/events` 列表页
+2. 完成 `/admin/events/new` 创建赛事表单
+3. 落地 `createEvent / updateEvent / togglePublish`
+4. 补前台首页赛事列表与赛事详情页
 
 ### Step 2: 赛事管理 (Day 2-3)
 

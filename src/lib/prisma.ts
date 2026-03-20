@@ -15,3 +15,11 @@ export function getPrismaClient() {
 
   return globalThis.__prisma__;
 }
+
+export function getOptionalPrismaClient() {
+  if (!process.env.DATABASE_URL?.trim()) {
+    return null;
+  }
+
+  return getPrismaClient();
+}
