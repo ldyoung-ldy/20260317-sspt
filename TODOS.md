@@ -1,29 +1,29 @@
 # TODOS — AI 赛事管理平台 MVP (v2)
 
-> 进度跟踪文件 | 创建: 2026-03-19 | 最后更新: 2026-03-20 | 关联: [PLAN.md](./PLAN.md)
+> 进度跟踪文件 | 创建: 2026-03-19 | 最后更新: 2026-03-21 | 关联: [PLAN.md](./PLAN.md)
 > 基于 CEO Review (SCOPE REDUCTION) 重写，从零搭建现代技术栈
 
-## 🎯 下一步计划 (Step 3 主线)
+## 🎯 下一步计划 (Step 3 收尾 → Step 4)
 
 > 恢复开发时按以下顺序执行：
 
-1. **开始 Step 3 报名流程开发** — 优先实现报名表单、状态机与管理员审核
-2. **完成 Step 3 主链路与验证** — 覆盖用户报名、管理员审核、用户确认
-3. **Step 3 完成后回收 Step 2 非阻塞收尾项** — 决定历史验收赛事 `管理员流程回归赛 2026` 的去留
+1. **补齐 Step 3 acceptance 结果回写** — 新增/整理报名流程验收结论、关键截图/脚本与最终通过项
+2. **处理 Step 3 验收数据与历史样本一致性** — 清理或保留 `管理员流程回归赛 2026`，并修正 `registrationStart < startDate` 的历史样本
+3. **进入 Step 4 作品提交开发** — 在 Step 3 归档收尾后继续作品提交主线
 
 ## 进度总览
 
 ```
   Step 1: 项目脚手架        [x] 12/12  ██████████  Day 1  ← 已完成
   Step 2: 赛事管理          [x] 20/20  ██████████  Day 2-3
-  Step 3: 报名流程          [ ] 0/8    ░░░░░░░░░░  Day 3-4
+  Step 3: 报名流程          [~] 12/13  █████████░  Day 3-4
   Step 4: 作品提交          [ ] 0/7    ░░░░░░░░░░  Day 4-5
   Step 5: 评分系统          [ ] 0/8    ░░░░░░░░░░  Day 5-6
   Step 6: 排名系统          [ ] 0/6    ░░░░░░░░░░  Day 6-7
   Step 7: 测试              [ ] 0/7    ░░░░░░░░░░  Day 7-8
   Step 8: 部署上线          [ ] 0/5    ░░░░░░░░░░  Day 8
   ─────────────────────────────────────────────────
-  TOTAL                     [~] 32/73  ████░░░░░░
+  TOTAL                     [~] 44/78  ██████░░░░
 ```
 
 ---
@@ -56,6 +56,7 @@
 - OAuth provider 已正确加载，登录链路可继续浏览器联调
 - ADMIN_EMAILS 中的用户登录后自动获得 admin 角色
 - 数据库表已创建，Prisma Studio 可查看
+
 
 ---
 
@@ -113,21 +114,48 @@
 
 ## Step 3: 报名流程 — Day 3-4
 
-> 优先级: P0 | 预估: 1.5 天 | 状态: ⬜ 未开始
+> 优先级: P0 | 预估: 1.5 天 | 状态: [~] 核心功能已完成，review / qa / acceptance 收尾中
 
-- [ ] 3.1 Server Actions: createRegistration, updateRegistrationStatus (批量), confirmRegistration, cancelRegistration
-- [ ] 3.2 状态转换校验逻辑 (确保合法路径: pending→accepted→confirmed, pending→rejected, accepted/confirmed→cancelled)
-- [ ] 3.3 前台: 报名表单页 (自定义字段渲染 + 队伍名填写 + 提交)
-- [ ] 3.4 前台: 我的报名页 (状态展示 + 确认/取消操作)
-- [ ] 3.5 管理后台: 报名管理页 (列表 + 筛选 + 批量接受/拒绝 + CSV 导出)
-- [ ] 3.6 时间窗口校验: registrationStart ≤ now ≤ registrationEnd
-- [ ] 3.7 抽取 lib/registration-status.ts 纯函数模块 (canTransition, getAvailableTransitions)
-- [ ] 3.8 验证: 用户报名 → 管理员批量接受 → 用户确认参加
+- [x] 3.1 Server Actions: `createRegistration`、`updateRegistrationStatus` (批量)、`confirmRegistration`、`cancelRegistration`
+- [x] 3.2 状态转换校验逻辑 (确保合法路径: pending→accepted→confirmed, pending→rejected, accepted/confirmed→cancelled)
+- [x] 3.3 前台: 报名表单页 (自定义字段渲染 + 队伍名填写 + 提交)
+- [x] 3.4 前台: 我的报名页 (状态展示 + 确认/取消操作)
+- [x] 3.5 管理后台: 报名管理页 (列表 + 筛选 + 批量接受/拒绝 + CSV 导出)
+- [x] 3.6 时间窗口校验: `registrationStart ≤ now ≤ registrationEnd`
+- [x] 3.7 抽取 `lib/registration-status.ts` 纯函数模块
+- [x] 3.8 报名入口集成完成：赛事详情页、头部“我的报名”、后台赛事入口均已联动
+- [x] 3.9 pre-landing review / diff review：已定位并修复字段索引匹配和重复报名错误提示两个缺陷
+- [x] 3.10 authenticated admin flow QA：已验证管理员能看到报名入口、进入报名页并在“我的报名”看到结果
+- [x] 3.11 非法表单校验场景：stale 字段提交、必填校验、URL 校验、select 选项校验已覆盖
+- [x] 3.12 重复 / 冲突场景回归：双标签页重复报名已返回明确冲突提示
+- [ ] 3.13 acceptance 结果回写与收尾：补齐 Step 3 验收清单 / 手工脚本，并固化测试数据清理策略
 
-### 完成标准
+### Step 3 当前进度说明
+
+- 报名流程主功能已落地：用户报名、管理员审核、用户确认/取消、后台批量审核与 CSV 导出均已完成
+- 审查阶段已发现并修复两个真实缺陷：自定义字段按索引匹配导致旧表单串值，以及并发重复报名落为通用错误
+- 浏览器联调已覆盖管理员报名入口、stale 提交拦截、重复报名冲突提示等关键回归
+- 当前主要剩余工作不是功能编码，而是 acceptance 归档、历史验收样本清理与环境波动带来的 QA 收尾
+
+### Step 3 当前阻塞 / 风险
+
+- **Neon 间歇性连通抖动**：live QA 期间 Prisma 查询偶发失败，需要重试，影响联调稳定性
+- **历史样本时间窗口不一致**：当前验收赛事里存在 `registrationStart < startDate` 的样本，后台编辑页在扰动型 QA 时容易被现有校验拦截
+- **acceptance 尚未沉淀**：Step 3 的最终手工验收结果还未回写到 `acceptance/`，后续会话继承成本偏高
+
+### Step 3 完成标准
+
 - 报名状态转换严格按状态机执行
 - 非报名时间窗口内无法提交报名
 - 管理员能批量审核 + 导出数据
+- review / qa / acceptance 结论已归档
+
+### 旧计划校正（与实际代码 / 验收状态对齐）
+
+- “Step 3 未开始” 已过期：当前报名流程核心代码和页面已完成
+- “后台报名管理页 / CSV 导出未实现” 已过期：两者均已落地
+- “review 与 QA 尚未展开” 已过期：当前已完成 diff review、关键 bug 修复与核心浏览器回归
+- 当前真正未完成的事项是 acceptance 结果回写与样本数据收尾，而非功能开发本身
 
 ---
 

@@ -42,3 +42,27 @@
 - 解决方案：将时间字段标准化逻辑挪到客户端表单初始化阶段；新增 `EventFormInitialValues` 与 `normalizeEventFormValues`，让编辑页直接传递原始日期值，由浏览器按本地时区生成 `datetime-local` 输入值。
 - 验证：`bun run lint && bun run typecheck && bun run test` 全部通过；新增 `src/lib/events/schema.test.ts` 回归测试，覆盖 ISO/UTC 时间输入在运行时区内的标准化行为。
 - 涉及文件：`src/components/events/event-form.tsx`、`src/app/admin/events/[id]/edit/page.tsx`、`src/lib/events/schema.ts`、`src/lib/events/schema.test.ts`
+
+## 2026-03-21 — 管理员登录后在赛事详情页看不到报名入口
+
+- 现象：管理员账号访问已开启报名的赛事详情页时，页面没有显示“立即报名”入口，导致管理员无法直接参与报名。
+- 根因：赛事详情页的报名入口判断逻辑分散在页面条件分支中，登录态、是否已有报名、报名窗口开放与管理员身份混在一起，导致管理员用户被错误落到无入口分支。
+- 解决方案：抽取 `src/lib/registrations/entry-state.ts` 统一管理报名入口状态，改为显式区分 `existing / can_register / login_required / auth_unavailable / closed` 分支，并重构赛事详情页按该状态渲染按钮与提示。
+- 验证：新增 `src/lib/registrations/entry-state.test.ts` 覆盖管理员可报名场景；`bun run lint && bun run typecheck && bun run test` 通过；浏览器联调确认管理员已可见并进入报名页。
+- 涉及文件：`src/lib/registrations/entry-state.ts`、`src/lib/registrations/entry-state.test.ts`、`src/app/events/[slug]/page.tsx`
+
+## 2026-03-21 — 后台调整报名字段后，旧报名表单会静默串值
+
+- 现象：用户打开报名页后，如果管理员在后台调整了自定义字段顺序或内容，旧页面继续提交时会按索引错位写入答案，表面提交成功但实际字段答案已串值。
+- 根因：报名表单与服务端校验都按字段数组下标匹配答案，自定义字段缺少稳定身份标识，导致字段配置变更后无法识别“旧表单”。
+- 解决方案：为赛事自定义字段引入稳定 `id`，报名表单改为提交 `{ fieldId, value }[]`，服务端校验按 `fieldId` 匹配并在字段缺失、重复或配置已变化时返回 stale form 错误；同时为旧数据提供确定性 ID 生成与去重逻辑。
+- 验证：补充 `events schema` 与 `registrations schema` 单元测试；`bun run lint && bun run typecheck && bun run test` 通过；浏览器联调确认旧表单提交会提示“报名字段已更新，请刷新页面后重新填写”。
+- 涉及文件：`src/lib/events/schema.ts`、`src/lib/events/schema.test.ts`、`src/components/events/event-form.tsx`、`src/components/registrations/registration-form.tsx`、`src/lib/registrations/schema.ts`、`src/lib/registrations/schema.test.ts`
+
+## 2026-03-21 — 并发重复报名只返回通用失败，未给出明确冲突提示
+
+- 现象：同一用户在两个旧标签页同时提交同一赛事报名时，第二次提交会因数据库唯一约束失败，但前端只能看到通用错误，无法判断是“已报名”还是系统异常。
+- 根因：`createRegistration` 仅做提交前查询，没有捕获真正写入阶段抛出的 Prisma `P2002` 唯一约束异常，导致并发冲突漏转成业务错误。
+- 解决方案：在 `src/app/my/registrations/actions.ts` 中捕获 Prisma `P2002`，并将其转换为明确的 `CONFLICT` 业务结果，统一返回“你已提交过该赛事报名，请前往“我的报名”查看状态。”。
+- 验证：`bun run lint && bun run typecheck && bun run test` 通过；浏览器双标签页复测确认第二次提交会展示明确冲突提示而非通用失败。
+- 涉及文件：`src/app/my/registrations/actions.ts`

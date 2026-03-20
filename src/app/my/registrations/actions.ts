@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { ActionResultError, safeActionWithSchema } from "@/lib/action-result";
 import { canRegisterForEvent } from "@/lib/events/phase";
@@ -71,18 +72,31 @@ export async function createRegistration(input: RegistrationFormInput) {
       );
     }
 
-    const registration = await prisma.registration.create({
-      data: {
-        eventId: event.id,
-        userId: session.user.id,
-        teamName: payload.teamName.trim() || null,
-        answers: validation.answers,
-      },
-      select: {
-        id: true,
-        status: true,
-      },
-    });
+    let registration;
+
+    try {
+      registration = await prisma.registration.create({
+        data: {
+          eventId: event.id,
+          userId: session.user.id,
+          teamName: payload.teamName.trim() || null,
+          answers: validation.answers,
+        },
+        select: {
+          id: true,
+          status: true,
+        },
+      });
+    } catch (error) {
+      if (isDuplicateRegistrationError(error)) {
+        throw new ActionResultError(
+          "CONFLICT",
+          "你已提交过该赛事报名，请前往“我的报名”查看状态。"
+        );
+      }
+
+      throw error;
+    }
 
     revalidatePath(`/events/${event.slug}`);
     revalidatePath(`/events/${event.slug}/register`);
@@ -161,4 +175,11 @@ async function requireUserAction() {
   }
 
   return session;
+}
+
+function isDuplicateRegistrationError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002"
+  );
 }

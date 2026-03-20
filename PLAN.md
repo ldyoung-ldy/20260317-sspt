@@ -315,24 +315,41 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 
 ### Step 3: 报名流程 (Day 3-4)
 
-**目标**: 用户可以报名，管理员可以审核。
+**目标**: 用户可以报名，管理员可以审核；当前核心功能已完成，review / qa / acceptance 收尾中。
 
-- [ ] 前台: 报名表单页 (`/events/[slug]/register`)
-  - 填写自定义表单字段
-  - 填写队伍名称 (可选)
-  - 提交后状态为 pending
-- [ ] 前台: 我的报名页 (`/my/registrations`)
+- [x] 前台: 报名表单页 (`/events/[slug]/register`)
+  - 动态渲染自定义表单字段
+  - 支持填写队伍名称 (可选)
+  - 提交后状态默认为 pending
+- [x] 前台: 我的报名页 (`/my/registrations`)
   - 查看报名状态
   - accepted 状态可确认参加 → confirmed
   - 可取消报名
-- [ ] 管理后台: 报名管理页 (`/admin/events/[id]/registrations`)
+- [x] 管理后台: 报名管理页 (`/admin/events/[id]/registrations`)
   - 报名列表 + 筛选/搜索
   - 批量操作: 接受 / 拒绝
   - 导出报名数据 (CSV)
-- [ ] Server Actions: createRegistration, updateRegistrationStatus, confirmRegistration, cancelRegistration
-- [ ] 状态转换校验: 确保只能按合法路径转换
-- [ ] 抽取 lib/registration-status.ts 状态机纯函数 (canTransition, getAvailableTransitions)
-- [ ] 验证: 用户报名 → 管理员接受 → 用户确认 流程走通
+- [x] Server Actions: createRegistration, updateRegistrationStatus, confirmRegistration, cancelRegistration
+- [x] 状态转换校验: 确保只能按合法路径转换
+- [x] 抽取 `src/lib/registration-status.ts` 状态机纯函数 (canTransition, canCancelRegistration, canConfirmRegistration)
+- [x] 赛事详情页 / 我的报名 / 后台快捷入口联动已完成
+
+**Step 3 当前进度（2026-03-21，项目进度存档）**
+
+1. 已完成功能：报名表单页、我的报名页、后台报名管理页、CSV 导出、报名状态机、报名入口状态判断、管理员可见报名入口、头部“我的报名”导航，以及对应的 server actions / schema / query / 组件层均已落地
+2. 已完成 review：已执行一次 Step 3 pre-landing diff review，并定位/修复两个高优先级缺陷——“自定义字段按索引匹配导致字段调整后静默串值”与“并发重复报名返回通用错误而非明确冲突提示”
+3. 已完成 QA：`bun run lint && bun run typecheck && bun run test` 已通过；浏览器联调已覆盖管理员报名入口可见性、stale 表单提交拦截、双标签页重复报名冲突提示等关键场景
+4. 当前阻塞 / 风险：Neon 数据库仍存在间歇性不可达，导致 live QA 需要重试；当前验收赛事数据里存在 `registrationStart < startDate` 的历史样本，使用后台编辑页做扰动型 QA 时容易触发表单校验失败；Step 3 对应 acceptance 结果尚未正式回写到 `acceptance/`
+5. 下一步最高优先级：先补齐 Step 3 acceptance 结果回写与测试数据清理策略，再处理现有验收赛事时间窗口样本的一致性，随后进入 Step 4 作品提交开发
+6. 与实际代码、验收记录不一致的旧计划项：旧计划中“Step 3 未开始 / 报名页与后台报名管理尚未实现 / review 与 QA 尚未规划”均已过期；当前真实状态是“核心开发完成，剩余为验收归档与环境稳定性收尾”
+
+#### Step 3 Review / QA 收尾计划
+
+- [x] Pre-landing review / diff review：已完成代码审查，并依据审查结果修复字段身份匹配与重复报名冲突提示两个缺陷
+- [x] Authenticated admin flow QA：已验证管理员账号可在赛事详情页看到报名入口、进入报名页、提交报名并在“我的报名”查看记录
+- [x] 非法表单校验场景：已通过浏览器复测 stale 字段提交被拦截；`required / url / select / stale fieldId / duplicate fieldId` 已由单元测试覆盖
+- [x] 并发 / 冲突场景回归：已用双标签页复测重复报名，第二次提交返回明确冲突提示，不再落成通用错误
+- [ ] acceptance 结果回写与收尾：补齐 Step 3 验收清单 / 手工脚本，沉淀最终通过项、风险项与测试数据清理结论
 
 ### Step 4: 作品提交 (Day 4-5)
 
