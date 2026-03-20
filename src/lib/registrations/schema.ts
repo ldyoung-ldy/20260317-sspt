@@ -9,10 +9,15 @@ const maxAnswerLength = 2_000;
 
 export const registrationAnswerInputSchema = z.string().max(maxAnswerLength, "填写内容过长。");
 
+export const registrationFieldAnswerInputSchema = z.object({
+  fieldId: z.string().trim().min(1, "字段 ID 无效。"),
+  value: registrationAnswerInputSchema,
+});
+
 export const registrationFormSchema = z.object({
   eventId: z.string().uuid("赛事 ID 无效。"),
   teamName: z.string().trim().max(120, "队伍名称最多 120 个字符。"),
-  answers: z.array(registrationAnswerInputSchema).default([]),
+  answers: z.array(registrationFieldAnswerInputSchema).default([]),
 });
 
 export const registrationStatusUpdateSchema = z.object({
@@ -37,6 +42,7 @@ export type RegistrationFormInput = z.output<typeof registrationFormSchema>;
 export type RegistrationActionInput = z.output<typeof registrationActionSchema>;
 export type RegistrationStatusUpdateInput = z.output<typeof registrationStatusUpdateSchema>;
 export type RegistrationAnswer = z.output<typeof registrationAnswerSchema>;
+export type RegistrationFieldAnswerInput = z.output<typeof registrationFieldAnswerInputSchema>;
 
 export function parseRegistrationAnswers(value: unknown) {
   const result = registrationAnswerListSchema.safeParse(value);
@@ -50,16 +56,38 @@ export function parseRegistrationCustomFields(value: unknown) {
 
 export function validateRegistrationAnswers(
   customFields: EventCustomFieldInput[],
-  rawAnswers: string[]
+  rawAnswers: RegistrationFieldAnswerInput[]
 ) {
   const fieldErrors: Record<string, string[]> = {};
+  const currentFieldIds = new Set(customFields.map((field) => field.id));
+  const answerByFieldId = new Map<string, string>();
 
   if (rawAnswers.length !== customFields.length) {
     fieldErrors.answers = ["报名字段已更新，请刷新页面后重新填写。"];
   }
 
+  rawAnswers.forEach((answer) => {
+    if (!currentFieldIds.has(answer.fieldId)) {
+      fieldErrors.answers = ["报名字段已更新，请刷新页面后重新填写。"]; 
+      return;
+    }
+
+    if (answerByFieldId.has(answer.fieldId)) {
+      fieldErrors.answers = ["报名字段存在重复提交，请刷新页面后重试。"]; 
+      return;
+    }
+
+    answerByFieldId.set(answer.fieldId, answer.value);
+  });
+
   const answers = customFields.map((field, index) => {
-    const value = (rawAnswers[index] ?? "").trim();
+    const hasAnswer = answerByFieldId.has(field.id);
+
+    if (!hasAnswer) {
+      fieldErrors.answers = ["报名字段已更新，请刷新页面后重新填写。"]; 
+    }
+
+    const value = (answerByFieldId.get(field.id) ?? "").trim();
 
     if (field.required && value.length === 0) {
       fieldErrors[`answer-${index}`] = [`请填写${field.label}。`];
