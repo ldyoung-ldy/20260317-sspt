@@ -12,7 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import type { ActionResult } from "@/lib/action-result";
 import type { EventCustomFieldInput } from "@/lib/events/schema";
 import type { RegistrationStatusValue } from "@/lib/registration-status";
-import type { RegistrationFormInput } from "@/lib/registrations/schema";
+import type {
+  RegistrationFieldAnswerInput,
+  RegistrationFormInput,
+} from "@/lib/registrations/schema";
 
 type RegistrationMutationResult = {
   id: string;
@@ -35,17 +38,20 @@ export function RegistrationForm({ event, action }: RegistrationFormProps) {
   const [values, setValues] = useState<RegistrationFormInput>(() => ({
     eventId: event.id,
     teamName: "",
-    answers: event.customFields.map(() => ""),
+    answers: event.customFields.map((field) => ({
+      fieldId: field.id,
+      value: "",
+    })),
   }));
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[] | undefined>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function updateAnswer(index: number, value: string) {
+  function updateAnswer(fieldId: string, value: string) {
     setValues((current) => ({
       ...current,
-      answers: current.answers.map((item, currentIndex) =>
-        currentIndex === index ? value : item
+      answers: current.answers.map((item) =>
+        item.fieldId === fieldId ? { ...item, value } : item
       ),
     }));
   }
@@ -114,11 +120,15 @@ export function RegistrationForm({ event, action }: RegistrationFormProps) {
             <div className="grid gap-4">
               {event.customFields.map((field, index) => (
                 <Field
-                  key={`${field.label}-${index}`}
+                  key={field.id}
                   label={field.required ? `${field.label} *` : field.label}
                   error={fieldErrors[`answer-${index}`]?.[0]}
                 >
-                  {renderField(field, values.answers[index] ?? "", (value) => updateAnswer(index, value))}
+                  {renderField(
+                    field,
+                    getAnswerValue(values.answers, field.id),
+                    (value) => updateAnswer(field.id, value)
+                  )}
                 </Field>
               ))}
             </div>
@@ -204,4 +214,8 @@ function renderField(
       placeholder={field.type === "url" ? "https://example.com" : undefined}
     />
   );
+}
+
+function getAnswerValue(answers: RegistrationFieldAnswerInput[], fieldId: string) {
+  return answers.find((answer) => answer.fieldId === fieldId)?.value ?? "";
 }

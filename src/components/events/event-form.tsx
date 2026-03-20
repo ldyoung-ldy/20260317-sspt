@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { ActionResult } from "@/lib/action-result";
 import {
+  createEmptyEventCustomField,
   getDefaultEventFormValues,
   normalizeEventFormValues,
   type EventCustomFieldInput,
@@ -457,14 +458,7 @@ export function EventForm({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() =>
-              addArrayItem("customFields", {
-                label: "",
-                type: "text",
-                required: false,
-                options: [],
-              })
-            }
+            onClick={() => addArrayItem("customFields", createEmptyEventCustomField())}
           >
             <Plus />
             添加字段
@@ -671,6 +665,7 @@ function cloneEventFormValues(values: EventFormInput): EventFormInput {
 function cloneCustomField(field: EventCustomFieldInput): EventCustomFieldInput {
   return {
     ...field,
+    id: field.id,
     options: [...field.options],
   };
 }
