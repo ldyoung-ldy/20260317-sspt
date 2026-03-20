@@ -47,6 +47,12 @@ export default async function AdminEditEventPage({
             {!event.published ? (
               <EventDeleteButton eventId={event.id} redirectTo="/admin/events" />
             ) : null}
+            <Link
+              href={`/admin/events/${event.id}/registrations`}
+              className={linkButtonClassName("outline", "sm")}
+            >
+              报名管理
+            </Link>
             {event.published ? (
               <Link
                 href={`/events/${event.slug}`}

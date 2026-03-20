@@ -6,6 +6,11 @@ import { auth } from "@/auth";
 import { ActionResultError, safeActionWithSchema } from "@/lib/action-result";
 import { getEventDeletionBlockReason } from "@/lib/events/delete-policy";
 import { ensureUniqueEventSlug } from "@/lib/events/slug";
+import {
+  canTransition,
+  getRegistrationStatusLabel,
+} from "@/lib/registration-status";
+import { registrationStatusUpdateSchema } from "@/lib/registrations/schema";
 import { eventFormSchema, toEventMutationData, type EventFormInput } from "@/lib/events/schema";
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -157,6 +162,73 @@ export async function deleteEvent(input: { eventId: string }) {
 
     return {
       id: eventId,
+    };
+  });
+}
+
+export async function updateRegistrationStatus(input: {
+  eventId: string;
+  registrationIds: string[];
+  nextStatus: "ACCEPTED" | "REJECTED";
+}) {
+  return safeActionWithSchema(registrationStatusUpdateSchema, input, async (payload) => {
+    await requireAdminAction();
+
+    const prisma = getPrismaClient();
+    const event = await prisma.event.findUnique({
+      where: { id: payload.eventId },
+      select: {
+        id: true,
+        slug: true,
+      },
+    });
+
+    if (!event) {
+      throw new ActionResultError("NOT_FOUND", "赛事不存在或已被删除。");
+    }
+
+    const registrations = await prisma.registration.findMany({
+      where: {
+        eventId: payload.eventId,
+        id: { in: payload.registrationIds },
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (registrations.length !== payload.registrationIds.length) {
+      throw new ActionResultError("NOT_FOUND", "部分报名记录不存在或已失效，请刷新列表后重试。");
+    }
+
+    const invalidRegistration = registrations.find(
+      (registration) => !canTransition(registration.status, payload.nextStatus)
+    );
+
+    if (invalidRegistration) {
+      throw new ActionResultError(
+        "CONFLICT",
+        `仅待审核报名可执行该操作，当前包含 ${getRegistrationStatusLabel(invalidRegistration.status)} 状态记录。`
+      );
+    }
+
+    await prisma.$transaction(
+      registrations.map((registration) =>
+        prisma.registration.update({
+          where: { id: registration.id },
+          data: { status: payload.nextStatus },
+        })
+      )
+    );
+
+    revalidatePath(`/admin/events/${payload.eventId}/registrations`);
+    revalidatePath(`/events/${event.slug}`);
+    revalidatePath("/my/registrations");
+
+    return {
+      updatedCount: registrations.length,
+      nextStatus: payload.nextStatus,
     };
   });
 }
