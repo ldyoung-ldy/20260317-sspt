@@ -71,6 +71,9 @@ export function getEventPhaseLabel(phase: EventPhase) {
   }
 }
 
-export function canRegisterForEvent(event: EventPhaseInput, now = new Date()) {
+export function canRegisterForEvent(
+  event: Pick<EventPhaseInput, "published" | "registrationStart" | "registrationEnd">,
+  now = new Date()
+) {
   return event.published && now >= event.registrationStart && now < event.registrationEnd;
 }
