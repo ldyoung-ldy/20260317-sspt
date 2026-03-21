@@ -4,6 +4,7 @@ import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { RegistrationStatusBadge } from "@/components/registrations/registration-status-badge";
+import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -127,6 +128,7 @@ export function AdminRegistrationReviewTable({
                 checked={allPendingSelected}
                 onChange={(event) => toggleAllPending(event.target.checked)}
                 aria-label="全选待处理报名"
+                className="size-4 rounded border-border text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </TableHead>
             <TableHead>报名人</TableHead>
@@ -150,6 +152,7 @@ export function AdminRegistrationReviewTable({
                     checked={selectedIds.includes(registration.id)}
                     onChange={(event) => toggleSelection(registration.id, event.target.checked)}
                     aria-label={`选择报名 ${registration.id}`}
+                    className="size-4 rounded border-border text-primary focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </TableCell>
                 <TableCell className="whitespace-normal">
@@ -218,14 +221,4 @@ export function AdminRegistrationReviewTable({
       </Table>
     </div>
   );
-}
-
-function formatDate(value: Date) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(value);
 }

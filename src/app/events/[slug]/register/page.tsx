@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createRegistration } from "@/app/my/registrations/actions";
+import { InfoItem } from "@/components/info-item";
+import { PageHeaderCard } from "@/components/page-header-card";
 import { RegistrationForm } from "@/components/registrations/registration-form";
 import { RegistrationStatusBadge } from "@/components/registrations/registration-status-badge";
 import { linkButtonClassName } from "@/lib/button-link";
 import { requireUser } from "@/lib/auth-guards";
 import { canRegisterForEvent } from "@/lib/events/phase";
+import { formatDate, formatDateRange } from "@/lib/format";
 import {
   getRegistrationEventBySlug,
   getUserEventRegistration,
@@ -29,19 +32,21 @@ export default async function EventRegistrationPage({
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-10 lg:px-8">
-      <section className="rounded-3xl border border-border bg-card p-8 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">赛事报名</p>
-            <h1 className="text-3xl font-semibold tracking-tight">{event.name}</h1>
-            <p className="text-sm leading-7 text-muted-foreground">
+      <PageHeaderCard
+        tag="赛事报名"
+        title={event.name}
+        description="当前登录账号可直接填写下方报名表单并提交，管理员账号同样可以参与报名。"
+        extra={
+          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
               报名窗口：{formatDateRange(event.registrationStart, event.registrationEnd)}
-            </p>
-            <p className="text-sm leading-7 text-muted-foreground">
-              当前登录账号可直接填写下方报名表单并提交，管理员账号同样可以参与报名。
-            </p>
+            </span>
+            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+              额外字段：{event.customFields.length > 0 ? `${event.customFields.length} 项` : "无"}
+            </span>
           </div>
-
+        }
+        actions={
           <div className="flex flex-wrap gap-3">
             <Link href={`/events/${event.slug}`} className={linkButtonClassName("outline", "sm")}>
               返回详情
@@ -50,11 +55,17 @@ export default async function EventRegistrationPage({
               我的报名
             </Link>
           </div>
-        </div>
+        }
+      />
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <InfoItem label="报名开始" value={formatDate(event.registrationStart)} />
+        <InfoItem label="报名截止" value={formatDate(event.registrationEnd)} />
+        <InfoItem label="当前状态" value={registrationOpen ? "可报名" : "未开放"} />
       </section>
 
       {existingRegistration ? (
-        <section className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-8 shadow-sm">
           <div className="space-y-4">
             <RegistrationStatusBadge status={existingRegistration.status} />
             <h2 className="text-2xl font-semibold">你已经提交过本赛事报名</h2>
@@ -69,10 +80,12 @@ export default async function EventRegistrationPage({
       ) : registrationOpen ? (
         <RegistrationForm event={event} action={createRegistration} />
       ) : (
-        <section className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-8 shadow-sm">
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold">当前不在报名时间窗口内</h2>
-            <p className="text-sm leading-7 text-muted-foreground">{getRegistrationHint(event.registrationStart, event.registrationEnd)}</p>
+            <p className="text-sm leading-7 text-muted-foreground">
+              {getRegistrationHint(event.registrationStart, event.registrationEnd)}
+            </p>
             <Link href={`/events/${event.slug}`} className={linkButtonClassName("default", "sm")}>
               返回赛事详情
             </Link>
@@ -110,18 +123,4 @@ function getRegistrationHint(registrationStart: Date, registrationEnd: Date) {
   }
 
   return "报名入口暂不可用。";
-}
-
-function formatDate(value: Date) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(value);
-}
-
-function formatDateRange(startDate: Date, endDate: Date) {
-  return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 }

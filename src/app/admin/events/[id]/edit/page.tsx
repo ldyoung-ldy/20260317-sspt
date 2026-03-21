@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { updateEvent } from "@/app/admin/events/actions";
 import { EventDeleteButton } from "@/components/events/event-delete-button";
 import { EventForm } from "@/components/events/event-form";
+import { PageHeaderCard } from "@/components/page-header-card";
+import { Badge } from "@/components/ui/badge";
 import { linkButtonClassName } from "@/lib/button-link";
 import { getAdminEventById } from "@/lib/events/queries";
 import { type EventFormInput } from "@/lib/events/schema";
@@ -32,17 +34,21 @@ export default async function AdminEditEventPage({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">赛事管理 / 编辑</p>
-            <h1 className="text-3xl font-semibold tracking-tight">编辑赛事</h1>
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-              当前正在编辑“{event.name}”，保存后会直接覆盖后台配置；若赛事已发布，前台详情也会同步刷新。
-            </p>
-            <p className="text-xs text-muted-foreground">当前 slug：/{event.slug}</p>
+      <PageHeaderCard
+        tag="赛事管理 / 编辑"
+        title="编辑赛事"
+        description={`当前正在编辑“${event.name}”，保存后会直接覆盖后台配置；若赛事已发布，前台详情也会同步刷新。`}
+        extra={
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <Badge variant={event.published ? "default" : "outline"}>
+              {event.published ? "已发布" : "草稿"}
+            </Badge>
+            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+              当前 slug：/{event.slug}
+            </span>
           </div>
-
+        }
+        actions={
           <div className="flex flex-wrap gap-3">
             {!event.published ? (
               <EventDeleteButton eventId={event.id} redirectTo="/admin/events" />
@@ -65,8 +71,8 @@ export default async function AdminEditEventPage({
               返回列表
             </Link>
           </div>
-        </div>
-      </section>
+        }
+      />
 
       <EventForm
         action={submitAction}

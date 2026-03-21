@@ -1,4 +1,6 @@
 import { getOptionalSession } from "@/lib/auth-session";
+import { MetricCard } from "@/components/metric-card";
+import { PageHeaderCard } from "@/components/page-header-card";
 
 const checkpoints = [
   {
@@ -20,21 +22,36 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-        <p className="text-sm font-medium text-muted-foreground">Admin Dashboard</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-          你好，{session?.user.name ?? session?.user.email ?? "管理员"}
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-          当前后台已完成基础入口、访问保护与导航骨架。接下来优先补赛事 CRUD、报名流转和作品/评分模块。
-        </p>
+      <PageHeaderCard
+        tag="后台概览"
+        title={`你好，${session?.user?.name ?? session?.user?.email ?? "管理员"}`}
+        description="当前后台已完成基础入口、访问保护与导航骨架。接下来优先补赛事 CRUD、报名流转和作品/评分模块。"
+        extra={
+          <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+              入口已接入
+            </span>
+            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+              双层访问保护
+            </span>
+            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+              控制台导航就绪
+            </span>
+          </div>
+        }
+      />
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <MetricCard label="基础入口" value="已完成" standalone />
+        <MetricCard label="访问保护" value="已完成" standalone />
+        <MetricCard label="后续流程" value="报名 / 作品 / 评分" standalone />
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         {checkpoints.map((item) => (
           <article
             key={item.title}
-            className="rounded-3xl border border-border bg-card p-5 shadow-sm"
+            className="rounded-2xl border border-border bg-card p-5 shadow-sm"
           >
             <h2 className="text-lg font-semibold">{item.title}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">

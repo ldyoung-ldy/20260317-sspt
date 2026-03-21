@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EventPhaseBadge } from "@/components/events/event-phase-badge";
+import { InfoItem } from "@/components/info-item";
+import { MetricCard } from "@/components/metric-card";
+import { PageHeaderCard } from "@/components/page-header-card";
 import { RegistrationStatusBadge } from "@/components/registrations/registration-status-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getConfiguredAuthProviders } from "@/lib/auth-providers";
 import { getOptionalSession } from "@/lib/auth-session";
 import { linkButtonClassName } from "@/lib/button-link";
-import { canRegisterForEvent } from "@/lib/events/phase";
+import { canRegisterForEvent, canSubmitProjectForEvent } from "@/lib/events/phase";
 import { getPublishedEventBySlug } from "@/lib/events/queries";
+import { formatDate, formatDateRange } from "@/lib/format";
+import { getUserEventProject } from "@/lib/projects/queries";
+import { ProjectStatusBadge } from "@/components/projects/project-status-badge";
 import { getRegistrationEntryState } from "@/lib/registrations/entry-state";
 import { getUserEventRegistration } from "@/lib/registrations/queries";
 
@@ -27,8 +34,10 @@ export default async function EventDetailPage({
   const currentRegistration = session?.user
     ? await getUserEventRegistration(event.id, session.user.id)
     : null;
+  const currentProject = session?.user ? await getUserEventProject(event.id, session.user.id) : null;
   const authReady = Boolean(process.env.AUTH_SECRET?.trim()) && getConfiguredAuthProviders().length > 0;
   const registrationOpen = canRegisterForEvent(event);
+  const submissionOpen = canSubmitProjectForEvent(event);
   const entryState = getRegistrationEntryState({
     currentRegistrationStatus: currentRegistration?.status,
     isAuthenticated: Boolean(session?.user),
@@ -38,20 +47,18 @@ export default async function EventDetailPage({
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 lg:px-8">
-      <section className="rounded-3xl border border-border bg-card p-8 shadow-sm">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <EventPhaseBadge phase={event.phase} />
-              <span className="text-sm text-muted-foreground">/{event.slug}</span>
-            </div>
-            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight">{event.name}</h1>
-            <p className="max-w-3xl text-base leading-8 text-muted-foreground">
-              {event.description}
-            </p>
+      <PageHeaderCard
+        tag="赛事详情"
+        title={event.name}
+        description={event.description}
+        extra={
+          <div className="flex flex-wrap items-center gap-2">
+            <EventPhaseBadge phase={event.phase} />
+            <Badge variant="outline">/{event.slug}</Badge>
           </div>
-
-          <div className="min-w-72 rounded-3xl border border-border bg-background p-5">
+        }
+        actions={
+          <div className="w-full rounded-2xl border border-border bg-background/75 p-4 shadow-sm lg:min-w-72">
             <h2 className="text-sm font-semibold">报名状态</h2>
             <p className="mt-2 text-sm leading-7 text-muted-foreground">
               {getRegistrationEntryHint(
@@ -69,7 +76,10 @@ export default async function EventDetailPage({
                   </Link>
                 </>
               ) : entryState.kind === "can_register" ? (
-                <Link href={`/events/${event.slug}/register`} className={linkButtonClassName("default", "sm")}>
+                <Link
+                  href={`/events/${event.slug}/register`}
+                  className={linkButtonClassName("default", "sm")}
+                >
                   立即报名
                 </Link>
               ) : entryState.kind === "auth_unavailable" ? (
@@ -79,42 +89,83 @@ export default async function EventDetailPage({
                   返回赛事列表
                 </Link>
               ) : null}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
               {entryState.kind === "login_required" ? (
-                <span className="inline-flex items-center rounded-md border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground">
+                <span className="inline-flex items-center rounded-[10px] border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground">
                   请先登录后再报名
                 </span>
               ) : null}
               {entryState.kind === "can_register" && session?.user?.role === "ADMIN" ? (
-                <span className="inline-flex items-center rounded-md border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground">
+                <span className="inline-flex items-center rounded-[10px] border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground">
                   当前管理员账号也可直接报名
                 </span>
               ) : null}
             </div>
+
+            {session?.user && currentRegistration ? (
+              <div className="mt-4 border-t border-border pt-4">
+                <h3 className="text-sm font-semibold">作品提交</h3>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                  {getProjectEntryHint(currentRegistration.status, currentProject?.status, submissionOpen, event.submissionStart, event.submissionEnd)}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {currentProject ? <ProjectStatusBadge status={currentProject.status} /> : null}
+                  {currentRegistration.status === "CONFIRMED" && currentProject ? (
+                    <>
+                      <Link
+                        href={`/events/${event.slug}/submit`}
+                        className={linkButtonClassName("default", "sm")}
+                      >
+                        继续编辑作品
+                      </Link>
+                      <Link href="/my/projects" className={linkButtonClassName("outline", "sm")}>
+                        查看我的作品
+                      </Link>
+                    </>
+                  ) : null}
+                  {currentRegistration.status === "CONFIRMED" && !currentProject && submissionOpen ? (
+                    <Link
+                      href={`/events/${event.slug}/submit`}
+                      className={linkButtonClassName("default", "sm")}
+                    >
+                      提交作品
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </div>
-        </div>
+        }
+      />
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <MetricCard label="赛道" value={String(event.tracks.length)} standalone />
+        <MetricCard label="奖项" value={String(event.prizes.length)} standalone />
+        <MetricCard label="评分维度" value={String(event.scoringCriteria.length)} standalone />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <article className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <article className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="text-xl font-semibold">赛事时间线</h2>
           <div className="mt-4 grid gap-3">
-            <TimelineItem label="赛事时间" value={formatDateRange(event.startDate, event.endDate)} />
-            <TimelineItem
+            <InfoItem label="赛事时间" value={formatDateRange(event.startDate, event.endDate)} />
+            <InfoItem
               label="报名阶段"
               value={formatDateRange(event.registrationStart, event.registrationEnd)}
             />
-            <TimelineItem
+            <InfoItem
               label="作品提交"
               value={formatDateRange(event.submissionStart, event.submissionEnd)}
             />
-            <TimelineItem
+            <InfoItem
               label="评审阶段"
               value={formatDateRange(event.reviewStart, event.reviewEnd)}
             />
           </div>
         </article>
 
-        <article className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <article className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="text-xl font-semibold">赛事配置概览</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <MetricCard label="赛道" value={String(event.tracks.length)} />
@@ -128,11 +179,11 @@ export default async function EventDetailPage({
       </section>
 
       {event.tracks.length > 0 ? (
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="text-xl font-semibold">赛道</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {event.tracks.map((track) => (
-              <article key={track.name} className="rounded-2xl border border-border p-4">
+              <article key={track.name} className="rounded-xl border border-border bg-background/50 p-4">
                 <h3 className="font-medium">{track.name}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {track.description || "暂无赛道补充说明。"}
@@ -144,11 +195,11 @@ export default async function EventDetailPage({
       ) : null}
 
       {event.challenges.length > 0 ? (
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="text-xl font-semibold">赛题</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {event.challenges.map((challenge) => (
-              <article key={challenge.title} className="rounded-2xl border border-border p-4">
+              <article key={challenge.title} className="rounded-xl border border-border bg-background/50 p-4">
                 <h3 className="font-medium">{challenge.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {challenge.description || "暂无赛题补充说明。"}
@@ -160,11 +211,11 @@ export default async function EventDetailPage({
       ) : null}
 
       {event.prizes.length > 0 ? (
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="text-xl font-semibold">奖项设置</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {event.prizes.map((prize) => (
-              <article key={prize.title} className="rounded-2xl border border-border p-4">
+              <article key={prize.title} className="rounded-xl border border-border bg-background/50 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="font-medium">{prize.title}</h3>
                   {prize.amount ? (
@@ -180,11 +231,11 @@ export default async function EventDetailPage({
         </section>
       ) : null}
 
-      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h2 className="text-xl font-semibold">评分维度</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {event.scoringCriteria.map((criterion) => (
-            <article key={criterion.name} className="rounded-2xl border border-border p-4">
+            <article key={criterion.name} className="rounded-xl border border-border bg-background/50 p-4">
               <h3 className="font-medium">{criterion.name}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 最高分 {criterion.maxScore} / 权重 {criterion.weight}%
@@ -197,23 +248,6 @@ export default async function EventDetailPage({
   );
 }
 
-function TimelineItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-border px-4 py-4">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-2 text-sm font-medium text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-border px-4 py-4">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-foreground">{value}</p>
-    </div>
-  );
-}
 
 function getRegistrationHint(registrationStart: Date, registrationEnd: Date) {
   const now = new Date();
@@ -248,6 +282,44 @@ function getRegistrationEntryHint(
   }
 }
 
+function getProjectEntryHint(
+  registrationStatus: "PENDING" | "ACCEPTED" | "CONFIRMED" | "REJECTED" | "CANCELLED",
+  projectStatus: "DRAFT" | "FINAL" | undefined,
+  submissionOpen: boolean,
+  submissionStart: Date,
+  submissionEnd: Date
+) {
+  if (registrationStatus !== "CONFIRMED") {
+    return "需要先完成参赛确认，随后才能进入作品提交。";
+  }
+
+  if (projectStatus === "FINAL") {
+    return submissionOpen
+      ? "你已提交终稿，截止前仍可继续修改并重新提交。"
+      : "你已提交终稿，当前提交窗口已结束。";
+  }
+
+  if (projectStatus === "DRAFT") {
+    return submissionOpen
+      ? "你已有一份草稿，当前可继续完善并提交终稿。"
+      : "你已有一份草稿，但提交窗口当前未开放。";
+  }
+
+  if (submissionOpen) {
+    return "提交窗口已开启，确认参赛后即可提交作品。";
+  }
+
+  if (new Date() < submissionStart) {
+    return `作品提交将于 ${formatDate(submissionStart)} 开启。`;
+  }
+
+  if (new Date() >= submissionEnd) {
+    return "作品提交已结束，可前往“我的作品”查看留存记录。";
+  }
+
+  return "当前暂不能提交作品。";
+}
+
 function getRegistrationStatusHint(
   status: "PENDING" | "ACCEPTED" | "CONFIRMED" | "REJECTED" | "CANCELLED"
 ) {
@@ -263,18 +335,4 @@ function getRegistrationStatusHint(
     case "CANCELLED":
       return "你已取消本次报名，当前不会参与后续流程。";
   }
-}
-
-function formatDate(value: Date) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(value);
-}
-
-function formatDateRange(startDate: Date, endDate: Date) {
-  return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 }

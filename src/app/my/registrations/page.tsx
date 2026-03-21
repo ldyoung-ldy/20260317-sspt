@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { cancelRegistration, confirmRegistration } from "@/app/my/registrations/actions";
+import { EmptyState } from "@/components/empty-state";
+import { InfoItem } from "@/components/info-item";
+import { MetricCard } from "@/components/metric-card";
+import { PageHeaderCard } from "@/components/page-header-card";
 import { RegistrationActionButton } from "@/components/registrations/registration-action-button";
 import { RegistrationStatusBadge } from "@/components/registrations/registration-status-badge";
-import { linkButtonClassName } from "@/lib/button-link";
 import { requireUser } from "@/lib/auth-guards";
+import { linkButtonClassName } from "@/lib/button-link";
+import { formatDate, formatDateRange } from "@/lib/format";
 import {
   canCancelRegistration,
   canConfirmRegistration,
@@ -13,40 +18,60 @@ import { listUserRegistrations } from "@/lib/registrations/queries";
 export default async function MyRegistrationsPage() {
   const session = await requireUser("/my/registrations");
   const registrations = await listUserRegistrations(session.user.id);
+  const pendingCount = registrations.filter((item) => item.status === "PENDING").length;
+  const activeCount = registrations.filter((item) =>
+    ["ACCEPTED", "CONFIRMED"].includes(item.status)
+  ).length;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 lg:px-8">
-      <section className="rounded-3xl border border-border bg-card p-8 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">用户中心</p>
-            <h1 className="text-3xl font-semibold tracking-tight">我的报名</h1>
-            <p className="text-sm leading-7 text-muted-foreground">
-              查看你已提交的赛事报名，管理员录取后可在此确认参赛，已录取或已确认状态也可主动取消。
-            </p>
+      <PageHeaderCard
+        tag="用户中心"
+        title="我的报名"
+        description="查看你已提交的赛事报名，管理员录取后可在此确认参赛，已录取或已确认状态也可主动取消。"
+        extra={
+          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+              共 {registrations.length} 条报名
+            </span>
+            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+              待审核 {pendingCount} 条
+            </span>
+            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+              可继续操作 {activeCount} 条
+            </span>
           </div>
+        }
+        actions={
           <Link href="/" className={linkButtonClassName("outline", "sm")}>
             返回首页
           </Link>
-        </div>
-      </section>
+        }
+      />
+
+      {registrations.length > 0 ? (
+        <section className="grid gap-4 md:grid-cols-3">
+          <MetricCard label="报名总数" value={String(registrations.length)} standalone />
+          <MetricCard label="待审核" value={String(pendingCount)} standalone />
+          <MetricCard label="可继续操作" value={String(activeCount)} standalone />
+        </section>
+      ) : null}
 
       {registrations.length === 0 ? (
-        <section className="rounded-3xl border border-dashed border-border bg-card p-10 text-center shadow-sm">
-          <h2 className="text-2xl font-semibold">你还没有提交任何报名</h2>
-          <p className="mt-3 text-sm leading-7 text-muted-foreground">
-            去首页或赛事详情页查看当前开放中的赛事，提交后这里会展示你的报名状态。
-          </p>
+        <EmptyState
+          title="你还没有提交任何报名"
+          description="去首页或赛事详情页查看当前开放中的赛事，提交后这里会展示你的报名状态。"
+        >
           <Link href="/" className={linkButtonClassName("default", "sm", "mt-4")}>
             去看赛事
           </Link>
-        </section>
+        </EmptyState>
       ) : (
         <section className="grid gap-6 lg:grid-cols-2">
           {registrations.map((registration) => (
             <article
               key={registration.id}
-              className="flex h-full flex-col rounded-3xl border border-border bg-card p-6 shadow-sm"
+              className="flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-sm"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-2">
@@ -109,27 +134,4 @@ export default async function MyRegistrationsPage() {
       )}
     </div>
   );
-}
-
-function InfoItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-border px-4 py-3">
-      <dt className="text-xs uppercase tracking-wide">{label}</dt>
-      <dd className="mt-1 text-foreground">{value}</dd>
-    </div>
-  );
-}
-
-function formatDate(value: Date) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(value);
-}
-
-function formatDateRange(startDate: Date, endDate: Date) {
-  return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 }

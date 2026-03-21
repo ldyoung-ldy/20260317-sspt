@@ -77,7 +77,7 @@ export function RegistrationForm({ event, action }: RegistrationFormProps) {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      <Card className="rounded-3xl border border-border shadow-sm">
+      <Card className="rounded-2xl border border-border shadow-sm">
         <CardHeader>
           <CardTitle>报名信息</CardTitle>
         </CardHeader>
@@ -101,7 +101,7 @@ export function RegistrationForm({ event, action }: RegistrationFormProps) {
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl border border-border shadow-sm">
+      <Card className="rounded-2xl border border-border shadow-sm">
         <CardHeader>
           <CardTitle>补充信息</CardTitle>
         </CardHeader>
@@ -136,7 +136,7 @@ export function RegistrationForm({ event, action }: RegistrationFormProps) {
         </CardContent>
       </Card>
 
-      <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         {formError ? (
           <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {formError}
@@ -192,7 +192,7 @@ function renderField(
   if (field.type === "select") {
     return (
       <select
-        className="flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >

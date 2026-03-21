@@ -110,7 +110,7 @@ export function EventForm({
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      <Card className="rounded-3xl border border-border shadow-sm">
+      <Card className="rounded-2xl border border-border shadow-sm">
         <CardHeader>
           <CardTitle>基础信息</CardTitle>
         </CardHeader>
@@ -135,7 +135,7 @@ export function EventForm({
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl border border-border shadow-sm">
+      <Card className="rounded-2xl border border-border shadow-sm">
         <CardHeader>
           <CardTitle>时间窗口</CardTitle>
         </CardHeader>
@@ -489,7 +489,7 @@ export function EventForm({
                   </Field>
                   <Field label="字段类型">
                     <select
-                      className="flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className="flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                       value={field.type}
                       onChange={(event) =>
                         updateArrayItem("customFields", index, {
@@ -529,6 +529,7 @@ export function EventForm({
                           required: event.target.checked,
                         })
                       }
+                      className="size-4 rounded border-border text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
                     />
                     设为必填字段
                   </label>
@@ -539,7 +540,7 @@ export function EventForm({
         )}
       </ArraySection>
 
-      <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         {formError ? (
           <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {formError}
@@ -547,11 +548,9 @@ export function EventForm({
         ) : null}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">
-            {helperText}
-          </p>
+          <p className="text-sm text-muted-foreground">{helperText}</p>
           <div className="flex gap-3">
-            <Button type="button" variant="outline" onClick={() => router.push("/admin/events") }>
+            <Button type="button" variant="outline" onClick={() => router.push("/admin/events")}>
               取消
             </Button>
             <Button type="submit" disabled={isPending}>
@@ -599,7 +598,7 @@ function ArraySection({
   children: ReactNode;
 }) {
   return (
-    <Card className="rounded-3xl border border-border shadow-sm">
+    <Card className="rounded-2xl border border-border shadow-sm">
       <CardHeader className="flex flex-col gap-4 border-b border-border/80 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <CardTitle>{title}</CardTitle>

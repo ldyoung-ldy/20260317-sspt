@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { togglePublish } from "@/app/admin/events/actions";
+import { formatDate, formatDateRange } from "@/lib/format";
 import { EventDeleteButton } from "@/components/events/event-delete-button";
 import { EventPhaseBadge } from "@/components/events/event-phase-badge";
+import { MetricCard } from "@/components/metric-card";
+import { PageHeaderCard } from "@/components/page-header-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,29 +20,34 @@ import { listAdminEvents } from "@/lib/events/queries";
 
 export default async function AdminEventsPage() {
   const events = await listAdminEvents();
+  const publishedCount = events.filter((event) => event.published).length;
+  const draftCount = events.length - publishedCount;
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">赛事管理</p>
-            <h1 className="text-3xl font-semibold tracking-tight">赛事列表</h1>
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-              在这里创建、编辑赛事，查看当前阶段，并按需将草稿发布到前台首页。
-            </p>
-            <p className="text-xs text-muted-foreground">
-              安全删除策略：仅未发布且没有报名、作品、评分、评委分配数据的赛事可删除。
-            </p>
-          </div>
-
+      <PageHeaderCard
+        tag="赛事管理"
+        title="赛事列表"
+        description="在这里创建、编辑赛事，查看当前阶段，并按需将草稿发布到前台首页。"
+        extra={
+          <p className="text-xs leading-6 text-muted-foreground">
+            安全删除策略：仅未发布且没有报名、作品、评分、评委分配数据的赛事可删除。
+          </p>
+        }
+        actions={
           <Link href="/admin/events/new" className={linkButtonClassName("default", "sm")}>
             创建赛事
           </Link>
-        </div>
+        }
+      />
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <MetricCard label="赛事总数" value={String(events.length)} standalone />
+        <MetricCard label="已发布" value={String(publishedCount)} standalone />
+        <MetricCard label="草稿" value={String(draftCount)} standalone />
       </section>
 
-      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         {events.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center">
             <h2 className="text-lg font-semibold">还没有赛事</h2>
@@ -105,6 +113,12 @@ export default async function AdminEventsPage() {
                       >
                         报名管理
                       </Link>
+                      <Link
+                        href={`/admin/events/${event.id}/projects`}
+                        className={linkButtonClassName("outline", "sm")}
+                      >
+                        作品管理
+                      </Link>
                       {event.published ? (
                         <Link
                           href={`/events/${event.slug}`}
@@ -145,18 +159,4 @@ export default async function AdminEventsPage() {
       </section>
     </div>
   );
-}
-
-function formatDate(value: Date) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(value);
-}
-
-function formatDateRange(startDate: Date, endDate: Date) {
-  return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 }

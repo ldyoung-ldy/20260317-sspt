@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { updateRegistrationStatus } from "@/app/admin/events/actions";
+import { MetricCard } from "@/components/metric-card";
 import { AdminRegistrationReviewTable } from "@/components/registrations/admin-registration-review-table";
 import { EventPhaseBadge } from "@/components/events/event-phase-badge";
+import { PageHeaderCard } from "@/components/page-header-card";
 import { Button } from "@/components/ui/button";
 import { linkButtonClassName } from "@/lib/button-link";
 import {
@@ -46,20 +48,20 @@ export default async function AdminEventRegistrationsPage({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <p className="text-sm font-medium text-muted-foreground">赛事管理 / 报名审核</p>
-              <EventPhaseBadge phase={data.event.phase} />
-            </div>
-            <h1 className="text-3xl font-semibold tracking-tight">{data.event.name}</h1>
-            <p className="max-w-3xl text-sm leading-7 text-muted-foreground">
-              审核报名申请、筛选报名状态，并导出当前筛选结果为 CSV。只有待审核报名支持批量接受或拒绝。
-            </p>
+      <PageHeaderCard
+        tag="赛事管理 / 报名审核"
+        title={data.event.name}
+        description="审核报名申请、筛选报名状态，并导出当前筛选结果为 CSV。只有待审核报名支持批量接受或拒绝。"
+        extra={
+          <div className="flex flex-wrap items-center gap-2">
+            <EventPhaseBadge phase={data.event.phase} />
+            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
+              当前只显示此赛事的报名
+            </span>
           </div>
-
-          <div className="flex flex-wrap gap-3">
+        }
+        actions={
+          <>
             <Link href={exportHref} className={linkButtonClassName("outline", "sm")}>
               导出 CSV
             </Link>
@@ -69,22 +71,23 @@ export default async function AdminEventRegistrationsPage({
             <Link href="/admin/events" className={linkButtonClassName("outline", "sm")}>
               返回赛事列表
             </Link>
-          </div>
-        </div>
-      </section>
+          </>
+        }
+      />
 
       <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <MetricCard label="总报名数" value={String(totalCount)} />
+        <MetricCard label="总报名数" value={String(totalCount)} standalone />
         {registrationStatuses.map((status) => (
           <MetricCard
             key={status}
             label={getRegistrationStatusLabel(status)}
             value={String(data.statusCounts[status])}
+            standalone
           />
         ))}
       </section>
 
-      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm lg:p-6">
         <form className="grid gap-4 md:grid-cols-[1.4fr_0.8fr_auto_auto]">
           <div>
             <label className="text-sm font-medium">搜索报名人 / 邮箱 / 队伍</label>
@@ -92,7 +95,7 @@ export default async function AdminEventRegistrationsPage({
               name="query"
               defaultValue={filters.query}
               placeholder="例如：张三、team、example@company.com"
-              className="mt-2 flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
           <div>
@@ -100,7 +103,7 @@ export default async function AdminEventRegistrationsPage({
             <select
               name="status"
               defaultValue={filters.status ?? ""}
-              className="mt-2 flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <option value="">全部状态</option>
               {registrationStatuses.map((status) => (
@@ -123,19 +126,10 @@ export default async function AdminEventRegistrationsPage({
         </form>
       </section>
 
-      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <AdminRegistrationReviewTable registrations={data.registrations} action={submitAction} />
       </section>
     </div>
-  );
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <article className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
-    </article>
   );
 }
 
