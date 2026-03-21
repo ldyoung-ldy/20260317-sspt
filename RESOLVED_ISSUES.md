@@ -66,3 +66,11 @@
 - 解决方案：在 `src/app/my/registrations/actions.ts` 中捕获 Prisma `P2002`，并将其转换为明确的 `CONFLICT` 业务结果，统一返回“你已提交过该赛事报名，请前往“我的报名”查看状态。”。
 - 验证：`bun run lint && bun run typecheck && bun run test` 通过；浏览器双标签页复测确认第二次提交会展示明确冲突提示而非通用失败。
 - 涉及文件：`src/app/my/registrations/actions.ts`
+
+## 2026-03-21 — 登录入口使用 `Link` 指向 Auth.js API 路由，导致开发环境持续报 `UnknownAction`
+
+- 现象：未登录用户打开首页或赛事详情页时，页面表面可正常展示，但 Next 开发日志会持续出现 `[auth][error] UnknownAction: Only GET and POST requests are supported`，噪音很大，容易掩盖真实认证问题。
+- 根因：前台首页和全局 Header 把登录入口写成了 `Link href="/api/auth/signin"`；Next 会把它当作页面链接处理并发起额外预取请求，而 Auth.js 的 API 路由不接受这类请求方式，因而不断报错。
+- 解决方案：保留 `Link`，但在登录入口上显式设置 `prefetch={false}`，避免对 `/api/auth/signin` 做页面级预取，同时不破坏现有导航样式与 lint 规则。
+- 验证：`bun run lint && bun run typecheck && bun run test` 通过；使用浏览器重新打开首页与受保护页面后，`.next/dev/logs/next-development.log` 不再新增 `UnknownAction` 记录，登录入口点击仍可正常跳转到 Google 登录页。
+- 涉及文件：`src/app/page.tsx`、`src/components/app-header.tsx`

@@ -49,7 +49,11 @@ export default async function Home() {
               管理赛事
             </Link>
           ) : authReady ? (
-            <Link href="/api/auth/signin" className={linkButtonClassName("default", "sm")}>
+            <Link
+              href="/api/auth/signin"
+              prefetch={false}
+              className={linkButtonClassName("default", "sm")}
+            >
               配置完成后登录
             </Link>
           ) : (

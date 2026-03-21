@@ -111,7 +111,7 @@ export async function AppHeader() {
               </form>
             </>
           ) : authReady ? (
-            <Link href="/api/auth/signin" className={linkButtonClassName}>
+            <Link href="/api/auth/signin" prefetch={false} className={linkButtonClassName}>
               登录
             </Link>
           ) : (
