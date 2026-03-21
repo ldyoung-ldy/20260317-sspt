@@ -1,0 +1,16 @@
+/**
+ * InfoItem — 通用 label + value 展示块
+ *
+ * 适用于时间线、报名详情等场景的键值对展示。
+ */
+
+export function InfoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-background/70 px-4 py-3.5">
+      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-medium leading-6 text-foreground tabular-nums">{value}</p>
+    </div>
+  );
+}

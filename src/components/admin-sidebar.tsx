@@ -22,11 +22,11 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-full shrink-0 rounded-3xl border border-border bg-card p-4 shadow-sm lg:w-64">
-      <div className="mb-4 px-2">
-        <h2 className="text-sm font-semibold">管理后台</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Step 1 先搭基础框架，后续逐步补赛事、报名、评分和排名模块。
+    <aside className="w-full shrink-0 rounded-2xl border border-border bg-card p-4 shadow-sm lg:w-64">
+      <div className="mb-4 rounded-xl border border-border/70 bg-muted/30 px-3 py-3">
+        <h2 className="text-sm font-semibold tracking-tight">管理后台</h2>
+        <p className="mt-1 text-xs leading-6 text-muted-foreground">
+          赛事管理与运营控制台
         </p>
       </div>
 
@@ -41,9 +41,9 @@ export function AdminSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-2xl px-3 py-2 text-sm transition-colors",
+                "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
                 isActive
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/10 text-primary shadow-sm"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >

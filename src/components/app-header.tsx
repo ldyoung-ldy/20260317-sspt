@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOut } from "@/auth";
 import { Button } from "@/components/ui/button";
+import { MobileNav } from "@/components/mobile-nav";
 import { getConfiguredAuthProviders } from "@/lib/auth-providers";
 import { getOptionalSession } from "@/lib/auth-session";
 
@@ -27,12 +28,28 @@ export async function AppHeader() {
   const linkButtonClassName =
     "inline-flex h-7 items-center justify-center rounded-[min(var(--radius-md),12px)] bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground transition-colors hover:bg-primary/90";
 
+  const navItems: { href: string; label: string }[] = [
+    { href: "/", label: "首页" },
+  ];
+  if (session?.user) {
+    navItems.push({ href: "/my/registrations", label: "我的报名" });
+    navItems.push({ href: "/my/projects", label: "我的作品" });
+  }
+  if (session?.user?.role === "ADMIN") {
+    navItems.push({ href: "/admin", label: "管理后台" });
+  }
+
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6 lg:px-8">
         <div className="flex items-center gap-6">
-          <Link href="/" className="text-sm font-semibold tracking-tight">
-            AI 赛事业务管理平台
+          <Link href="/" className="flex flex-col leading-none">
+            <span className="text-[15px] font-semibold tracking-tight text-foreground [font-family:var(--font-display-face)]">
+              AI 赛事业务管理平台
+            </span>
+            <span className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              赛事运营控制台
+            </span>
           </Link>
 
           <nav className="hidden items-center gap-4 text-sm text-muted-foreground md:flex">
@@ -40,11 +57,16 @@ export async function AppHeader() {
               首页
             </Link>
             {session?.user ? (
-              <Link href="/my/registrations" className="transition-colors hover:text-foreground">
-                我的报名
-              </Link>
+              <>
+                <Link href="/my/registrations" className="transition-colors hover:text-foreground">
+                  我的报名
+                </Link>
+                <Link href="/my/projects" className="transition-colors hover:text-foreground">
+                  我的作品
+                </Link>
+              </>
             ) : null}
-            {session?.user.role === "ADMIN" ? (
+            {session?.user?.role === "ADMIN" ? (
               <Link
                 href="/admin"
                 className="transition-colors hover:text-foreground"
@@ -56,9 +78,14 @@ export async function AppHeader() {
         </div>
 
         <div className="flex items-center gap-3">
+          <MobileNav
+            items={navItems}
+            userLabel={session?.user ? getUserLabel(session.user.name, session.user.email) : undefined}
+            userRole={session?.user?.role ?? undefined}
+          />
           {session?.user ? (
             <>
-              <div className="hidden items-center gap-3 rounded-full border border-border px-2 py-1 md:flex">
+              <div className="hidden items-center gap-3 rounded-full border border-border bg-card px-2 py-1.5 md:flex">
                 <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                   {initials}
                 </div>
