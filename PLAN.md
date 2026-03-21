@@ -665,7 +665,7 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 2. 已完成 review：已执行一次 Step 3 pre-landing diff review，并定位/修复两个高优先级缺陷——“自定义字段按索引匹配导致字段调整后静默串值”与“并发重复报名返回通用错误而非明确冲突提示”
 3. 已完成 QA：`bun run lint && bun run typecheck && bun run test` 已通过；浏览器联调已覆盖管理员报名入口可见性、stale 表单提交拦截、双标签页重复报名冲突提示等关键场景
 4. 当前阻塞 / 风险：Neon 数据库仍存在间歇性不可达，导致 live QA 需要重试；当前验收赛事数据里存在 `registrationStart < startDate` 的历史样本，使用后台编辑页做扰动型 QA 时容易触发表单校验失败；Step 3 对应 acceptance 结果尚未正式回写到 `acceptance/`
-5. 下一步最高优先级：先补齐 Step 3 acceptance 结果回写与测试数据清理策略，再处理现有验收赛事时间窗口样本的一致性，随后进入 Step 4 作品提交开发
+5. 下一步最高优先级：补齐 Step 4 的 live QA 与 acceptance 回写，确认 confirmed 用户提交作品、后台查看与 CSV 导出链路，再进入 Step 5 评分系统
 6. 与实际代码、验收记录不一致的旧计划项：旧计划中“Step 3 未开始 / 报名页与后台报名管理尚未实现 / review 与 QA 尚未规划”均已过期；当前真实状态是“核心开发完成，剩余为验收归档与环境稳定性收尾”
 
 #### Step 3 Review / QA 收尾计划
@@ -674,20 +674,20 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 - [x] Authenticated admin flow QA：已验证管理员账号可在赛事详情页看到报名入口、进入报名页、提交报名并在“我的报名”查看记录
 - [x] 非法表单校验场景：已通过浏览器复测 stale 字段提交被拦截；`required / url / select / stale fieldId / duplicate fieldId` 已由单元测试覆盖
 - [x] 并发 / 冲突场景回归：已用双标签页复测重复报名，第二次提交返回明确冲突提示，不再落成通用错误
-- [ ] acceptance 结果回写与收尾：补齐 Step 3 验收清单 / 手工脚本，沉淀最终通过项、风险项与测试数据清理结论
+- [x] acceptance 结果回写与收尾：验收清单已归档至 `acceptance/step-3-registration-checklist.md`
 
 ### Step 3.5: 共用组件抽取（Step 4 前置）
 
 **目标**: 消除跨页面重复代码，为 Step 4-6 提供统一的 UI 基础组件。
 
-- [ ] 抽取 `src/lib/format.ts`（formatDate / formatDateRange），替换 4 个页面的内联定义
-- [ ] 抽取 `src/components/metric-card.tsx`，替换首页/详情页/报名管理的重复定义
-- [ ] 抽取 `src/components/info-item.tsx`（label + value 通用展示块），替换 InfoItem / TimelineItem
-- [ ] 抽取 `src/components/empty-state.tsx`（标题 + 描述 + 可选操作按钮），替换各页面内联空状态 JSX
-- [ ] 抽取 `src/components/page-header-card.tsx`（标签 + 标题 + 描述 + 操作区），替换各页面头部卡片
-- [ ] 移动端 Header 汉堡菜单：`< md` 时显示 Menu 图标按钮，点击展开 Sheet 侧边抽屉（shadcn Sheet），包含所有导航链接 + 用户信息 + 退出按钮
-- [ ] 替换 `admin-sidebar.tsx` 开发期临时文案为正式描述
-- [ ] 验证: `bun run lint && bun run typecheck && bun run test` 通过，页面渲染无回归
+- [x] 抽取 `src/lib/format.ts`（formatDate / formatDateRange），替换 7 个文件的内联定义
+- [x] 抽取 `src/components/metric-card.tsx`，替换首页/详情页/报名管理的重复定义
+- [x] 抽取 `src/components/info-item.tsx`（label + value 通用展示块），替换 InfoItem / TimelineItem
+- [x] 抽取 `src/components/empty-state.tsx`（标题 + 描述 + 可选操作按钮），替换各页面内联空状态 JSX
+- [x] 抽取 `src/components/page-header-card.tsx`（标签 + 标题 + 描述 + 操作区），替换各页面头部卡片
+- [x] 移动端 Header 汉堡菜单：`< md` 时显示 Menu 图标按钮，点击展开导航面板
+- [x] 替换 `admin-sidebar.tsx` 开发期临时文案为正式描述
+- [x] 验证: `bun run lint && bun run typecheck && bun run test` 通过
 
 ### Step 4: 作品提交 (Day 4-5)
 
@@ -697,26 +697,33 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 
 | 功能 | LOADING | EMPTY | ERROR | SUCCESS | PARTIAL |
 |------|---------|-------|-------|---------|---------|
-| 作品提交页 `/events/[slug]/submit` | Server Component 直出，无客户端 loading | 首次进入：空表单 + 赛事名称/赛道/提交截止时间概览卡片 | 非 confirmed 用户：提示"需要先获得报名确认才能提交作品"+ 返回按钮；时间窗口外：提示"提交窗口尚未开启/已关闭"+ 具体时间 | 提交成功：页面刷新展示已提交状态 + "前往我的作品"链接 | 草稿状态：表单已填数据回显 + 顶部橙色 Badge"草稿 — 截止前可继续编辑"；终稿状态：表单只读 + 顶部绿色 Badge"已提交终稿" |
+| 作品提交页 `/events/[slug]/submit` | Server Component 直出，无客户端 loading | 首次进入：空表单 + 赛事名称/赛道/提交截止时间概览卡片 | 非 confirmed 用户：提示"需要先获得报名确认才能提交作品"+ 返回按钮；时间窗口外：提示"提交窗口尚未开启/已关闭"+ 具体时间 | 提交成功：页面刷新展示已提交状态 + "前往我的作品"链接 | 草稿状态：表单已填数据回显 + 顶部橙色 Badge"草稿 — 截止前可继续编辑"；终稿状态：表单回显 + 顶部绿色 Badge"已提交终稿"，截止前仍可继续编辑并重新提交 |
 | 我的作品页 `/my/projects` | Server Component 直出 | 零作品：虚线边框卡片"你还没有提交任何作品"+ 说明文案"先确认参赛后即可提交"+ 主按钮"去看赛事" | — | — | 多个作品（跨赛事）：按赛事分组的卡片列表，每张卡片展示作品名、赛事名、状态 Badge（草稿/终稿）、提交时间 |
 | 后台作品管理 `/admin/events/[id]/projects` | Server Component 直出 | 零作品：虚线边框区域"本赛事暂无作品提交"+ 说明"选手确认参赛并在提交窗口内提交后会出现在这里" | — | 导出 CSV 成功：浏览器直接下载 | 有作品：表格列出作品名、提交者、队伍、赛道、状态、提交时间；筛选栏支持按赛道/状态过滤 |
 
-- [ ] 前台: 作品提交页 (`/events/[slug]/submit`)
+- [x] 前台: 作品提交页 (`/events/[slug]/submit`)
   - 填写作品信息 (名称/描述/链接)
   - 选择赛道/挑战
   - 保存草稿 / 提交终稿
   - 时间窗口外禁止提交
-- [ ] 前台: 我的作品页 (`/my/projects`)
+- [x] 前台: 我的作品页 (`/my/projects`)
   - 查看已提交作品
   - 在截止前可编辑
-- [ ] 管理后台: 作品管理页 (`/admin/events/[id]/projects`)
+- [x] 管理后台: 作品管理页 (`/admin/events/[id]/projects`)
   - 作品列表 + 筛选
   - 查看作品详情
   - 导出作品数据 (CSV)
-- [ ] Server Actions: createProject, updateProject, submitProject (draft→final)
-- [ ] 权限校验: 只有 confirmed 的用户才能提交
-- [ ] 时间窗口校验: submissionStart ≤ now ≤ submissionEnd
+- [x] Server Actions: createProject, updateProject, submitProject (draft→final)
+- [x] 权限校验: 只有 confirmed 的用户才能提交
+- [x] 时间窗口校验: submissionStart ≤ now ≤ submissionEnd
 - [ ] 验证: confirmed 用户提交作品 → 管理员能看到
+
+**Step 4 当前进度（2026-03-21，项目进度存档）**
+
+1. 已完成功能：作品提交页、我的作品页、后台作品管理页、CSV 导出、Header“我的作品”导航、赛事详情页作品提交入口联动，以及对应的 server actions / schema / query / 组件层均已落地
+2. 已完成校验：`bun run lint`、`bun run typecheck`、`bun run test` 全部通过；新增单元测试覆盖作品表单 schema、提交窗口 helper、项目状态 helper 与后台筛选解析
+3. 当前剩余工作：尚未在真实数据库与浏览器登录态下完成 Step 4 的完整 live QA，因此“confirmed 用户提交作品 → 管理员后台查看与导出”这条最终验收链路仍待补录到 `acceptance/`
+4. 关键实现口径：终稿不是锁定态；在 `submissionEnd` 前，用户仍可继续编辑并再次提交终稿；点击“保存草稿”会把当前内容降级保存为草稿
 
 ### Step 5: 评分系统 (Day 5-6)
 

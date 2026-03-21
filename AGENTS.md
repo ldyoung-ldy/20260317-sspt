@@ -37,6 +37,14 @@
 - 按 `.env.sample` 填写：`DATABASE_URL`、`AUTH_SECRET`、`ADMIN_EMAILS`、`AUTH_GITHUB_ID`、`AUTH_GITHUB_SECRET`、`AUTH_GOOGLE_ID`、`AUTH_GOOGLE_SECRET`。
 - `src/lib/auth-session.ts` 会在缺少 `AUTH_SECRET` 时直接返回 `null`，这样在认证未配置完成前，首页和进度页仍可正常渲染。
 
+## 设计系统
+
+- 做任何视觉或 UI 决策前，先阅读 `DESIGN.md`。
+- 所有字体选择、颜色、间距和美学方向都在 `DESIGN.md` 中定义。
+- 不要在没有明确用户批准的情况下偏离设计系统。
+- QA 模式中，标记任何不符合 `DESIGN.md` 的代码。
+- 新页面（Step 4+）优先使用 DESIGN.md 中的分级圆角体系（4/8/12/16px），现有页面不强制回改。
+
 ## 架构总览
 
 - `src/app` 使用 App Router。`src/app/layout.tsx` 挂载全局 `AppHeader`。当前首页和后台页面大多还是脚手架/占位实现，尚未进入完整业务流。

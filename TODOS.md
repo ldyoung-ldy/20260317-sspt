@@ -3,29 +3,27 @@
 > 进度跟踪文件 | 创建: 2026-03-19 | 最后更新: 2026-03-21 | 关联: [PLAN.md](./PLAN.md)
 > 基于 CEO Review (SCOPE REDUCTION) 重写，从零搭建现代技术栈
 
-## 🎯 下一步计划 (Step 3 收尾 → Step 3.5 → Step 4)
+## 🎯 下一步计划 (Step 4 验收收口 / Step 5 评分系统)
 
-> 恢复开发时按以下顺序执行：
+> Step 4 开发代码已完成，下一步先补 live QA 与验收归档，再进入 Step 5：
 
-1. **补齐 Step 3 acceptance 结果回写** — 新增/整理报名流程验收结论、关键截图/脚本与最终通过项
-2. **处理 Step 3 验收数据与历史样本一致性** — 清理或保留 `管理员流程回归赛 2026`，并修正 `registrationStart < startDate` 的历史样本
-3. **执行 Step 3.5 共用组件抽取** — 消除重复代码 + 移动端汉堡菜单 + Sidebar 文案替换（见 PLAN.md Step 3.5）
-4. **进入 Step 4 作品提交开发** — 在 Step 3.5 完成后继续作品提交主线
+1. **补 Step 4 live QA 与 acceptance 回写** — confirmed 用户提交作品、后台查看详情、CSV 导出
+2. **进入 Step 5 评分系统开发** — 评委分配 + 评分表单 + 后台评分进度
 
 ## 进度总览
 
 ```
   Step 1: 项目脚手架        [x] 12/12  ██████████  Day 1  ← 已完成
   Step 2: 赛事管理          [x] 20/20  ██████████  Day 2-3
-  Step 3: 报名流程          [~] 12/13  █████████░  Day 3-4
-  Step 3.5: 组件抽取        [ ] 0/8    ░░░░░░░░░░  Day 4 前置
-  Step 4: 作品提交          [ ] 0/7    ░░░░░░░░░░  Day 4-5
+  Step 3: 报名流程          [x] 13/13  ██████████  Day 3-4
+  Step 3.5: 组件抽取        [x] 8/8    ██████████  Day 4 前置
+  Step 4: 作品提交          [~] 6/7    ████████░░  Day 4-5
   Step 5: 评分系统          [ ] 0/8    ░░░░░░░░░░  Day 5-6
   Step 6: 排名系统          [ ] 0/6    ░░░░░░░░░░  Day 6-7
   Step 7: 测试              [ ] 0/7    ░░░░░░░░░░  Day 7-8
   Step 8: 部署上线          [ ] 0/5    ░░░░░░░░░░  Day 8
   ─────────────────────────────────────────────────
-  TOTAL                     [~] 44/86  █████░░░░░
+  TOTAL                     [~] 59/86  ███████░░░
 ```
 
 ---
@@ -116,7 +114,7 @@
 
 ## Step 3: 报名流程 — Day 3-4
 
-> 优先级: P0 | 预估: 1.5 天 | 状态: [~] 核心功能已完成，review / qa / acceptance 收尾中
+> 优先级: P0 | 预估: 1.5 天 | 状态: ✅ 已完成
 
 - [x] 3.1 Server Actions: `createRegistration`、`updateRegistrationStatus` (批量)、`confirmRegistration`、`cancelRegistration`
 - [x] 3.2 状态转换校验逻辑 (确保合法路径: pending→accepted→confirmed, pending→rejected, accepted/confirmed→cancelled)
@@ -130,7 +128,7 @@
 - [x] 3.10 authenticated admin flow QA：已验证管理员能看到报名入口、进入报名页并在“我的报名”看到结果
 - [x] 3.11 非法表单校验场景：stale 字段提交、必填校验、URL 校验、select 选项校验已覆盖
 - [x] 3.12 重复 / 冲突场景回归：双标签页重复报名已返回明确冲突提示
-- [ ] 3.13 acceptance 结果回写与收尾：补齐 Step 3 验收清单 / 手工脚本，并固化测试数据清理策略
+- [x] 3.13 acceptance 结果回写与收尾：验收清单已归档至 `acceptance/step-3-registration-checklist.md`
 
 ### Step 3 当前进度说明
 
@@ -163,20 +161,28 @@
 
 ## Step 4: 作品提交 — Day 4-5
 
-> 优先级: P0 | 预估: 1.5 天 | 状态: ⬜ 未开始
+> 优先级: P0 | 预估: 1.5 天 | 状态: 🟡 开发完成，live QA / acceptance 待补
 
-- [ ] 4.1 Server Actions: createProject, updateProject, submitProject (draft→final)
-- [ ] 4.2 权限校验: 只有 confirmed 状态的用户才能提交
-- [ ] 4.3 时间窗口校验: submissionStart ≤ now ≤ submissionEnd
-- [ ] 4.4 前台: 作品提交页 (名称 + 描述 + 链接 + 赛道选择 + 保存草稿/提交终稿)
-- [ ] 4.5 前台: 我的作品页 (查看 + 截止前可编辑)
-- [ ] 4.6 管理后台: 作品管理页 (列表 + 筛选 + 详情查看 + CSV 导出)
+- [x] 4.1 Server Actions: createProject, updateProject, submitProject (draft→final)
+- [x] 4.2 权限校验: 只有 confirmed 状态的用户才能提交
+- [x] 4.3 时间窗口校验: submissionStart ≤ now ≤ submissionEnd
+- [x] 4.4 前台: 作品提交页 (名称 + 描述 + 链接 + 赛道选择 + 保存草稿/提交终稿)
+- [x] 4.5 前台: 我的作品页 (查看 + 截止前可编辑)
+- [x] 4.6 管理后台: 作品管理页 (列表 + 筛选 + 详情查看 + CSV 导出)
 - [ ] 4.7 验证: confirmed 用户提交作品 → 管理员查看 → 非 confirmed 用户被拦截
 
 ### 完成标准
 - 只有 confirmed 用户能在时间窗口内提交
 - 草稿可编辑，终稿在截止前可修改
 - 管理员能查看和导出所有作品
+
+### Step 4 当前进度说明
+
+- 作品提交主功能已落地：前台提交页、我的作品页、后台作品管理页、CSV 导出与赛事详情页入口联动均已实现
+- 当前策略已锁定：终稿提交后在截止前仍可继续编辑并再次提交；保存草稿会把当前内容保存为 `DRAFT`
+- Header 已增加“我的作品”导航，后台赛事列表也新增“作品管理”入口
+- 自动化校验已通过：`bun run lint`、`bun run typecheck`、`bun run test`
+- 当前唯一未闭环项是 DB + 浏览器登录态下的 live QA 与 acceptance 结果回写
 
 ---
 
