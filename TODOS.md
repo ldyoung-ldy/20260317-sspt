@@ -165,7 +165,7 @@
 
 - [x] 4.1 Server Actions: createProject, updateProject, submitProject (draft→final)
 - [x] 4.2 权限校验: 只有 confirmed 状态的用户才能提交
-- [x] 4.3 时间窗口校验: submissionStart ≤ now ≤ submissionEnd
+- [x] 4.3 时间窗口校验: submissionStart ≤ now < submissionEnd
 - [x] 4.4 前台: 作品提交页 (名称 + 描述 + 链接 + 赛道选择 + 保存草稿/提交终稿)
 - [x] 4.5 前台: 我的作品页 (查看 + 截止前可编辑)
 - [x] 4.6 管理后台: 作品管理页 (列表 + 筛选 + 详情查看 + CSV 导出)

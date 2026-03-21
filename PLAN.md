@@ -715,7 +715,7 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
   - 导出作品数据 (CSV)
 - [x] Server Actions: createProject, updateProject, submitProject (draft→final)
 - [x] 权限校验: 只有 confirmed 的用户才能提交
-- [x] 时间窗口校验: submissionStart ≤ now ≤ submissionEnd
+- [x] 时间窗口校验: submissionStart ≤ now < submissionEnd
 - [ ] 验证: confirmed 用户提交作品 → 管理员能看到
 
 **Step 4 当前进度（2026-03-21，项目进度存档）**
