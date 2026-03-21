@@ -77,3 +77,10 @@ export function canRegisterForEvent(
 ) {
   return event.published && now >= event.registrationStart && now < event.registrationEnd;
 }
+
+export function canSubmitProjectForEvent(
+  event: Pick<EventPhaseInput, "published" | "submissionStart" | "submissionEnd">,
+  now = new Date()
+) {
+  return event.published && now >= event.submissionStart && now < event.submissionEnd;
+}

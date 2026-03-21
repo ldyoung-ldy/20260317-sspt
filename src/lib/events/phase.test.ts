@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { canRegisterForEvent, getEventPhase, getEventPhaseLabel } from "@/lib/events/phase";
+import {
+  canRegisterForEvent,
+  canSubmitProjectForEvent,
+  getEventPhase,
+  getEventPhaseLabel,
+} from "@/lib/events/phase";
 
 const event = {
   published: true,
@@ -29,6 +34,8 @@ describe("event phase", () => {
   it("exposes registration window and labels", () => {
     expect(canRegisterForEvent(event, new Date("2026-04-02T00:00:00.000Z"))).toBe(true);
     expect(canRegisterForEvent(event, new Date("2026-04-06T00:00:00.000Z"))).toBe(false);
+    expect(canSubmitProjectForEvent(event, new Date("2026-04-07T00:00:00.000Z"))).toBe(true);
+    expect(canSubmitProjectForEvent(event, new Date("2026-04-12T00:00:00.000Z"))).toBe(false);
     expect(getEventPhaseLabel("SUBMISSION_PENDING")).toBe("待提交");
   });
 });
