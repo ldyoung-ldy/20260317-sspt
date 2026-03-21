@@ -716,14 +716,15 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 - [x] Server Actions: createProject, updateProject, submitProject (draft→final)
 - [x] 权限校验: 只有 confirmed 的用户才能提交
 - [x] 时间窗口校验: submissionStart ≤ now < submissionEnd
-- [ ] 验证: confirmed 用户提交作品 → 管理员能看到
+- [x] 验证: confirmed 用户提交作品 → 管理员能看到
 
 **Step 4 当前进度（2026-03-21，项目进度存档）**
 
 1. 已完成功能：作品提交页、我的作品页、后台作品管理页、CSV 导出、Header“我的作品”导航、赛事详情页作品提交入口联动，以及对应的 server actions / schema / query / 组件层均已落地
 2. 已完成校验：`bun run lint`、`bun run typecheck`、`bun run test` 全部通过；新增单元测试覆盖作品表单 schema、提交窗口 helper、项目状态 helper 与后台筛选解析
-3. 当前剩余工作：尚未在真实数据库与浏览器登录态下完成 Step 4 的完整 live QA，因此“confirmed 用户提交作品 → 管理员后台查看与导出”这条最终验收链路仍待补录到 `acceptance/`
-4. 关键实现口径：终稿不是锁定态；在 `submissionEnd` 前，用户仍可继续编辑并再次提交终稿；点击“保存草稿”会把当前内容降级保存为草稿
+3. 已完成 live QA：在真实数据库与浏览器登录态下跑通了 confirmed 用户保存草稿、提交终稿、截止前更新终稿，以及“我的作品”、后台详情、状态筛选和 CSV 导出，并在结束后恢复了临时测试数据
+4. 当前收尾状态：Step 4 主链路的代码、自动化校验、验收清单和 QA 报告都已归档；如果后续继续回归，可再单独补一个“非 confirmed 用户”与“提交窗口已结束”的 spot check
+5. 关键实现口径：终稿不是锁定态；在 `submissionEnd` 前，用户仍可继续编辑并再次提交终稿；点击“保存草稿”会把当前内容降级保存为草稿
 
 ### Step 5: 评分系统 (Day 5-6)
 

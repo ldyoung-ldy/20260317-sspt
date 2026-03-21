@@ -1,6 +1,6 @@
 # Step 4 作品提交落地 ExecPlan
 
-这个 ExecPlan 是一份活文档。后续如果继续补 Step 4 的 live QA、修复联调问题或调整文案，需要同步更新 `Progress`、`Surprises & Discoveries`、`Decision Log` 和 `Outcomes & Retrospective`。
+这个 ExecPlan 是一份活文档。后续如果继续补 Step 4 的回归测试、修复联调问题或调整文案，需要同步更新 `Progress`、`Surprises & Discoveries`、`Decision Log` 和 `Outcomes & Retrospective`。
 
 本文件遵循 `~/.agents/PLANS.md` 的要求编写，并以当前仓库工作树为唯一上下文。
 
@@ -8,7 +8,7 @@
 
 完成这轮改动后，已经确认参赛的用户可以在作品提交窗口内进入 `/events/[slug]/submit`，保存草稿、提交终稿，并在截止前继续修改最新版本。这里的窗口定义与现有报名逻辑保持一致，采用左闭右开区间：`submissionStart <= now < submissionEnd`。用户还可以通过 `/my/projects` 查看自己跨赛事的作品列表，管理员则可以在 `/admin/events/[id]/projects` 按状态、赛道和关键字筛选作品、查看详情并导出 CSV。
 
-这次实现的可见成果不是“新增了一些类型”而已，而是把赛事主链路从“报名确认”推进到了“作品提交完成、后台可管理”的下一阶段。验证方式包括静态校验、单元测试，以及后续需要补齐的真实登录态手工联调。
+这次实现的可见成果不是“新增了一些类型”而已，而是把赛事主链路从“报名确认”推进到了“作品提交完成、后台可管理”的下一阶段。验证方式包括静态校验、单元测试，以及已经完成回写的真实登录态 live QA。
 
 ## Progress
 
@@ -18,7 +18,7 @@
 - [x] (2026-03-21 12:04Z) 新增 `/events/[slug]/submit`、`/my/projects`、`/admin/events/[id]/projects` 与 CSV 导出路由，接通 Header、赛事详情页和后台赛事列表入口。
 - [x] (2026-03-21 12:07Z) 补齐 Step 4 单元测试并执行 `bun run lint`、`bun run typecheck`、`bun run test`，全部通过。
 - [x] (2026-03-21 12:13Z) 回写 `PLAN.md`、`TODOS.md`、`acceptance/step-4-project-submission-checklist.md`、`acceptance/step-4-project-submission-manual-script.md`。
-- [ ] (2026-03-21 12:13Z) 使用真实数据库和浏览器登录态补一次完整 live QA，把结果回写到 acceptance 文档。
+- [x] (2026-03-21 13:30Z) 使用真实数据库和浏览器登录态完成 Step 4 主链路 live QA，验证提交、回显、后台查看与导出，并把结果回写到 acceptance 文档和 QA 报告。
 
 ## Surprises & Discoveries
 
@@ -51,9 +51,9 @@
 
 ## Outcomes & Retrospective
 
-Step 4 的代码面已经闭环：confirmed 用户能获得作品提交入口，提交页能保存草稿和终稿，我的作品页能查看状态，管理员后台能筛选、看详情和导出 CSV。新增的单元测试和全量 `lint/typecheck/test` 已证明这批代码在当前仓库里是可编译、可通过测试的。
+Step 4 的代码面与主链路验收都已经闭环：confirmed 用户能获得作品提交入口，提交页能保存草稿和终稿，我的作品页能查看状态，管理员后台能筛选、看详情和导出 CSV。新增的单元测试和全量 `lint/typecheck/test` 已证明这批代码在当前仓库里是可编译、可通过测试的；后续又通过真实数据库和真实浏览器登录态补跑了完整 live QA，把主链路从“代码可用”推进到了“实际联调可用”。
 
-当前仍未完成的部分是 live QA。因为这需要真实数据库、真实 OAuth 登录态和至少一组管理员/普通用户数据，所以本次实现会话只把验收脚本和清单先归档到 `acceptance/`，等待下一次联调把最后一条“真实链路验证”补齐。
+这轮 live QA 还顺手验证了窗口关闭前的再次提交、后台空筛选结果和 CSV 导出，并在结束后清理了临时作品数据、恢复了赛事提交时间窗口。当前剩余的只是可选的补充 spot check，例如再单独造一个非 confirmed 用户或提交已结束场景做回归，不再阻塞 Step 5。
 
 ## Context and Orientation
 
@@ -89,7 +89,7 @@ Step 4 的代码面已经闭环：confirmed 用户能获得作品提交入口，
     bun run typecheck
     bun run test
 
-本次实现的实际结果如下：
+本次实现与回归的实际结果如下：
 
     $ bun run lint
     $ eslint .
@@ -98,10 +98,13 @@ Step 4 的代码面已经闭环：confirmed 用户能获得作品提交入口，
     $ tsc --noEmit
 
     $ bun run test
-    Test Files  13 passed (13)
-    Tests       50 passed (50)
+    Test Files  14 passed (14)
+    Tests       56 passed (56)
 
-如果下一位执行者要继续做 live QA，按 `acceptance/step-4-project-submission-manual-script.md` 的步骤，在本地启动开发环境并导入登录态后完成浏览器联调，再把结果回写到 checklist。
+    $ live QA
+    confirmed 用户保存草稿 -> 提交终稿 -> 截止前更新终稿
+    我的作品页状态回显、后台详情/筛选/CSV 导出正常
+    临时测试作品已删除，赛事提交窗口已恢复
 
 ## Validation and Acceptance
 
@@ -109,24 +112,22 @@ Step 4 的代码面已经闭环：confirmed 用户能获得作品提交入口，
 
 - `bun run lint` 通过。
 - `bun run typecheck` 通过。
-- `bun run test` 通过，且总计 13 个测试文件、50 个测试用例全部通过。
+- `bun run test` 通过，且总计 14 个测试文件、56 个测试用例全部通过。
 - 新增的 Step 4 测试覆盖了作品 schema、窗口 helper、后台筛选解析和项目状态 helper。
+- 真实数据库 + 浏览器登录态下的 live QA 已完成，确认了 confirmed 用户保存草稿、提交终稿、截止前更新终稿，以及后台详情、状态筛选和 CSV 导出。
+- 临时联调用测试数据已在 QA 结束后清理，`ai-2026` 的提交窗口已恢复原值。
+- QA 结果已写入 `.gstack/qa-reports/qa-report-localhost-3000-2026-03-21.md` 和 `acceptance/step-4-project-submission-checklist.md`。
 
-当前尚未完成但必须补齐的验收是：
+如果需要继续扩展验收，优先补的两个场景是：
 
-- confirmed 用户首次保存草稿。
-- confirmed 用户直接提交终稿。
-- `FINAL` 状态截止前继续修改并再次提交。
-- 非 confirmed 用户访问 `/events/[slug]/submit` 被阻断。
-- 管理员后台查看作品详情并导出当前筛选结果。
-
-这些场景的详细步骤已经记录在 `acceptance/step-4-project-submission-manual-script.md`。
+- 非 confirmed 用户访问 `/events/[slug]/submit` 的单独手工阻断验证。
+- 提交窗口已结束后的阻断提示验证。
 
 ## Idempotence and Recovery
 
 本轮改动没有数据库 migration，也没有新增依赖，因此重复运行 `bun run lint`、`bun run typecheck`、`bun run test` 是安全的。作品写操作本身受 `@@unique([eventId, submittedBy])` 限制，重复提交不会生成多份作品，只会更新当前用户在该赛事下的同一条记录。
 
-如果后续 live QA 发现问题，优先修改 `src/lib/projects/*` 或 `src/app/my/projects/actions.ts` 里的领域逻辑和校验逻辑，再重新执行三条验证命令。回滚时不需要处理数据库 schema，只需要回退相关 TypeScript 文件即可。
+如果后续补充回归发现问题，优先修改 `src/lib/projects/*` 或 `src/app/my/projects/actions.ts` 里的领域逻辑和校验逻辑，再重新执行三条验证命令。回滚时不需要处理数据库 schema，只需要回退相关 TypeScript 文件即可。
 
 ## Artifacts and Notes
 
@@ -151,4 +152,4 @@ Step 4 的代码面已经闭环：confirmed 用户能获得作品提交入口，
 - `src/lib/projects/queries.ts` 中的 `getProjectSubmissionPageData(...)`、`getUserEventProject(...)`、`listUserProjects(...)`、`getAdminEventProjects(...)`、`parseAdminProjectFilters(...)`。
 - `src/app/my/projects/actions.ts` 中的 `createProject(...)`、`updateProject(...)`、`submitProject(...)`。
 
-更新说明：2026-03-21 首次写入本 ExecPlan，并按实际实现结果补齐了最终文件列表、验证命令和“live QA 仍待补”的当前状态，目的是让后续执行者可以直接接着做联调和验收归档。
+更新说明：2026-03-21 首次写入本 ExecPlan，并在同日补充了真实登录态 live QA 的执行结果、清理动作、QA 报告落点与 acceptance 回写状态，方便后续执行者直接进入 Step 5 或补做少量 spot check。

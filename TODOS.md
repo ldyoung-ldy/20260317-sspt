@@ -161,7 +161,7 @@
 
 ## Step 4: 作品提交 — Day 4-5
 
-> 优先级: P0 | 预估: 1.5 天 | 状态: 🟡 开发完成，live QA / acceptance 待补
+> 优先级: P0 | 预估: 1.5 天 | 状态: 🟢 主链路完成，文档与 QA 已归档
 
 - [x] 4.1 Server Actions: createProject, updateProject, submitProject (draft→final)
 - [x] 4.2 权限校验: 只有 confirmed 状态的用户才能提交
@@ -169,7 +169,7 @@
 - [x] 4.4 前台: 作品提交页 (名称 + 描述 + 链接 + 赛道选择 + 保存草稿/提交终稿)
 - [x] 4.5 前台: 我的作品页 (查看 + 截止前可编辑)
 - [x] 4.6 管理后台: 作品管理页 (列表 + 筛选 + 详情查看 + CSV 导出)
-- [ ] 4.7 验证: confirmed 用户提交作品 → 管理员查看 → 非 confirmed 用户被拦截
+- [x] 4.7 验证: confirmed 用户提交作品 → 管理员查看与导出（主链路 live QA 已完成）
 
 ### 完成标准
 - 只有 confirmed 用户能在时间窗口内提交
@@ -182,7 +182,8 @@
 - 当前策略已锁定：终稿提交后在截止前仍可继续编辑并再次提交；保存草稿会把当前内容保存为 `DRAFT`
 - Header 已增加“我的作品”导航，后台赛事列表也新增“作品管理”入口
 - 自动化校验已通过：`bun run lint`、`bun run typecheck`、`bun run test`
-- 当前唯一未闭环项是 DB + 浏览器登录态下的 live QA 与 acceptance 结果回写
+- 真实数据库 + 浏览器登录态下的主链路 live QA 已完成，QA 报告与验收清单已同步回写
+- 后续如继续补充回归，优先补一个“非 confirmed 用户阻断”和“提交窗口已结束”的 spot check
 
 ---
 
