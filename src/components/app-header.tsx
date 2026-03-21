@@ -41,7 +41,7 @@ export async function AppHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6 lg:px-8">
+      <div className="flex h-16 w-full items-center justify-between gap-4 px-6 lg:px-8">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex flex-col leading-none">
             <span className="text-[15px] font-semibold tracking-tight text-foreground [font-family:var(--font-display-face)]">

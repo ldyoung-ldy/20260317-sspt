@@ -16,7 +16,7 @@ export default async function MyProjectsPage() {
   const finalCount = projects.filter((project) => project.status === "FINAL").length;
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 lg:px-8">
+    <div className="flex w-full flex-1 flex-col gap-8 px-6 py-10 lg:px-8">
       <PageHeaderCard
         tag="用户中心"
         title="我的作品"

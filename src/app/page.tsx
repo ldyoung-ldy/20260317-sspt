@@ -25,7 +25,7 @@ export default async function Home() {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 lg:px-8">
+    <div className="flex w-full flex-1 flex-col gap-8 px-6 py-10 lg:px-8">
       <PageHeaderCard
         tag="前台首页"
         title="AI 赛事业务管理平台 MVP"

@@ -31,7 +31,7 @@ export default async function EventRegistrationPage({
   const registrationOpen = canRegisterForEvent(event);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-10 lg:px-8">
+    <div className="flex w-full flex-1 flex-col gap-8 px-6 py-10 lg:px-8">
       <PageHeaderCard
         tag="赛事报名"
         title={event.name}
