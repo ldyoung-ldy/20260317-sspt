@@ -1,14 +1,13 @@
 # TODOS — AI 赛事管理平台 MVP (v2)
 
-> 进度跟踪文件 | 创建: 2026-03-19 | 最后更新: 2026-03-21 | 关联: [PLAN.md](./PLAN.md)
+> 进度跟踪文件 | 创建: 2026-03-19 | 最后更新: 2026-03-23 | 关联: [PLAN.md](./PLAN.md)
 > 基于 CEO Review (SCOPE REDUCTION) 重写，从零搭建现代技术栈
 
-## 🎯 下一步计划 (Step 4 验收收口 / Step 5 评分系统)
+## 🎯 下一步计划 (Step 5 评分系统)
 
-> Step 4 开发代码已完成，下一步先补 live QA 与验收归档，再进入 Step 5：
+> Step 4 验收收口 + UI 设计刷新均已完成，下一步进入 Step 5：
 
-1. **补 Step 4 live QA 与 acceptance 回写** — confirmed 用户提交作品、后台查看详情、CSV 导出
-2. **进入 Step 5 评分系统开发** — 评委分配 + 评分表单 + 后台评分进度
+1. **进入 Step 5 评分系统开发** — 评委分配 + 评分表单 + 后台评分进度
 
 ## 进度总览
 
@@ -17,13 +16,14 @@
   Step 2: 赛事管理          [x] 20/20  ██████████  Day 2-3
   Step 3: 报名流程          [x] 13/13  ██████████  Day 3-4
   Step 3.5: 组件抽取        [x] 8/8    ██████████  Day 4 前置
-  Step 4: 作品提交          [~] 6/7    ████████░░  Day 4-5
+  Step 4: 作品提交          [x] 7/7    ██████████  Day 4-5
+  UI: 设计刷新              [x] 1/1    ██████████  Day 4-5 后
   Step 5: 评分系统          [ ] 0/8    ░░░░░░░░░░  Day 5-6
   Step 6: 排名系统          [ ] 0/6    ░░░░░░░░░░  Day 6-7
   Step 7: 测试              [ ] 0/7    ░░░░░░░░░░  Day 7-8
   Step 8: 部署上线          [ ] 0/5    ░░░░░░░░░░  Day 8
   ─────────────────────────────────────────────────
-  TOTAL                     [~] 59/86  ███████░░░
+  TOTAL                     [~] 60/87  ███████░░░
 ```
 
 ---
@@ -161,7 +161,7 @@
 
 ## Step 4: 作品提交 — Day 4-5
 
-> 优先级: P0 | 预估: 1.5 天 | 状态: 🟢 主链路完成，文档与 QA 已归档
+> 优先级: P0 | 预估: 1.5 天 | 状态: ✅ 已完成
 
 - [x] 4.1 Server Actions: createProject, updateProject, submitProject (draft→final)
 - [x] 4.2 权限校验: 只有 confirmed 状态的用户才能提交
@@ -183,7 +183,43 @@
 - Header 已增加“我的作品”导航，后台赛事列表也新增“作品管理”入口
 - 自动化校验已通过：`bun run lint`、`bun run typecheck`、`bun run test`
 - 真实数据库 + 浏览器登录态下的主链路 live QA 已完成，QA 报告与验收清单已同步回写
-- 后续如继续补充回归，优先补一个“非 confirmed 用户阻断”和“提交窗口已结束”的 spot check
+- 后续如继续补充回归，优先补一个”非 confirmed 用户阻断”和”提交窗口已结束”的 spot check
+
+---
+
+## UI: 设计刷新 — Day 4-5 后
+
+> 优先级: P1 | 状态: ✅ 已完成
+
+### 完成内容
+
+- [x] 整体风格从 Industrial/Utilitarian 切换到 Warm Minimal（暖调极简）
+- [x] 全局色系切换：主色从工具蓝 #0F6FDE 改为铜橘 #D97757，背景从白改为暖米 #FAF8F5
+- [x] 字体更新：UI 标签字体从 DM Sans 改为 IBM Plex Mono（等宽技术感）
+- [x] 圆角统一：移除 rounded-xl/rounded-2xl，统一使用 4px rounded-sm
+- [x] 阴影移除：所有 shadow-sm 移除，改用 1px border 分割
+- [x] 网格布局：使用 1px gap + border 色做网格分割线
+- [x] 全局 grain 噪点纹理：SVG fractalNoise 叠加 3% opacity
+- [x] ARIA landmarks 规范：header/main/nav/aside 添加语义化 labels
+- [x] 骨架屏 loading 组件：新增 `loading.tsx` + `Skeleton` 组件
+- [x] 首页重新设计：Hero section + 列表布局改为信息密度更高的设计
+
+### 相关文件
+
+- `DESIGN.md` — 设计规范文档已同步更新
+- `AGENTS.md` — 圆角设计约定行已更新
+- `src/app/globals.css` — 全局 CSS 变量更新
+- `src/app/layout.tsx` — IBM Plex Mono 字体接入
+- `src/components/ui/skeleton.tsx` — 新增骨架屏组件
+- `src/app/loading.tsx` — 新增根级 loading
+- `src/app/admin/loading.tsx` — 新增 admin loading
+- `src/app/admin/events/loading.tsx` — 新增 admin events loading
+- `src/app/events/[slug]/loading.tsx` — 新增 event detail loading
+
+### 验证
+
+- `/qa` 浏览器验证通过：首页、赛事详情、报名页、admin 重定向均正常
+- 无 console errors
 
 ---
 
