@@ -20,12 +20,11 @@ export function PageHeaderCard({
   actions?: ReactNode;
 }) {
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm lg:p-8">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+    <section className="border border-border bg-card p-6 lg:p-8">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 space-y-3">
           {tag ? (
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+            <p className="inline-block border-b border-primary pb-1 font-[family-name:var(--font-mono-ui-face)] text-[11px] uppercase tracking-[0.1em] text-primary">
               {tag}
             </p>
           ) : null}

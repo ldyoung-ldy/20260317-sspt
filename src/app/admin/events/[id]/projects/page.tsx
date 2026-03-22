@@ -54,7 +54,7 @@ export default async function AdminEventProjectsPage({
         extra={
           <div className="flex flex-wrap items-center gap-2">
             <EventPhaseBadge phase={data.event.phase} />
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
+            <span className="border border-border bg-muted px-3 py-1.5 text-xs text-muted-foreground">
               当前只显示此赛事的作品
             </span>
           </div>
@@ -81,7 +81,7 @@ export default async function AdminEventProjectsPage({
       </section>
 
       {selectedProject ? (
-        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <section className="border border-border bg-card p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground">作品详情</p>
@@ -97,14 +97,14 @@ export default async function AdminEventProjectsPage({
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl border border-border bg-background/70 p-4 text-sm text-muted-foreground">
+            <div className="border border-border bg-background/70 p-4 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">提交人信息</p>
               <p className="mt-2">{selectedProject.user.name || "未填写姓名"}</p>
               <p className="mt-1">{selectedProject.user.email || "未绑定邮箱"}</p>
               <p className="mt-1">队伍：{selectedProject.teamName || "个人参赛"}</p>
               <p className="mt-1">赛道：{selectedProject.track || "未选择"}</p>
             </div>
-            <div className="rounded-xl border border-border bg-background/70 p-4 text-sm text-muted-foreground">
+            <div className="border border-border bg-background/70 p-4 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">提交内容</p>
               <p className="mt-2">创建时间：{formatDate(selectedProject.createdAt)}</p>
               <p className="mt-1">最近更新：{formatDate(selectedProject.updatedAt)}</p>
@@ -149,7 +149,7 @@ export default async function AdminEventProjectsPage({
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm lg:p-6">
+      <section className="border border-border bg-card p-5 lg:p-6">
         <form className="grid gap-4 md:grid-cols-[1.2fr_0.7fr_0.7fr_auto_auto]">
           <div>
             <label className="text-sm font-medium">搜索作品 / 提交者 / 邮箱 / 队伍</label>
@@ -157,7 +157,7 @@ export default async function AdminEventProjectsPage({
               name="query"
               defaultValue={filters.query}
               placeholder="例如：Factory、张三、team、example@company.com"
-              className="mt-2 flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
           <div>
@@ -165,7 +165,7 @@ export default async function AdminEventProjectsPage({
             <select
               name="status"
               defaultValue={filters.status ?? ""}
-              className="mt-2 flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <option value="">全部状态</option>
               <option value="DRAFT">{getProjectStatusLabel("DRAFT")}</option>
@@ -177,7 +177,7 @@ export default async function AdminEventProjectsPage({
             <select
               name="track"
               defaultValue={filters.track ?? ""}
-              className="mt-2 flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <option value="">全部赛道</option>
               {data.event.tracks.map((track) => (
@@ -200,7 +200,7 @@ export default async function AdminEventProjectsPage({
         </form>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <section className="overflow-hidden border border-border bg-card">
         {data.projects.length === 0 ? (
           <EmptyState
             title="本赛事暂无作品提交"

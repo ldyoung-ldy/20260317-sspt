@@ -38,10 +38,10 @@ export default async function EventRegistrationPage({
         description="当前登录账号可直接填写下方报名表单并提交，管理员账号同样可以参与报名。"
         extra={
           <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               报名窗口：{formatDateRange(event.registrationStart, event.registrationEnd)}
             </span>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               额外字段：{event.customFields.length > 0 ? `${event.customFields.length} 项` : "无"}
             </span>
           </div>
@@ -65,7 +65,7 @@ export default async function EventRegistrationPage({
       </section>
 
       {existingRegistration ? (
-        <section className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+        <section className="border border-border bg-card p-8">
           <div className="space-y-4">
             <RegistrationStatusBadge status={existingRegistration.status} />
             <h2 className="text-2xl font-semibold">你已经提交过本赛事报名</h2>
@@ -80,7 +80,7 @@ export default async function EventRegistrationPage({
       ) : registrationOpen ? (
         <RegistrationForm event={event} action={createRegistration} />
       ) : (
-        <section className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+        <section className="border border-border bg-card p-8">
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold">当前不在报名时间窗口内</h2>
             <p className="text-sm leading-7 text-muted-foreground">

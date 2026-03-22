@@ -47,9 +47,9 @@ export default async function AdminEventsPage() {
         <MetricCard label="草稿" value={String(draftCount)} standalone />
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <section className="overflow-hidden border border-border bg-card">
         {events.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center">
+          <div className="border border-dashed border-border px-6 py-12 text-center">
             <h2 className="text-lg font-semibold">还没有赛事</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               先创建第一个赛事，随后即可在这里发布并同步到前台首页。

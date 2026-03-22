@@ -23,13 +23,13 @@ export default async function MyProjectsPage() {
         description="查看你已提交到各个赛事的作品，草稿与终稿都会保留在这里，便于继续编辑或追踪后续评审阶段。"
         extra={
           <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               共 {projects.length} 份作品
             </span>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               草稿 {draftCount} 份
             </span>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               终稿 {finalCount} 份
             </span>
           </div>
@@ -63,7 +63,7 @@ export default async function MyProjectsPage() {
           {projects.map((project) => (
             <article
               key={project.id}
-              className="flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-sm"
+              className="flex h-full flex-col border border-border bg-card p-6"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-2">
@@ -84,7 +84,7 @@ export default async function MyProjectsPage() {
                 <InfoItem label="参赛赛道" value={project.track || "未选择"} />
               </dl>
 
-              <div className="mt-6 rounded-2xl border border-border px-4 py-4 text-sm text-muted-foreground">
+              <div className="mt-6 border border-border px-4 py-4 text-sm text-muted-foreground">
                 <p className="font-medium text-foreground">提交内容概览</p>
                 <p className="mt-2 line-clamp-3 leading-7">{project.description}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -92,7 +92,7 @@ export default async function MyProjectsPage() {
                     project.challenges.map((challenge) => (
                       <span
                         key={`${project.id}-${challenge}`}
-                        className="rounded-full border border-border bg-background px-3 py-1 text-xs"
+                        className="border border-border bg-background px-3 py-1 text-xs"
                       >
                         {challenge}
                       </span>
@@ -103,7 +103,7 @@ export default async function MyProjectsPage() {
                 </div>
               </div>
 
-              <div className="mt-6 rounded-2xl border border-border bg-background/70 px-4 py-4 text-sm text-muted-foreground">
+              <div className="mt-6 border border-border bg-background/70 px-4 py-4 text-sm text-muted-foreground">
                 <p className="font-medium text-foreground">下一步</p>
                 <p className="mt-2 leading-7">{getProjectNextStep(project.event.phase, project.event.reviewStart, project.event.reviewEnd)}</p>
               </div>

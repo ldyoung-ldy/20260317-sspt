@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, JetBrains_Mono } from "next/font/google";
+import { DM_Sans, IBM_Plex_Mono, JetBrains_Mono } from "next/font/google";
 import { AppHeader } from "@/components/app-header";
 import "./globals.css";
 
@@ -11,6 +11,12 @@ const dmSans = DM_Sans({
 const jetBrainsMono = JetBrains_Mono({
   variable: "--font-mono-face",
   subsets: ["latin"],
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: "--font-mono-ui-face",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -26,11 +32,11 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={`${dmSans.variable} ${jetBrainsMono.variable} h-full antialiased`}
+      className={`${dmSans.variable} ${jetBrainsMono.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <AppHeader />
-        <main className="flex flex-1 flex-col">{children}</main>
+        <main id="main-content" aria-label="主内容区域" className="flex flex-1 flex-col">{children}</main>
       </body>
     </html>
   );

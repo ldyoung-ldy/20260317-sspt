@@ -55,7 +55,7 @@ export default async function AdminEventRegistrationsPage({
         extra={
           <div className="flex flex-wrap items-center gap-2">
             <EventPhaseBadge phase={data.event.phase} />
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
+            <span className="border border-border bg-muted px-3 py-1.5 text-xs text-muted-foreground">
               当前只显示此赛事的报名
             </span>
           </div>
@@ -87,7 +87,7 @@ export default async function AdminEventRegistrationsPage({
         ))}
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm lg:p-6">
+      <section className="border border-border bg-card p-5 lg:p-6">
         <form className="grid gap-4 md:grid-cols-[1.4fr_0.8fr_auto_auto]">
           <div>
             <label className="text-sm font-medium">搜索报名人 / 邮箱 / 队伍</label>
@@ -95,7 +95,7 @@ export default async function AdminEventRegistrationsPage({
               name="query"
               defaultValue={filters.query}
               placeholder="例如：张三、team、example@company.com"
-              className="mt-2 flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
           <div>
@@ -103,7 +103,7 @@ export default async function AdminEventRegistrationsPage({
             <select
               name="status"
               defaultValue={filters.status ?? ""}
-              className="mt-2 flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <option value="">全部状态</option>
               {registrationStatuses.map((status) => (
@@ -126,7 +126,7 @@ export default async function AdminEventRegistrationsPage({
         </form>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <section className="overflow-hidden border border-border bg-card">
         <AdminRegistrationReviewTable registrations={data.registrations} action={submitAction} />
       </section>
     </div>

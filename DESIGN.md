@@ -7,86 +7,112 @@
 - **Project type:** Web app — 前台参赛者体验 + 后台管理运营工具
 
 ## Aesthetic Direction
-- **Direction:** Industrial / Utilitarian
-- **Decoration level:** Intentional — 微妙的背景层级区分，不做多余装饰；表格、表单、状态卡片本身构成视觉节奏
-- **Mood:** 专业、清晰、高效。像一个值得信赖的赛事运营控制台，不是一个营销落地页
-- **Reference sites:** Devpost, Devfolio, Junction (hackjunction.com), HackerEarth
+- **Direction:** Warm Minimal — 暖调极简主义
+- **Decoration level:** Minimal — 全局 grain 噪点纹理叠加，1px 边框网格分割，无多余装饰
+- **Mood:** 温暖、精密、克制。像一个专业的开发者工具，有温度但不花哨
+- **Reference sites:** [Claude Code History Viewer](https://jhlee0409.github.io/claude-code-history-viewer/), Kaggle, AIcrowd
 
 ## Typography
-- **Display/Hero:** Satoshi (Fontshare) — 现代几何无衬线，比 Inter/Roboto 更有辨识度，字重表现力强
+- **Display/Hero:** Satoshi (Fontshare) — 现代几何无衬线，辨识度强
 - **Body:** DM Sans (Google Fonts) — 清晰可读，中西文混排友好
-- **UI/Labels:** DM Sans 500 — 导航、标签等小号 UI 文案
-- **Data/Tables:** DM Sans (tabular-nums) — 数字等宽对齐，表格一致性
-- **Code:** JetBrains Mono — 开发者赛事场景的自然选择
+- **UI/Labels:** IBM Plex Mono (Google Fonts) — 导航、标签、meta 信息、section label，等宽字体增强技术感
+- **Data/Tables:** DM Sans (tabular-nums) / IBM Plex Mono — 数字等宽对齐
+- **Code:** JetBrains Mono (Google Fonts) — 代码块专用
 - **Chinese fallback:** -apple-system, 'PingFang SC', 'Noto Sans SC', sans-serif
-- **Loading:** Satoshi via Fontshare CDN, DM Sans + JetBrains Mono via Google Fonts
+- **Loading:** Satoshi via Fontshare CDN, DM Sans + IBM Plex Mono + JetBrains Mono via Google Fonts
 - **Scale:**
-  - Hero: 48px / 700 / -0.02em
-  - Page title: 30px / 600 / -0.01em (对应 text-3xl)
-  - Section heading: 22px / 600
-  - Body: 16px / 400 / 1.7 line-height
-  - Small body: 14px / 400 / 1.65
-  - Label: 13px / 500
-  - Caption: 12px / 400-500
-  - Code: 14px / 400
+  - Hero: 56px / 700 / -0.03em / line-height 1.05
+  - Page title: 28px / 600 / -0.02em
+  - Section heading: 22px / 600 / -0.02em
+  - Body: 16px / 400 / line-height 1.6
+  - Small body: 14px / 400 / line-height 1.65
+  - Label (mono): 13px / 500 / -0.01em
+  - Section label (mono): 11px / 500 / uppercase / letter-spacing 0.1em
+  - Caption (mono): 12px / 400
+  - Code: 13px / 400
 
 ## Color
-- **Approach:** Restrained — 1 个主色 + 冷灰中性色 + 语义色
-- **Primary:** #0F6FDE — 克制的工具蓝，用于可交互元素和关键操作
-  - Light: #3b8eef
-  - Dark: #0b5ab3
-  - 50: #eff6ff
-  - 100: #dbeafe
-  - 900: #1e3a5f
-- **Neutrals:** Slate 冷灰系
-  - 50: #f8fafc (bg-subtle)
-  - 100: #f1f5f9 (bg-muted)
-  - 200: #e2e8f0 (border)
-  - 400: #94a3b8 (text-muted)
-  - 600: #475569 (text-secondary)
-  - 900: #0f172a (text)
+- **Approach:** Warm Restrained — 暖色中性底 + 单一铜橘强调色
+- **Background:**
+  - bg: #FAF8F5 — 主背景（暖米色）
+  - bg-alt: #F3EFE9 — 交替区域背景
+  - surface: #FFFFFF — 卡片/浮层表面
+- **Accent:** #D97757 — 铜橘色，用于所有可交互元素、标签、强调
+  - hover: #C4684A
+  - light: rgba(217, 119, 87, 0.08) — 用于 badge 背景、hover 行高亮
+  - border: rgba(217, 119, 87, 0.25) — 用于 focus 边框
+- **Text:**
+  - text: #1C1917 — 主文字（Stone-900）
+  - text-secondary: #57534E — 次要文字（Stone-600）
+  - text-muted: #A8A29E — 弱化文字（Stone-400）
+- **Border:**
+  - border: #E7E5E4 — 分割线、网格边框（Stone-200）
+  - border-hover: #D6D3D1 — hover 态边框（Stone-300）
 - **Semantic:**
-  - Success: #16a34a (green-600)
-  - Warning: #d97706 (amber-600)
-  - Error: #dc2626 (red-600)
-  - Info: #0284c7 (sky-600)
-- **Dark mode:** 延期到 MVP 后。策略：反转 Slate 灰阶，主色切换到 #3b8eef，降饱和度 10-20%
+  - Success: #16A34A (green-600) / bg: #F0FDF4
+  - Warning: #D97706 (amber-600) / bg: #FFFBEB
+  - Error: #DC2626 (red-600) / bg: #FEF2F2
+  - Info: #0284C7 (sky-600) / bg: #F0F9FF
+- **Dark mode:** 延期到 MVP 后
 
 ## Spacing
 - **Base unit:** 4px
 - **Density:** Comfortable — 后台兼顾操作效率，前台适当放松
 - **Scale:** 4(1) 8(2) 12(3) 16(4) 24(6) 32(8) 48(12) 64(16)
-- **Page padding:** 24px (mobile) / 32px (desktop)
-- **Section gap:** 24-32px
-- **Card padding:** 24px (standard) / 32px (hero/header)
-- **Max content width:** 1152px (max-w-6xl, 与现有代码一致)
+- **Page padding:** 24px (all breakpoints)
+- **Section gap:** 48-80px（section 之间用 1px border 分割）
+- **Card padding:** 24-32px（网格卡片内部 padding）
+- **Max content width:** 1152px (72rem)
 
 ## Layout
-- **Approach:** Grid-disciplined
-- **Grid:** 1 col (mobile) / 2 col (md) / 3 col (xl) for card grids
-- **Admin:** Fixed sidebar 256px + fluid content area
+- **Approach:** Grid-disciplined — 用 1px gap + 背景色做网格分割
+- **Grid pattern:** 所有并列内容使用 `gap: 1px; background: var(--color-border); border: 1px solid var(--color-border)` 模式，子元素设 `background: var(--color-bg)`
+- **Grid:** 1 col (mobile) / 2 col (md) / 3-4 col (xl) for card grids
+- **Admin:** Fixed sidebar 220px + fluid content area
 - **Max content width:** 1152px (72rem)
-- **Border radius:** Hierarchical scale
-  - xs: 4px — 按钮、输入框、小元素
-  - sm: 8px — 内嵌卡片、代码块、下拉菜单
-  - md: 12px — 中号容器、MetricCard
-  - lg: 16px — 主要内容卡片
-  - full: 9999px — 头像、Badge、Pill
+- **Border radius:** 统一 4px
+  - 默认: 4px（`rounded` / `rounded-sm`）— 按钮、输入框、卡片、badge、dialog 均适用
+  - 头像: 保持 `rounded-full`（圆形头像）
+  - 图片: 可使用 4-8px，UI 元素保持 4px
+- **Navigation:** Fixed top, `backdrop-filter: blur(12px)`, 半透明背景 `rgba(250,248,245,0.85)`
 
-> **注意：** 当前代码使用 rounded-2xl(16px) / rounded-3xl(24px)，需在 Step 4 开发时逐步过渡到新的分级圆角体系。现有页面不强制回改，新页面优先使用新体系。
+## Accessibility
+- **ARIA Landmarks:** 所有页面使用语义化 HTML landmarks
+  - `<header role="banner" aria-label="网站头部">`
+  - `<nav aria-label="主导航">` / `<nav aria-label="移动端导航">`
+  - `<main id="main-content" aria-label="主内容区域">`
+  - `<aside aria-label="管理后台导航">`
+- **Loading States:** 关键数据页面提供骨架屏（`loading.tsx` + Suspense），使用 `animate-pulse` + `bg-muted`
+- **Focus Visible:** 所有交互元素有 `:focus-visible` 样式（`ring-3 ring-ring/50`）
+- **Touch Targets:** 最小 44×44px（按钮、链接、触控区域）
+
+## Decoration
+- **Grain texture:** 全局叠加 SVG fractalNoise 纹理，opacity 0.03，fixed 定位，pointer-events: none，z-index 1000
+- **Section divider:** 1px solid var(--color-border)，不使用间距分割
+- **Hover effects:** 背景色微变（accent-light 或 bg → surface），translateY(-1px)
+- **Card style:** 无 box-shadow，仅 1px border，hover 时 border-color 加深
+- **Status indicator:** 赛事卡片顶部 6px 高色条（accent=进行中, warning=即将开始, border=已结束）
 
 ## Motion
-- **Approach:** Minimal-functional — 仅转场和状态变化使用动画，不做装饰性动效
-- **Easing:** enter(ease-out) exit(ease-in) move(ease-in-out)
-- **Duration:** micro(50-100ms) short(150-250ms) medium(250-400ms)
-- **MVP scope:** 仅 CSS transition（hover、focus、theme toggle），不引入动画库
+- **Approach:** Minimal-functional — 仅 fade-up 入场动画和 hover 过渡
+- **Easing:** ease-out (enter), ease-in (exit), ease (general)
+- **Duration:** 0.2s (hover/focus), 0.6s (fade-up 入场)
+- **Fade-up:** `@keyframes fadeUp { from { opacity:0; translateY(20px) } to { opacity:1; translateY(0) } }`
+- **Stagger:** 入场动画递增 0.1s delay（delay-1, delay-2, delay-3...）
+- **MVP scope:** 仅 CSS transition + @keyframes，不引入动画库
 
 ## Decisions Log
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-03-21 | 初始设计系统创建 | /design-consultation 基于 Devpost/Devfolio/Junction/HackerEarth 竞品调研 |
 | 2026-03-21 | Satoshi 做 Display 字体 | 竞品几乎全用 Inter/Roboto 变体，Satoshi 提供辨识度同时保持专业感 |
-| 2026-03-21 | 冷灰 Slate 替代默认灰 | 中文 SaaS 多用暖灰，冷灰使产品更"国际化"、更技术导向 |
-| 2026-03-21 | 分级圆角 4/8/12/16px | 当前统一大圆角在数据密集场景下浪费空间，分级能提升信息密度 |
-| 2026-03-21 | 暗色模式延期 | PLAN.md 明确 MVP 不启用暗色模式，统一浅色 |
-| 2026-03-21 | 圆角过渡策略 | 现有页面不强制回改，新页面（Step 4+）优先使用新体系 |
+| 2026-03-22 | 整体风格从 Industrial/Utilitarian 切换到 Warm Minimal | 参考 Claude Code History Viewer 的暖调极简风格，更有辨识度 |
+| 2026-03-22 | 铜橘 #D97757 替代工具蓝 #0F6FDE | 暖色强调色在米色背景上更协调，且在 AI 赛事平台中更独特 |
+| 2026-03-22 | 零圆角设计 | 方正元素增强精密感和技术工具气质，与 grain 纹理搭配更和谐 |
+| 2026-03-22 | 零圆角改为统一 4px | 完全零圆角过于生硬，用户反馈需要轻微圆角增加温和感。统一 4px（Tailwind `rounded-sm`）
+| 2026-03-22 | 引入 IBM Plex Mono 做 UI 标签字体 | 等宽字体用于导航/标签/meta 信息，强化技术感和精密感 |
+| 2026-03-22 | 1px gap 网格布局模式 | 用边框色做网格分割线，替代间距分割，更紧凑且有结构感 |
+| 2026-03-22 | 全局 grain 噪点纹理 | SVG fractalNoise 叠加 3% 不透明度，增加质感但不影响可读性 |
+| 2026-03-22 | 暗色模式继续延期 | PLAN.md 明确 MVP 不启用暗色模式，统一浅色 |
+| 2026-03-23 | ARIA Landmarks 规范 | 为 header/main/nav/aside 添加语义化 ARIA labels，提升无障碍访问 |
+| 2026-03-23 | 骨架屏加载态 | 首页/赛事详情/管理后台添加 `loading.tsx`，数据加载时显示骨架而非空白 |

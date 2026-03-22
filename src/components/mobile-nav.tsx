@@ -29,8 +29,8 @@ export function MobileNav({
       </Button>
 
       {open ? (
-        <div className="absolute left-0 right-0 top-16 z-50 border-b border-border bg-background/98 px-6 py-4 shadow-lg backdrop-blur">
-          <nav className="flex flex-col gap-3">
+        <div className="absolute left-0 right-0 top-16 z-50 border-b border-border bg-background/98 px-6 py-4 backdrop-blur">
+          <nav aria-label="移动端导航" className="flex flex-col gap-3">
             {items.map((item) => (
               <Link
                 key={item.href}
@@ -44,7 +44,7 @@ export function MobileNav({
           </nav>
 
           {userLabel ? (
-            <div className="mt-4 rounded-xl border border-border bg-muted/30 px-3 py-3">
+            <div className="mt-4 border border-border bg-muted px-3 py-3">
               <p className="text-sm font-medium">{userLabel}</p>
               <p className="text-xs text-muted-foreground">
                 {userRole === "ADMIN" ? "管理员" : "普通用户"}

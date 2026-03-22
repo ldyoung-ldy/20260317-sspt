@@ -28,13 +28,13 @@ export default async function AdminDashboardPage() {
         description="当前后台已完成基础入口、访问保护与导航骨架。接下来优先补赛事 CRUD、报名流转和作品/评分模块。"
         extra={
           <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               入口已接入
             </span>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               双层访问保护
             </span>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               控制台导航就绪
             </span>
           </div>
@@ -51,7 +51,7 @@ export default async function AdminDashboardPage() {
         {checkpoints.map((item) => (
           <article
             key={item.title}
-            className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+            className="border border-border bg-card p-5"
           >
             <h2 className="text-lg font-semibold">{item.title}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">

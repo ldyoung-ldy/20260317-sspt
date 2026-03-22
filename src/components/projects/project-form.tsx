@@ -88,12 +88,12 @@ export function ProjectForm({
 
   return (
     <div className="space-y-6">
-      <Card className="rounded-2xl border border-border shadow-sm">
+      <Card className="border border-border">
         <CardHeader>
           <CardTitle>作品基础信息</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-xl border border-border bg-background px-4 py-4 text-sm text-muted-foreground">
+          <div className="border border-border bg-background px-4 py-4 text-sm text-muted-foreground">
             你正在为「{event.name}」提交作品。保存草稿后可继续完善，点击“提交终稿”后仍可在截止前继续修改并再次提交。
           </div>
 
@@ -116,7 +116,7 @@ export function ProjectForm({
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border border-border shadow-sm">
+      <Card className="border border-border">
         <CardHeader>
           <CardTitle>赛道与赛题</CardTitle>
         </CardHeader>
@@ -124,7 +124,7 @@ export function ProjectForm({
           {event.tracks.length > 0 ? (
             <Field label="参赛赛道" error={fieldErrors.track?.[0]}>
               <select
-                className="flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 value={values.track}
                 onChange={(event_) => updateValue("track", event_.target.value)}
               >
@@ -137,7 +137,7 @@ export function ProjectForm({
               </select>
             </Field>
           ) : (
-            <div className="rounded-xl border border-dashed border-border px-4 py-5 text-sm text-muted-foreground">
+            <div className="border border-dashed border-border px-4 py-5 text-sm text-muted-foreground">
               当前赛事未配置赛道，作品将按默认分组提交。
             </div>
           )}
@@ -148,7 +148,7 @@ export function ProjectForm({
                 {event.challenges.map((challenge) => (
                   <label
                     key={challenge.title}
-                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                    className="flex cursor-pointer items-start gap-3 border border-border bg-background px-4 py-3 text-sm"
                   >
                     <input
                       type="checkbox"
@@ -170,7 +170,7 @@ export function ProjectForm({
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border border-border shadow-sm">
+      <Card className="border border-border">
         <CardHeader>
           <CardTitle>相关链接</CardTitle>
         </CardHeader>
@@ -202,9 +202,9 @@ export function ProjectForm({
         </CardContent>
       </Card>
 
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <div className="border border-border bg-card p-6">
         {formError ? (
-          <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <div className="mb-4 border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {formError}
           </div>
         ) : null}

@@ -77,7 +77,7 @@ export function AdminRegistrationReviewTable({
 
   if (registrations.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+      <div className="border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
         当前筛选条件下暂无报名记录。
       </div>
     );
@@ -85,7 +85,7 @@ export function AdminRegistrationReviewTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-muted-foreground">
           已选择 {selectedIds.length} 条待处理报名，可批量执行接受或拒绝。
         </div>
@@ -114,7 +114,7 @@ export function AdminRegistrationReviewTable({
       </div>
 
       {error ? (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       ) : null}

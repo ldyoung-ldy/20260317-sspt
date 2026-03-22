@@ -110,7 +110,7 @@ export function EventForm({
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      <Card className="rounded-2xl border border-border shadow-sm">
+      <Card className="border border-border">
         <CardHeader>
           <CardTitle>基础信息</CardTitle>
         </CardHeader>
@@ -135,7 +135,7 @@ export function EventForm({
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border border-border shadow-sm">
+      <Card className="border border-border">
         <CardHeader>
           <CardTitle>时间窗口</CardTitle>
         </CardHeader>
@@ -489,7 +489,7 @@ export function EventForm({
                   </Field>
                   <Field label="字段类型">
                     <select
-                      className="flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className="flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                       value={field.type}
                       onChange={(event) =>
                         updateArrayItem("customFields", index, {
@@ -540,9 +540,9 @@ export function EventForm({
         )}
       </ArraySection>
 
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <div className="border border-border bg-card p-6">
         {formError ? (
-          <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <div className="mb-4 border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {formError}
           </div>
         ) : null}
@@ -598,7 +598,7 @@ function ArraySection({
   children: ReactNode;
 }) {
   return (
-    <Card className="rounded-2xl border border-border shadow-sm">
+    <Card className="border border-border">
       <CardHeader className="flex flex-col gap-4 border-b border-border/80 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <CardTitle>{title}</CardTitle>
@@ -622,7 +622,7 @@ function ArrayItemCard({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border p-4">
+    <div className="border border-border p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-sm font-medium">{title}</p>
         <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
@@ -637,7 +637,7 @@ function ArrayItemCard({
 
 function EmptyArrayState({ text }: { text: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+    <div className="border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
       {text}
     </div>
   );

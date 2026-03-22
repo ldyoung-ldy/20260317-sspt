@@ -22,9 +22,9 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-full shrink-0 rounded-2xl border border-border bg-card p-4 shadow-sm lg:w-64">
-      <div className="mb-4 rounded-xl border border-border/70 bg-muted/30 px-3 py-3">
-        <h2 className="text-sm font-semibold tracking-tight">管理后台</h2>
+    <aside aria-label="管理后台导航" className="w-full shrink-0 border border-border bg-muted p-4 lg:w-56">
+      <div className="mb-3 border-b border-border pb-4">
+        <h2 className="font-[family-name:var(--font-mono-ui-face)] text-xs font-medium tracking-tight">管理后台</h2>
         <p className="mt-1 text-xs leading-6 text-muted-foreground">
           赛事管理与运营控制台
         </p>
@@ -41,9 +41,9 @@ export function AdminSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
+                "flex items-center gap-3 px-3 py-2 text-sm transition-colors",
                 isActive
-                  ? "bg-primary/10 text-primary shadow-sm"
+                  ? "border-r-2 border-primary text-primary"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >

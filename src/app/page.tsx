@@ -1,135 +1,97 @@
 import Link from "next/link";
-import { getConfiguredAuthProviders } from "@/lib/auth-providers";
-import { getOptionalSession } from "@/lib/auth-session";
 import { EmptyState } from "@/components/empty-state";
 import { EventPhaseBadge } from "@/components/events/event-phase-badge";
-import { MetricCard } from "@/components/metric-card";
-import { PageHeaderCard } from "@/components/page-header-card";
-import { linkButtonClassName } from "@/lib/button-link";
 import { listPublishedEvents } from "@/lib/events/queries";
-import { formatDate, formatDateRange } from "@/lib/format";
+import { formatDateRange } from "@/lib/format";
 
 export default async function Home() {
-  const session = await getOptionalSession();
-  const providers = getConfiguredAuthProviders();
   const events = await listPublishedEvents();
-  const authReady = Boolean(process.env.AUTH_SECRET?.trim()) && providers.length > 0;
-  const summary = events.reduce(
-    (acc, event) => {
-      acc.tracks += event.tracks.length;
-      acc.prizes += event.prizes.length;
-      acc.criteria += event.scoringCriteria.length;
-      return acc;
-    },
-    { tracks: 0, prizes: 0, criteria: 0 }
-  );
 
   return (
-    <div className="flex w-full flex-1 flex-col gap-8 px-6 py-10 lg:px-8">
-      <PageHeaderCard
-        tag="前台首页"
-        title="AI 赛事业务管理平台 MVP"
-        description="浏览当前开放中的赛事、查看阶段与时间窗口；管理员可在后台创建并发布新的赛事活动。"
-        extra={
-          <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
-              {events.length} 个已发布赛事
-            </span>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
-              {authReady ? "登录能力已配置" : "等待 OAuth 配置"}
-            </span>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
-              管理员可直接进入后台
-            </span>
-          </div>
-        }
-        actions={
-          session?.user?.role === "ADMIN" ? (
-            <Link href="/admin/events" className={linkButtonClassName("default", "sm")}>
-              管理赛事
-            </Link>
-          ) : authReady ? (
-            <Link
-              href="/api/auth/signin"
-              prefetch={false}
-              className={linkButtonClassName("default", "sm")}
-            >
-              配置完成后登录
-            </Link>
-          ) : (
-            <span className="inline-flex h-7 items-center rounded-[10px] border border-dashed border-border px-3 text-sm text-muted-foreground">
-              先补全 OAuth 环境变量
-            </span>
-          )
-        }
-      />
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="已发布赛事" value={String(events.length)} standalone />
-        <MetricCard label="赛道总数" value={String(summary.tracks)} standalone />
-        <MetricCard label="评分维度总数" value={String(summary.criteria)} standalone />
+    <div className="flex w-full flex-1 flex-col">
+      {/* Hero */}
+      <section className="bg-muted border-b border-border px-6 py-16 text-center lg:px-8 lg:py-20">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground [font-family:var(--font-display-face)] lg:text-4xl">
+          与全球开发者竞逐比分，挑战排名
+        </h1>
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-muted-foreground lg:text-base">
+          浏览当前开放中的赛事，查看阶段与时间窗口，报名参赛开启你的挑战之旅。
+        </p>
       </section>
 
-      {events.length === 0 ? (
-        <EmptyState
-          title="暂时还没有已发布赛事"
-          description="管理员创建并发布赛事后，这里会自动展示到前台首页。"
-        >
-          {session?.user?.role === "ADMIN" ? (
-            <Link href="/admin/events/new" className={linkButtonClassName("outline", "sm", "mt-4")}>
-              去创建赛事
-            </Link>
-          ) : null}
-        </EmptyState>
-      ) : (
-        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {events.map((event) => (
-            <article
-              key={event.id}
-              className="flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs text-muted-foreground">/{event.slug}</p>
-                  <h2 className="mt-2 text-xl font-semibold">{event.name}</h2>
-                </div>
-                <EventPhaseBadge phase={event.phase} />
-              </div>
+      {/* 赛事列表 */}
+      <section className="mx-auto w-full max-w-6xl px-6 py-10 lg:px-8">
+        {events.length === 0 ? (
+          <EmptyState
+            title="暂时还没有开放赛事"
+            description="新的赛事发布后将会展示在这里，敬请关注。"
+          />
+        ) : (
+          <div className="flex flex-col gap-4">
+            {events.map((event) => (
+              <Link
+                key={event.id}
+                href={`/events/${event.slug}`}
+                className="group flex flex-col gap-4 border border-border bg-card p-5 transition-colors hover:bg-card/80 sm:flex-row sm:items-start sm:gap-6 sm:p-6"
+              >
+                {/* 左侧：标题 + 描述 + 赛道标签 */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                      {event.name}
+                    </h2>
+                    <EventPhaseBadge phase={event.phase} />
+                  </div>
 
-              <p className="mt-4 line-clamp-3 text-sm leading-7 text-muted-foreground">
-                {event.description}
-              </p>
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                    {event.description}
+                  </p>
 
-              <dl className="mt-6 grid gap-3 text-sm text-muted-foreground">
-                <div className="rounded-2xl border border-border px-4 py-3">
-                  <dt className="text-xs uppercase tracking-wide">赛事时间</dt>
-                  <dd className="mt-1 text-foreground">{formatDateRange(event.startDate, event.endDate)}</dd>
+                  {event.tracks.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {event.tracks.map((track) => (
+                        <span
+                          key={track.name}
+                          className="inline-flex items-center bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                        >
+                          {track.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <MetricCard label="赛道" value={String(event.tracks.length)} />
-                  <MetricCard label="奖项" value={String(event.prizes.length)} />
-                  <MetricCard
-                    label="评分维度"
-                    value={String(event.scoringCriteria.length)}
-                  />
-                </div>
-              </dl>
 
-              <div className="mt-6 flex items-center justify-between gap-3">
-                <span className="text-xs text-muted-foreground">
-                  报名截止：{formatDate(event.registrationEnd)}
-                </span>
-                <Link
-                  href={`/events/${event.slug}`}
-                  className={linkButtonClassName("outline", "sm")}
-                >
-                  查看详情
-                </Link>
-              </div>
-            </article>
-          ))}
-        </section>
-      )}
+                {/* 右侧：奖励 + 时间 */}
+                <div className="flex shrink-0 flex-wrap items-start gap-x-6 gap-y-2 text-sm text-muted-foreground sm:flex-col sm:items-end sm:gap-3">
+                  {event.prizes.length > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs">奖励</span>
+                      <span className="font-medium text-foreground">
+                        {summarizePrizes(event.prizes)}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs">赛期</span>
+                    <span className="text-xs tabular-nums text-foreground">
+                      {formatDateRange(event.startDate, event.endDate)}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
+}
+
+function summarizePrizes(prizes: { title: string; amount: string }[]) {
+  const withAmount = prizes.filter((p) => p.amount);
+  if (withAmount.length > 0) {
+    return withAmount.map((p) => p.amount).join(" / ");
+  }
+  return prizes.map((p) => p.title).join("、");
 }

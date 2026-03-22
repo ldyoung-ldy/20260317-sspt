@@ -40,19 +40,16 @@ export async function AppHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+    <header role="banner" aria-label="网站头部" className="sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur-[12px]">
       <div className="flex h-16 w-full items-center justify-between gap-4 px-6 lg:px-8">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex flex-col leading-none">
-            <span className="text-[15px] font-semibold tracking-tight text-foreground [font-family:var(--font-display-face)]">
+          <Link href="/" className="leading-none">
+            <span className="font-[family-name:var(--font-mono-ui-face)] text-[13px] font-medium tracking-[-0.01em] text-foreground">
               AI 赛事业务管理平台
-            </span>
-            <span className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-              赛事运营控制台
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-4 text-sm text-muted-foreground md:flex">
+          <nav aria-label="主导航" className="hidden items-center gap-4 font-[family-name:var(--font-mono-ui-face)] text-[13px] text-muted-foreground md:flex">
             <Link href="/" className="transition-colors hover:text-foreground">
               首页
             </Link>
@@ -85,8 +82,8 @@ export async function AppHeader() {
           />
           {session?.user ? (
             <>
-              <div className="hidden items-center gap-3 rounded-full border border-border bg-card px-2 py-1.5 md:flex">
-                <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+              <div className="hidden items-center gap-3 border border-border bg-card px-2 py-1.5 md:flex">
+                <div className="flex size-8 items-center justify-center bg-primary/10 text-xs font-semibold text-primary">
                   {initials}
                 </div>
                 <div className="pr-2 text-sm">
@@ -115,7 +112,7 @@ export async function AppHeader() {
               登录
             </Link>
           ) : (
-            <span className="hidden rounded-full border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground sm:inline-flex">
+            <span className="hidden border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground sm:inline-flex">
               待配置 OAuth
             </span>
           )}

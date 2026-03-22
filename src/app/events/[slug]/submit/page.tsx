@@ -45,13 +45,13 @@ export default async function EventProjectSubmitPage({
         description="已确认参赛的选手可在提交窗口内保存草稿、提交终稿，并在截止前继续修改最近一次提交内容。"
         extra={
           <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               提交窗口：{formatDateRange(data.event.submissionStart, data.event.submissionEnd)}
             </span>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               赛道：{data.event.tracks.length > 0 ? `${data.event.tracks.length} 个` : "未配置"}
             </span>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               赛题：{data.event.challenges.length > 0 ? `${data.event.challenges.length} 个` : "未配置"}
             </span>
           </div>
@@ -75,7 +75,7 @@ export default async function EventProjectSubmitPage({
       </section>
 
       {data.project ? (
-        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <section className="border border-border bg-card p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold">{data.project.name}</h2>
@@ -99,7 +99,7 @@ export default async function EventProjectSubmitPage({
       ) : null}
 
       {!isConfirmed ? (
-        <section className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+        <section className="border border-border bg-card p-8">
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold">需要先获得报名确认才能提交作品</h2>
             <p className="text-sm leading-7 text-muted-foreground">
@@ -111,7 +111,7 @@ export default async function EventProjectSubmitPage({
           </div>
         </section>
       ) : !submissionOpen ? (
-        <section className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+        <section className="border border-border bg-card p-8">
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold">当前不在作品提交时间窗口内</h2>
             <p className="text-sm leading-7 text-muted-foreground">

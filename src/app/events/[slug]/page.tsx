@@ -58,7 +58,7 @@ export default async function EventDetailPage({
           </div>
         }
         actions={
-          <div className="w-full rounded-2xl border border-border bg-background/75 p-4 shadow-sm lg:min-w-72">
+          <div className="w-full border border-border bg-background/75 p-4 lg:min-w-72">
             <h2 className="text-sm font-semibold">报名状态</h2>
             <p className="mt-2 text-sm leading-7 text-muted-foreground">
               {getRegistrationEntryHint(
@@ -92,12 +92,12 @@ export default async function EventDetailPage({
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {entryState.kind === "login_required" ? (
-                <span className="inline-flex items-center rounded-[10px] border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground">
+                <span className="inline-flex items-center border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground">
                   请先登录后再报名
                 </span>
               ) : null}
               {entryState.kind === "can_register" && session?.user?.role === "ADMIN" ? (
-                <span className="inline-flex items-center rounded-[10px] border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground">
+                <span className="inline-flex items-center border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground">
                   当前管理员账号也可直接报名
                 </span>
               ) : null}
@@ -146,7 +146,7 @@ export default async function EventDetailPage({
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <article className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <article className="border border-border bg-card p-6">
           <h2 className="text-xl font-semibold">赛事时间线</h2>
           <div className="mt-4 grid gap-3">
             <InfoItem label="赛事时间" value={formatDateRange(event.startDate, event.endDate)} />
@@ -165,25 +165,34 @@ export default async function EventDetailPage({
           </div>
         </article>
 
-        <article className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <article className="border border-border bg-card p-6">
           <h2 className="text-xl font-semibold">赛事配置概览</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <MetricCard label="赛道" value={String(event.tracks.length)} />
-            <MetricCard label="奖项" value={String(event.prizes.length)} />
-            <MetricCard label="评分维度" value={String(event.scoringCriteria.length)} />
+          <div className="mt-4 grid grid-cols-3 gap-4 border border-border bg-background/50 p-4 text-sm">
+            <div className="flex flex-col gap-1">
+              <span className="font-[family-name:var(--font-mono-ui-face)] text-[11px] uppercase tracking-[0.16em] text-muted-foreground">赛道</span>
+              <span className="font-semibold tabular-nums [font-family:var(--font-display-face)]">{event.tracks.length} 项</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="font-[family-name:var(--font-mono-ui-face)] text-[11px] uppercase tracking-[0.16em] text-muted-foreground">奖项</span>
+              <span className="font-semibold tabular-nums [font-family:var(--font-display-face)]">{event.prizes.length} 项</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="font-[family-name:var(--font-mono-ui-face)] text-[11px] uppercase tracking-[0.16em] text-muted-foreground">评分维度</span>
+              <span className="font-semibold tabular-nums [font-family:var(--font-display-face)]">{event.scoringCriteria.length} 项</span>
+            </div>
           </div>
-          <div className="mt-4 rounded-2xl border border-border px-4 py-4 text-sm text-muted-foreground">
+          <div className="mt-4 border border-border px-4 py-4 text-sm text-muted-foreground">
             报名附加字段：{event.customFields.length > 0 ? `${event.customFields.length} 项` : "默认字段"}
           </div>
         </article>
       </section>
 
       {event.tracks.length > 0 ? (
-        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <section className="border border-border bg-card p-6">
           <h2 className="text-xl font-semibold">赛道</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {event.tracks.map((track) => (
-              <article key={track.name} className="rounded-xl border border-border bg-background/50 p-4">
+              <article key={track.name} className="border border-border bg-background/50 p-4">
                 <h3 className="font-medium">{track.name}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {track.description || "暂无赛道补充说明。"}
@@ -195,11 +204,11 @@ export default async function EventDetailPage({
       ) : null}
 
       {event.challenges.length > 0 ? (
-        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <section className="border border-border bg-card p-6">
           <h2 className="text-xl font-semibold">赛题</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {event.challenges.map((challenge) => (
-              <article key={challenge.title} className="rounded-xl border border-border bg-background/50 p-4">
+              <article key={challenge.title} className="border border-border bg-background/50 p-4">
                 <h3 className="font-medium">{challenge.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {challenge.description || "暂无赛题补充说明。"}
@@ -211,11 +220,11 @@ export default async function EventDetailPage({
       ) : null}
 
       {event.prizes.length > 0 ? (
-        <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <section className="border border-border bg-card p-6">
           <h2 className="text-xl font-semibold">奖项设置</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {event.prizes.map((prize) => (
-              <article key={prize.title} className="rounded-xl border border-border bg-background/50 p-4">
+              <article key={prize.title} className="border border-border bg-background/50 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="font-medium">{prize.title}</h3>
                   {prize.amount ? (
@@ -231,11 +240,11 @@ export default async function EventDetailPage({
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <section className="border border-border bg-card p-6">
         <h2 className="text-xl font-semibold">评分维度</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {event.scoringCriteria.map((criterion) => (
-            <article key={criterion.name} className="rounded-xl border border-border bg-background/50 p-4">
+            <article key={criterion.name} className="border border-border bg-background/50 p-4">
               <h3 className="font-medium">{criterion.name}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 最高分 {criterion.maxScore} / 权重 {criterion.weight}%

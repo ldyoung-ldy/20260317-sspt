@@ -77,12 +77,12 @@ export function RegistrationForm({ event, action }: RegistrationFormProps) {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      <Card className="rounded-2xl border border-border shadow-sm">
+      <Card className="border border-border">
         <CardHeader>
           <CardTitle>报名信息</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-2xl border border-border bg-background px-4 py-4 text-sm text-muted-foreground">
+          <div className="border border-border bg-background px-4 py-4 text-sm text-muted-foreground">
             你正在报名「{event.name}」。提交后状态默认为待审核，管理员审核通过后可在“我的报名”里确认参赛。
           </div>
 
@@ -101,19 +101,19 @@ export function RegistrationForm({ event, action }: RegistrationFormProps) {
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border border-border shadow-sm">
+      <Card className="border border-border">
         <CardHeader>
           <CardTitle>补充信息</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {fieldErrors.answers?.[0] ? (
-            <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <div className="border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {fieldErrors.answers[0]}
             </div>
           ) : null}
 
           {event.customFields.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+            <div className="border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
               当前赛事没有额外报名字段，直接提交即可进入审核。
             </div>
           ) : (
@@ -136,9 +136,9 @@ export function RegistrationForm({ event, action }: RegistrationFormProps) {
         </CardContent>
       </Card>
 
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <div className="border border-border bg-card p-6">
         {formError ? (
-          <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <div className="mb-4 border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {formError}
           </div>
         ) : null}
@@ -192,7 +192,7 @@ function renderField(
   if (field.type === "select") {
     return (
       <select
-        className="flex h-8 w-full rounded-xl border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >

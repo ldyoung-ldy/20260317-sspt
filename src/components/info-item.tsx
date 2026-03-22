@@ -6,7 +6,7 @@
 
 export function InfoItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-background/70 px-4 py-3.5">
+    <div className="border border-border bg-background/70 px-4 py-3.5">
       <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
         {label}
       </p>

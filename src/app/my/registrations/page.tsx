@@ -31,13 +31,13 @@ export default async function MyRegistrationsPage() {
         description="查看你已提交的赛事报名，管理员录取后可在此确认参赛，已录取或已确认状态也可主动取消。"
         extra={
           <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               共 {registrations.length} 条报名
             </span>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               待审核 {pendingCount} 条
             </span>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               可继续操作 {activeCount} 条
             </span>
           </div>
@@ -71,7 +71,7 @@ export default async function MyRegistrationsPage() {
           {registrations.map((registration) => (
             <article
               key={registration.id}
-              className="flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-sm"
+              className="flex h-full flex-col border border-border bg-card p-6"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-2">
@@ -90,7 +90,7 @@ export default async function MyRegistrationsPage() {
                 />
               </dl>
 
-              <div className="mt-6 rounded-2xl border border-border px-4 py-4 text-sm text-muted-foreground">
+              <div className="mt-6 border border-border px-4 py-4 text-sm text-muted-foreground">
                 <p className="font-medium text-foreground">补充信息</p>
                 {registration.answers.length === 0 ? (
                   <p className="mt-2">无额外报名字段。</p>

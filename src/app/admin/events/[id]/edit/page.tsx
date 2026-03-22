@@ -43,7 +43,7 @@ export default async function AdminEditEventPage({
             <Badge variant={event.published ? "default" : "outline"}>
               {event.published ? "已发布" : "草稿"}
             </Badge>
-            <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5">
+            <span className="border border-border bg-muted px-3 py-1.5">
               当前 slug：/{event.slug}
             </span>
           </div>
