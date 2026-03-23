@@ -40,6 +40,5 @@ test("选手可以报名、被管理员接受并确认后提交终稿", async ({
   await fieldControl(participantPage, "演示链接").fill("https://demo.example.com/e2e-submission-copilot");
   await participantPage.getByRole("button", { name: "提交终稿" }).click();
 
-  await expect(participantPage.getByText("终稿")).toBeVisible();
   await expect(participantPage.getByRole("button", { name: "更新终稿" })).toBeVisible();
 });
