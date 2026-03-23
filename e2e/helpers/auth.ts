@@ -1,6 +1,6 @@
 import type { BrowserContext } from "@playwright/test";
 import { encode } from "@auth/core/jwt";
-import { getE2EBaseUrl, getRequiredEnv } from "./env";
+import { getRequiredEnv } from "./env";
 import type { E2EUser } from "./users";
 
 const SESSION_COOKIE_NAME = "authjs.session-token";
@@ -25,7 +25,7 @@ export async function buildAuthSessionCookie(user: E2EUser) {
     path: "/",
     httpOnly: true,
     secure: false,
-    sameSite: "Lax",
+    sameSite: "Lax" as const,
   };
 }
 
