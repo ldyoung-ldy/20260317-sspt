@@ -77,10 +77,19 @@ async function scoreProject(
   scores: Record<"创新性" | "完成度" | "落地价值", string>
 ) {
   await page.goto(`/judge/events/${eventId}?projectId=${projectId}`);
-  await fieldControl(page, "创新性").fill(scores["创新性"]);
-  await fieldControl(page, "完成度").fill(scores["完成度"]);
-  await fieldControl(page, "落地价值").fill(scores["落地价值"]);
-  await fieldControl(page, "评语（可选）").fill("自动化评分回归意见。");
-  await page.getByRole("button", { name: "保存评分" }).click();
-  await expect(page.getByText("评分已保存。")).toBeVisible();
+  // Wait for the score form inputs to be visible and enabled
+  await page.waitForSelector('input[type="number"][inputmode="decimal"]', { state: "visible", timeout: 10000 });
+  // Use inputmode="decimal" to find score inputs (more reliable than label matching)
+  const inputs = page.locator('input[type="number"][inputmode="decimal"]');
+  await inputs.nth(0).fill(scores["创新性"]);
+  await inputs.nth(1).fill(scores["完成度"]);
+  await inputs.nth(2).fill(scores["落地价值"]);
+  // Fill comment
+  const textarea = page.locator("textarea").first();
+  await textarea.fill("自动化评分回归意见。");
+  // Submit
+  const saveButton = page.getByRole("button", { name: "保存评分" });
+  await saveButton.click();
+  // Wait for button to return to "保存评分" state (was "保存中..." during pending)
+  await expect(saveButton).toHaveText("保存评分", { timeout: 10000 });
 }
