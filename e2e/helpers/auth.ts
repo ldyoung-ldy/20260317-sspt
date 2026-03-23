@@ -21,10 +21,11 @@ export async function buildAuthSessionCookie(user: E2EUser) {
   return {
     name: SESSION_COOKIE_NAME,
     value,
-    url: getE2EBaseUrl(),
-    httpOnly: true,
-    sameSite: "Lax" as const,
+    domain: "127.0.0.1",
     path: "/",
+    httpOnly: true,
+    secure: false,
+    sameSite: "Lax",
   };
 }
 
