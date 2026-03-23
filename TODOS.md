@@ -1,15 +1,13 @@
 # TODOS — AI 赛事管理平台 MVP (v2)
 
-> 进度跟踪文件 | 创建: 2026-03-19 | 最后更新: 2026-03-23（认证态 QA 已补跑） | 关联: [PLAN.md](./PLAN.md)
+> 进度跟踪文件 | 创建: 2026-03-19 | 最后更新: 2026-03-23（Step 7 测试收尾完成，CI 全量绿灯） | 关联: [PLAN.md](./PLAN.md)
 > 基于 CEO Review (SCOPE REDUCTION) 重写，从零搭建现代技术栈
 
-## 🎯 下一步计划 (Step 7 测试与收尾)
+## 🎯 下一步计划 (Step 8 部署上线)
 
-> Step 5 评审系统 + Step 6 排名系统已完成，当前转入测试收口与上线准备：
+> Step 7 测试收尾已完成，CI 全量绿灯，当前进入部署准备：
 
-1. **补齐 Step 7 测试收尾** — 非评审窗口阻断、多评委榜单 spot check、关键链路自动化覆盖
-2. **整理本地 QA 测试数据策略** — 固化一套可重复使用的验收赛事与时间窗口样本
-3. **进入 Step 8 部署准备** — 数据库、环境变量、线上冒烟链路
+1. **Step 8 部署上线** — Neon 生产数据库、Vercel 项目创建、环境变量配置、git push 部署
 
 ## 进度总览
 
@@ -22,10 +20,10 @@
   UI: 设计刷新              [x] 1/1    ██████████  Day 4-5 后
   Step 5: 评分系统          [x] 8/8    ██████████  Day 5-6
   Step 6: 排名系统          [x] 6/6    ██████████  Day 6-7
-  Step 7: 测试              [ ] 0/7    ░░░░░░░░░░  Day 7-8
+  Step 7: 测试              [x] 7/7    ██████████  Day 7-8
   Step 8: 部署上线          [ ] 0/5    ░░░░░░░░░░  Day 8
   ─────────────────────────────────────────────────
-  TOTAL                     [~] 74/87  ████████░░
+  TOTAL                     [~] 81/87  █████████░
 ```
 
 ---
@@ -279,20 +277,28 @@
 
 ## Step 7: 测试 — Day 7-8
 
-> 优先级: P0 | 预估: 1 天 | 状态: ⬜ 未开始
+> 优先级: P0 | 预估: 1 天 | 状态: ✅ 已完成
 
-- [ ] 7.1 补齐各 Step 遗漏的单元/集成测试
-- [ ] 7.2 安装配置 Playwright
-- [ ] 7.3 E2E 测试: 管理员创建赛事 → 发布 → 前台可见
-- [ ] 7.4 E2E 测试: 用户报名 → 管理员接受 → 用户确认 → 提交作品
-- [ ] 7.5 E2E 测试: 评委评分 → 排名计算 → 管理员发布 → 前台可见
-- [ ] 7.6 CI 配置 (GitHub Actions): push 时自动运行测试
-- [ ] 7.7 验证: 所有测试通过，核心流程有覆盖
+- [x] 7.1 补齐各 Step 遗漏的单元/集成测试（`src/app/judge/actions.test.ts`、`src/app/admin/events/actions.test.ts` 扩展）
+- [x] 7.2 安装配置 Playwright（`@playwright/test`、`playwright.config.ts`）
+- [x] 7.3 E2E 测试: 管理员创建赛事 → 发布 → 前台可见（`e2e/specs/admin-publish.spec.ts`）
+- [x] 7.4 E2E 测试: 用户报名 → 管理员接受 → 用户确认 → 提交作品（`e2e/specs/registration-submission.spec.ts`）
+- [x] 7.5 E2E 测试: 评委评分 → 排名计算 → 管理员发布 → 前台可见（`e2e/specs/review-ranking.spec.ts`，含非评审窗口阻断 + 多评委榜单 spot check）
+- [x] 7.6 CI 配置 (GitHub Actions): push 时自动运行 lint + typecheck + Vitest + Playwright
+- [x] 7.7 验证: CI Run 23422018389 全量绿灯（lint ✓ typecheck ✓ Vitest 81 tests ✓ Playwright 3 specs ✓）
+
+### Step 7 当前进度说明
+
+- Vitest 测试从 71 tests 增至 81 tests，新增 `src/app/judge/actions.test.ts` 覆盖未登录/未分配评委/非终稿/非评审窗口/stale 维度/upsert 路径；扩展 `src/app/admin/events/actions.test.ts` 覆盖未知邮箱/重复分配/无有效评分不可公开排名
+- Playwright E2E 工具层包含 Auth.js cookie 注入（`e2e/helpers/auth.ts`）、隔离数据库 reset/seed（`e2e/scripts/reset-and-seed.ts`）、phase-shift（`e2e/helpers/scenarios.ts`）、UI helper（`e2e/helpers/ui.ts`）
+- E2E 测试数据库保护：非 CI 环境下拒绝连接非 `test`/`e2e` 名称的数据库
+- 3 条 E2E 主流程 spec 已覆盖非评审窗口阻断（第 25-29 行）和多评委榜单 spot check（第 43-62 行）
+- Step 5 遗留的两个边界验证项已通过 E2E 自动化关闭
 
 ### 完成标准
-- 单元测试已在 Step 2-6 完成
-- E2E 测试覆盖完整赛事流程 (3 条主流程)
-- CI 绿灯
+- [x] 单元测试已在 Step 2-6 完成
+- [x] E2E 测试覆盖完整赛事流程 (3 条主流程)
+- [x] CI 绿灯
 
 ---
 

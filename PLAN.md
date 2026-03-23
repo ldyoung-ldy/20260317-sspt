@@ -802,13 +802,19 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 
 **目标**: E2E 测试覆盖完整流程，CI 配置，补齐测试漏洞。
 
-- [ ] 安装配置 Playwright (E2E)
-- [ ] E2E 测试:
-  - [ ] 管理员创建赛事 → 发布
-  - [ ] 用户报名 → 管理员接受 → 用户确认
-  - [ ] 用户提交作品
-  - [ ] 评委评分 → 查看排名
-- [ ] 验证: 所有测试通过，覆盖核心流程
+- [x] 安装配置 Playwright (E2E)
+- [x] E2E 测试:
+  - [x] 管理员创建赛事 → 发布 → 前台可见
+  - [x] 用户报名 → 管理员接受 → 用户确认 → 提交作品
+  - [x] 评委评分 → 排名计算 → 管理员发布 → 前台可见（含非评审窗口阻断 + 多评委榜单 spot check）
+- [x] CI 配置 (GitHub Actions): push 时自动运行 lint + typecheck + Vitest + Playwright
+- [x] 验证: 所有测试通过，CI Run 23422018389 全量绿灯
+
+**Step 7 当前进度（2026-03-23，项目进度存档）**
+
+1. 已完成：Playwright 依赖与配置、`e2e/helpers/` 工具层（cookie 注入/reset-seed/phase-shift/UI）、3 条主流程 spec、Vitest 补强（81 tests）、GitHub Actions workflow（PostgreSQL service container `sspt_e2e`）、Step 5 边界项关闭、Step 7 验收文档
+2. CI 全量绿灯：lint ✓ typecheck ✓ Vitest 81 tests ✓ Playwright 3 specs ✓
+3. 本地 E2E 实跑需隔离测试库（数据库名含 `test` 或 `e2e`），当前 `neondb` 开发库受保护逻辑阻止；CI 不受影响
 
 ### Step 8: 部署上线 (Day 8)
 
