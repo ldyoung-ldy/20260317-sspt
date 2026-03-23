@@ -738,24 +738,31 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 | 评委待评列表 `/judge` | Server Component 直出 | 零分配：虚线边框卡片"你当前没有被分配为任何赛事的评委"+ 说明"管理员分配后会自动出现在这里" | — | — | 多赛事：按赛事分组的卡片，每张显示赛事名、评审窗口时间、进度"已评 X/Y 个作品" |
 | 评委评分界面 `/judge/[eventId]` | Server Component 直出 | 全部评完：绿色完成卡片"🎉 你已完成本赛事所有作品的评审"+ 评分统计概览 | 时间窗口外：提示"评审窗口尚未开启/已关闭"+ 具体时间；提交评分失败：表单内联错误提示 | 单个作品评分提交成功：Server Action 完成后自动跳转到下一个待评作品（跳转本身即成功反馈） | 评了一半：待评作品列表中已评项显示 ✓ + 分数，未评项显示"待评审"；页面顶部展示进度"已评 X/Y" |
 
-- [ ] 管理后台: 评分管理页 (`/admin/events/[id]/scoring`)
+- [x] 管理后台: 评分管理页 (`/admin/events/[id]/scoring`)
   - 显示评分进度 (已评/总数)
   - 分配评委 (通过邮箱邀请 — MVP 直接将用户标记为评委)
   - 查看各评委评分详情
-- [ ] 评委视图: 待评赛事总览 (`/judge`)
+- [x] 评委视图: 待评赛事总览 (`/judge`)
   - 展示该评委被分配的所有赛事 + 各赛事评审进度
   - 无分配时显示空状态引导
-- [ ] 评委视图: 单赛事评分界面 (`/judge/[eventId]`)
+- [x] 评委视图: 单赛事评分界面 (`/judge/[eventId]`)
   - 单作品聚焦模式：页面主体展示当前作品详情 + 评分表单
   - 逐项评分 (按赛事配置的评分维度)
   - 填写评语 (可选)
   - 提交后自动跳转下一个待评作品
-- [ ] Server Actions: assignJudge (写入 EventJudge 表), submitScore, getScoreSummary
-- [ ] 唯一约束: 每个评委对每个作品只评一次
-- [ ] 评分时间窗口: reviewStart ≤ now ≤ reviewEnd
-- [ ] 评分维度匹配校验 (scores key 必须与 scoringCriteria name 一致)
-- [ ] 抽取 lib/scoring.ts 纯函数 (calculateWeightedScore, calculateRankings)
-- [ ] 验证: 评委打分 → 管理员查看评分结果
+- [x] Server Actions: assignJudge (写入 EventJudge 表), submitScore, getScoreSummary
+- [x] 唯一约束: 每个评委对每个作品只评一次
+- [x] 评分时间窗口: reviewStart ≤ now ≤ reviewEnd
+- [x] 评分维度匹配校验 (scores key 必须与 scoringCriteria name 一致)
+- [x] 抽取 lib/scoring.ts 纯函数 (calculateWeightedScore, calculateRankings)
+- [x] 验证: 评委打分 → 管理员查看评分结果
+
+**Step 5 当前进度（2026-03-22，项目进度存档）**
+
+1. 已完成功能：管理后台评分管理页、评委待评赛事总览页、单赛事评分界面，以及对应的 server actions / schema / query / 组件层均已落地
+2. 已完成校验：`bun run lint`、`bun run typecheck`、`bun run test` 全部通过
+3. 已完成 live QA：在真实数据库与浏览器登录态下跑通了评委分配、评分提交、进度展示等核心流程
+4. 关键实现口径：采用单作品聚焦模式，评委评完一个作品后自动跳转到下一个待评作品，提供流畅的评审体验
 
 ### Step 6: 排名系统 (Day 6-7)
 
@@ -768,21 +775,28 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 | 后台排名管理 `/admin/events/[id]/rankings` | Server Component 直出 | 零作品/零评分：虚线边框"无法生成排名"+ 说明"需要至少 1 个作品完成评审后才能查看排名" | — | 发布成功：排名表格上方绿色 Banner"排名已发布到前台"+ "取消发布"按钮 | 评分不完整：黄色警告 Banner"⚠️ X 个作品尚未完成全部评委评审，当前排名基于已有评分计算"+ 已完成/未完成作品数统计 |
 | 前台排名公示 `/events/[slug]/rankings` | Server Component 直出 | 排名未发布：提示卡片"排名尚未公布"+ 说明"管理员发布后即可在此查看完整排名"+ 返回赛事详情按钮 | — | 已发布：排名表格 + 按赛道分组的 Tab 切换 + 奖项高亮 | — |
 
-- [ ] 排名计算逻辑:
+- [x] 排名计算逻辑:
   - 每个作品的最终得分 = 各评委评分的加权平均
   - 加权方式: 按评分维度的 weight 加权
   - 排名按最终得分降序
-- [ ] 管理后台: 排名管理页 (`/admin/events/[id]/rankings`)
+- [x] 管理后台: 排名管理页 (`/admin/events/[id]/rankings`)
   - 查看完整排名 (含各维度详细分数)
   - 发布/取消发布排名
   - 导出排名 (CSV)
-- [ ] 前台: 排名公示页 (`/events/[slug]/rankings`)
+- [x] 前台: 排名公示页 (`/events/[slug]/rankings`)
   - 仅在管理员发布后可见
   - 显示排名、作品名、队伍名、总分
   - 按赛道/挑战分组展示
-- [ ] Server Actions: calculateRankings, publishRankings
-- [ ] 无评分作品不参与排名，管理员页面显示警告
-- [ ] 验证: 所有评委评分完成 → 查看排名 → 发布排名
+- [x] Server Actions: calculateRankings, publishRankings
+- [x] 无评分作品不参与排名，管理员页面显示警告
+- [x] 验证: 所有评委评分完成 → 查看排名 → 发布排名
+
+**Step 6 当前进度（2026-03-22，项目进度存档）**
+
+1. 已完成功能：排名计算逻辑、管理后台排名管理页、前台排名公示页，以及对应的 server actions / schema / query / 组件层均已落地
+2. 已完成校验：`bun run lint`、`bun run typecheck`、`bun run test` 全部通过
+3. 已完成 live QA：在真实数据库与浏览器登录态下跑通了排名计算、发布/取消发布、前台公示等核心流程
+4. 关键实现口径：排名基于评委评分的加权平均，支持按赛道分组展示，管理员可控制排名的发布状态
 
 ### Step 7: 测试 (Day 7-8)
 
