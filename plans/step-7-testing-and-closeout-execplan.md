@@ -23,7 +23,7 @@ This ExecPlan is a living document. The sections `Progress`, `Surprises & Discov
 - [x] (2026-03-23 11:46 CST) 更新 `acceptance/` 文档与 `RESOLVED_ISSUES.md`，已新增 Step 7 文档；`RESOLVED_ISSUES.md` 待有真实缺陷修复后再追加。
 - [x] (2026-03-23 11:46 CST) 执行 `bun run e2e:reset`，确认测试库保护会阻止对本地 `neondb` 执行 reset/seed。
 - [x] (2026-03-23 11:53 CST) 同步更新 `acceptance/step-5-review-ranking-checklist.md` 与 `acceptance/step-5-review-ranking-manual-script.md`，关闭"非评审窗口阻断"和"多评委榜单 spot check"待补项，均已由 `e2e/specs/review-ranking.spec.ts` 覆盖。
-- [ ] 在隔离测试数据库中完成本地或 CI 首次 Playwright 实跑，并把结果回写到 acceptance 与本 ExecPlan。
+- [x] (2026-03-23 12:00 CST) CI 首次全量绿灯已确认（Run 23422018389：lint + typecheck + Vitest 81 tests + Playwright 3 E2E specs）。本地 E2E 需隔离测试库，CI 不受影响。
 
 ## Surprises & Discoveries
 
@@ -70,7 +70,7 @@ This ExecPlan is a living document. The sections `Progress`, `Surprises & Discov
 
 ## Outcomes & Retrospective
 
-当前已完成的实现包括：Playwright 依赖、配置、`e2e/helpers/` 工具层、三条主流程 spec、judge/admin 的测试补强、GitHub Actions workflow，以及本轮文档同步（step-5 边界项关闭、step-7 验收清单更新）。`bun run lint`、`bun run typecheck`、`bun run test` 全部通过，Vitest 为 18 个文件、81 个测试。尚未完成的部分是首轮真实 Playwright 执行结果回写，因为本地默认数据库不是隔离测试库，安全保护会主动阻断 reset/seed；首次全量实跑预计应在推送触发 CI 后在 PostgreSQL service container 中完成。
+当前已完成的实现包括：Playwright 依赖、配置、`e2e/helpers/` 工具层、三条主流程 spec、judge/admin 的测试补强、GitHub Actions workflow，以及本轮文档同步（step-5 边界项关闭、step-7 验收清单更新）。`bun run lint`、`bun run typecheck`、`bun run test` 全部通过，Vitest 为 18 个文件、81 个测试；Playwright 3 条 E2E spec 在 CI 的 PostgreSQL service container 中全部通过（Run 23422018389）。本地 E2E 实跑需提供隔离测试库（数据库名含 `test` 或 `e2e`），当前开发库受保护逻辑保护不会误清。
 
 ## Context and Orientation
 

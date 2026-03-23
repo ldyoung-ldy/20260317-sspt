@@ -1,6 +1,6 @@
 # Step 7 测试与收尾验收清单
 
-> 验收日期: 2026-03-23 | 状态: 🟢 全部工程交付完成，CI workflow 已配置；E2E 本地实跑需隔离测试库（见阻塞项）
+> 验收日期: 2026-03-23 | 状态: 🟢 全部工程交付完成，CI 全量绿灯（lint + typecheck + Vitest + Playwright E2E）
 
 ## 1. 自动化基础设施
 
@@ -34,15 +34,14 @@
 - [x] `.github/workflows/ci.yml` 已新增
 - [x] GitHub Actions 使用 PostgreSQL service container（`sspt_e2e`）
 - [x] workflow 已包含 `lint`、`typecheck`、`test`、`test:e2e`
-- [ ] GitHub Actions 首次全量绿灯待触发推送后确认
+- [x] GitHub Actions 首次全量绿灯已确认（Run 23422018389）
 
 ## 5. 当前验证结论
 
 - [x] `bun run typecheck` 通过
 - [x] `bun run test` 通过
-- [ ] `bun run test:e2e` 本地通过
+- [x] `bun run test:e2e` CI 通过（GitHub Actions，隔离 PostgreSQL `sspt_e2e`）
 
-## 6. 当前阻塞
+## 6. 本地 E2E 说明
 
-- [ ] 本地 `.env.local` 的 `DATABASE_URL` 指向 `neondb`，不是隔离测试库；出于保护逻辑，当前不会在本地直接执行 reset/seed 与 Playwright
-- [ ] 如需本地实跑，需要额外提供一条数据库名包含 `test` 或 `e2e` 的 PostgreSQL 连接串
+本地 E2E 需要隔离测试库（数据库名含 `test` 或 `e2e`）。当前 `.env.local` 的 `neondb` 受保护逻辑阻止，reset/seed 不会执行。
