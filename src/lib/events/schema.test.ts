@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  areScoringCriteriaEqual,
   createEmptyEventCustomField,
   eventFormSchema,
   normalizeEventFormValues,
@@ -105,6 +106,57 @@ describe("event schema", () => {
       required: false,
       options: [],
     });
+  });
+
+  it("treats identical scoring criteria as unchanged", () => {
+    const criteria = [
+      { name: "创新性", maxScore: 10, weight: 40 },
+      { name: "完成度", maxScore: 10, weight: 35 },
+    ];
+
+    expect(areScoringCriteriaEqual(criteria, [...criteria])).toBe(true);
+  });
+
+  it("detects renamed scoring criteria", () => {
+    expect(
+      areScoringCriteriaEqual(
+        [{ name: "创新性", maxScore: 10, weight: 40 }],
+        [{ name: "产品价值", maxScore: 10, weight: 40 }]
+      )
+    ).toBe(false);
+  });
+
+  it("detects max score changes in scoring criteria", () => {
+    expect(
+      areScoringCriteriaEqual(
+        [{ name: "创新性", maxScore: 10, weight: 40 }],
+        [{ name: "创新性", maxScore: 12, weight: 40 }]
+      )
+    ).toBe(false);
+  });
+
+  it("detects weight changes in scoring criteria", () => {
+    expect(
+      areScoringCriteriaEqual(
+        [{ name: "创新性", maxScore: 10, weight: 40 }],
+        [{ name: "创新性", maxScore: 10, weight: 45 }]
+      )
+    ).toBe(false);
+  });
+
+  it("treats reordered scoring criteria as changed", () => {
+    expect(
+      areScoringCriteriaEqual(
+        [
+          { name: "创新性", maxScore: 10, weight: 40 },
+          { name: "完成度", maxScore: 10, weight: 35 },
+        ],
+        [
+          { name: "完成度", maxScore: 10, weight: 35 },
+          { name: "创新性", maxScore: 10, weight: 40 },
+        ]
+      )
+    ).toBe(false);
   });
 
   it("normalizes persisted dates using the runtime timezone", () => {

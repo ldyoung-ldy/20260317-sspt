@@ -5,6 +5,7 @@ import { InfoItem } from "@/components/info-item";
 import { MetricCard } from "@/components/metric-card";
 import { PageHeaderCard } from "@/components/page-header-card";
 import { RegistrationStatusBadge } from "@/components/registrations/registration-status-badge";
+import { ProjectRankingTable } from "@/components/reviews/project-ranking-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getConfiguredAuthProviders } from "@/lib/auth-providers";
@@ -17,6 +18,7 @@ import { getUserEventProject } from "@/lib/projects/queries";
 import { ProjectStatusBadge } from "@/components/projects/project-status-badge";
 import { getRegistrationEntryState } from "@/lib/registrations/entry-state";
 import { getUserEventRegistration } from "@/lib/registrations/queries";
+import { getPublishedEventRankingBySlug } from "@/lib/reviews/queries";
 
 export default async function EventDetailPage({
   params,
@@ -31,6 +33,7 @@ export default async function EventDetailPage({
   }
 
   const session = await getOptionalSession();
+  const rankingData = event.rankingsPublished ? await getPublishedEventRankingBySlug(slug) : null;
   const currentRegistration = session?.user
     ? await getUserEventRegistration(event.id, session.user.id)
     : null;
@@ -253,6 +256,18 @@ export default async function EventDetailPage({
           ))}
         </div>
       </section>
+
+      {rankingData ? (
+        <section className="overflow-hidden border border-border bg-card">
+          <div className="border-b border-border px-6 py-4">
+            <h2 className="text-xl font-semibold">公开榜单</h2>
+            <p className="mt-2 text-sm leading-7 text-muted-foreground">
+              当前榜单基于评委已提交的有效评分汇总而成，按平均加权总分降序展示。
+            </p>
+          </div>
+          <ProjectRankingTable rankings={rankingData.rankings} />
+        </section>
+      ) : null}
     </div>
   );
 }

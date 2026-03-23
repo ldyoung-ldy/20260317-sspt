@@ -74,3 +74,35 @@
 - 解决方案：保留 `Link`，但在登录入口上显式设置 `prefetch={false}`，避免对 `/api/auth/signin` 做页面级预取，同时不破坏现有导航样式与 lint 规则。
 - 验证：`bun run lint && bun run typecheck && bun run test` 通过；使用浏览器重新打开首页与受保护页面后，`.next/dev/logs/next-development.log` 不再新增 `UnknownAction` 记录，登录入口点击仍可正常跳转到 Google 登录页。
 - 涉及文件：`src/app/page.tsx`、`src/components/app-header.tsx`
+
+## 2026-03-23 — 评审汇总查询错误使用 `projectScores` 关系名导致 TypeScript 构建失败
+
+- 现象：实现 Step 5 评审与排名功能后运行 `bun run typecheck`，编译报错 `projectScores does not exist in type ProjectSelect`，导致评审查询与排名汇总代码无法通过类型检查。
+- 根因：Prisma schema 中 `Project` 模型上的关系字段名实际是 `scores`，但实现时按表名直觉写成了 `projectScores`，与生成出来的 Prisma Client 类型不一致。
+- 解决方案：统一将评审相关 select 和映射逻辑改为使用 `scores` 关系字段，并在进入排名汇总 helper 前显式转换为内部 `scoreRecords` 结构，避免页面与 helper 直接耦合 Prisma 命名。
+- 验证：修复后 `bun run typecheck` 与 `bun run test` 通过，后台评审页、评审中心与公开榜单相关代码均可正常编译。
+- 涉及文件：`src/lib/reviews/queries.ts`、`src/lib/reviews/ranking.ts`、`src/app/admin/events/actions.ts`
+
+## 2026-03-23 — 并列排名读取未回写 rank 值，导致第二个并列项目排名变成 0
+
+- 现象：新增 `src/lib/reviews/ranking.test.ts` 后，测试发现两个同分作品排序时，第一个作品排名为 `1`，第二个并列作品却得到 `0`。
+- 根因：排名生成逻辑在 `map` 中读取的是尚未回写真实 rank 的原始数组项，上一项仍保留默认值 `0`，并列场景下错误复用了这个默认值。
+- 解决方案：改为基于已经生成结果的累积数组计算 rank；只有在已生成结果中的上一项与当前项总分、评分人数完全一致时，才复用上一项的真实排名。
+- 验证：更新实现后 `src/lib/reviews/ranking.test.ts` 通过；全量执行 `bun run lint && bun run typecheck && bun run test` 均通过。
+- 涉及文件：`src/lib/reviews/ranking.ts`、`src/lib/reviews/ranking.test.ts`
+
+## 2026-03-23 — 已有评分后仍可修改评分维度，导致历史评分被榜单静默排除
+
+- 现象：管理员在赛事已有 `ProjectScore` 后仍可直接修改 `scoringCriteria`；修改后旧评分会继续在评委页显示为“已保存”，但后台汇总和公开榜单会静默忽略这些历史评分。
+- 根因：`src/app/admin/events/actions.ts` 的 `updateEvent` 会无条件覆盖赛事评分维度，而排名汇总只接受与当前评分配置完全一致的历史评分记录，导致编辑配置与汇总口径分叉。
+- 解决方案：新增评分维度结构比较 helper，并在 `updateEvent` 中加入服务端冻结约束；一旦赛事已有任意评分且评分维度发生名称、最高分、权重或顺序变化，直接返回 `CONFLICT`，同时在赛事编辑页补充“已有评分后评分维度会被冻结”的提示文案。
+- 验证：新增 `src/lib/events/schema.test.ts` 与 `src/app/admin/events/actions.test.ts` 回归用例，覆盖维度比较和 `updateEvent` 冲突分支；执行 `bun run lint && bun run typecheck && bun run test` 全部通过。
+- 涉及文件：`src/app/admin/events/actions.ts`、`src/app/admin/events/actions.test.ts`、`src/lib/events/schema.ts`、`src/lib/events/schema.test.ts`、`src/app/admin/events/[id]/edit/page.tsx`、`acceptance/step-5-review-ranking-checklist.md`、`acceptance/step-5-review-ranking-manual-script.md`
+
+## 2026-03-23 — 移除评委后历史评分仍继续影响后台与前台榜单
+
+- 现象：管理员在后台移除某位评委后，该评委虽然不再出现在分配列表中，但其已提交的 `ProjectScore` 仍继续参与“已评分作品”统计和项目排名汇总，导致撤销评委资格并不会撤销评分影响。
+- 根因：`src/app/admin/events/actions.ts` 的 `removeJudgeFromEvent` 原先只删除 `EventJudge` 分配记录，没有同步清理该评委在当前赛事下的评分记录；而榜单与统计读取的是 `ProjectScore` 数据。
+- 解决方案：将移除评委改为事务操作，先删除该评委在当前赛事下的 `ProjectScore`，再删除 `EventJudge` 分配记录；同时在后台评委面板补充说明文案，并把验收清单与手工脚本补充到“移除后不再影响榜单”的验证点。
+- 验证：新增 `src/app/admin/events/actions.test.ts` 覆盖移除评委时会同步删除赛事评分记录；执行 `bun run lint && bun run typecheck && bun run test` 全部通过。
+- 涉及文件：`src/app/admin/events/actions.ts`、`src/app/admin/events/actions.test.ts`、`src/components/reviews/judge-assignment-panel.tsx`、`acceptance/step-5-review-ranking-checklist.md`、`acceptance/step-5-review-ranking-manual-script.md`

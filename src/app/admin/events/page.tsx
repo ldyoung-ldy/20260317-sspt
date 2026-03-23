@@ -119,6 +119,12 @@ export default async function AdminEventsPage() {
                       >
                         作品管理
                       </Link>
+                      <Link
+                        href={`/admin/events/${event.id}/judging`}
+                        className={linkButtonClassName("outline", "sm")}
+                      >
+                        评审管理
+                      </Link>
                       {event.published ? (
                         <Link
                           href={`/events/${event.slug}`}

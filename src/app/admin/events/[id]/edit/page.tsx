@@ -59,6 +59,12 @@ export default async function AdminEditEventPage({
             >
               报名管理
             </Link>
+            <Link
+              href={`/admin/events/${event.id}/judging`}
+              className={linkButtonClassName("outline", "sm")}
+            >
+              评审管理
+            </Link>
             {event.published ? (
               <Link
                 href={`/events/${event.slug}`}
@@ -80,8 +86,8 @@ export default async function AdminEditEventPage({
         submitLabel="保存修改"
         helperText={
           event.published
-            ? "保存后会刷新后台列表与前台赛事详情，请确认时间窗口与展示信息无误。"
-            : "保存后仍保持草稿状态，可返回列表后再决定是否发布。"
+            ? "保存后会刷新后台列表与前台赛事详情，请确认时间窗口与展示信息无误；若赛事已产生评分，评分维度将被冻结，避免影响已提交评分和榜单汇总。"
+            : "保存后仍保持草稿状态，可返回列表后再决定是否发布；若赛事已产生评分，评分维度将被冻结，避免影响已提交评分和榜单汇总。"
         }
       />
     </div>

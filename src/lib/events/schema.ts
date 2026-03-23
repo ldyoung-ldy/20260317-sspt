@@ -298,6 +298,29 @@ export function toEventMutationData(input: EventFormInput) {
   };
 }
 
+export function areScoringCriteriaEqual(
+  left: EventScoringCriterionInput[],
+  right: EventScoringCriterionInput[]
+) {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((criterion, index) => {
+    const other = right[index];
+
+    if (!other) {
+      return false;
+    }
+
+    return (
+      criterion.name === other.name &&
+      criterion.maxScore === other.maxScore &&
+      criterion.weight === other.weight
+    );
+  });
+}
+
 export function parseEventJsonFields(input: {
   tracks: unknown;
   challenges: unknown;

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/mobile-nav";
 import { getConfiguredAuthProviders } from "@/lib/auth-providers";
 import { getOptionalSession } from "@/lib/auth-session";
+import { hasJudgeAssignments } from "@/lib/reviews/queries";
 
 function getUserLabel(name?: string | null, email?: string | null) {
   if (name) {
@@ -19,6 +20,7 @@ function getUserLabel(name?: string | null, email?: string | null) {
 
 export async function AppHeader() {
   const session = await getOptionalSession();
+  const showJudgeCenter = session?.user ? await hasJudgeAssignments(session.user.id) : false;
   const providers = getConfiguredAuthProviders();
   const authReady = Boolean(process.env.AUTH_SECRET?.trim()) && providers.length > 0;
   const initials = (session?.user?.name ?? session?.user?.email ?? "U")
@@ -34,6 +36,9 @@ export async function AppHeader() {
   if (session?.user) {
     navItems.push({ href: "/my/registrations", label: "我的报名" });
     navItems.push({ href: "/my/projects", label: "我的作品" });
+    if (showJudgeCenter) {
+      navItems.push({ href: "/judge", label: "评审中心" });
+    }
   }
   if (session?.user?.role === "ADMIN") {
     navItems.push({ href: "/admin", label: "管理后台" });
@@ -61,6 +66,11 @@ export async function AppHeader() {
                 <Link href="/my/projects" className="transition-colors hover:text-foreground">
                   我的作品
                 </Link>
+                {showJudgeCenter ? (
+                  <Link href="/judge" className="transition-colors hover:text-foreground">
+                    评审中心
+                  </Link>
+                ) : null}
               </>
             ) : null}
             {session?.user?.role === "ADMIN" ? (

@@ -84,3 +84,10 @@ export function canSubmitProjectForEvent(
 ) {
   return event.published && now >= event.submissionStart && now < event.submissionEnd;
 }
+
+export function canReviewEvent(
+  event: Pick<EventPhaseInput, "published" | "reviewStart" | "reviewEnd">,
+  now = new Date()
+) {
+  return event.published && now >= event.reviewStart && now < event.reviewEnd;
+}
