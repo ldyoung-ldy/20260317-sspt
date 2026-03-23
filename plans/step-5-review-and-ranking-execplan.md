@@ -15,6 +15,9 @@ This ExecPlan is a living document. The sections `Progress`, `Surprises & Discov
 - [x] (2026-03-23 10:52Z) 实现评分 schema、评审查询、排名汇总 helper 与服务端写操作。
 - [x] (2026-03-23 10:58Z) 实现管理员评审页、评委工作台、单赛事评分页与前台榜单展示。
 - [x] (2026-03-23 11:03Z) 补充测试、验收文档，并完成 `bun run lint && bun run typecheck && bun run test` 验证。
+- [x] (2026-03-23 11:32Z) 根据 review 修复“已有评分后仍可修改评分维度”问题，增加服务端冻结保护与回归测试。
+- [x] (2026-03-23 11:45Z) 根据 review 修复“移除评委后旧评分仍影响榜单”问题，在移除评委时同步清理该赛事历史评分。
+- [x] (2026-03-23 14:20Z) 完成认证态浏览器 live QA，真实验证“管理员分配评委 -> 评委打分 -> 后台汇总 -> 前台公示 -> 关闭公示”闭环。
 
 ## Surprises & Discoveries
 
@@ -44,11 +47,20 @@ This ExecPlan is a living document. The sections `Progress`, `Surprises & Discov
   Rationale: MVP 里评审对象应该是已提交终稿的作品；沿用当前评分维度作为唯一真值，能避免引入另一套维度快照机制。
   Date/Author: 2026-03-23 / Codex
 
+- Decision: 一旦赛事已经存在任意 `ProjectScore`，就冻结 `scoringCriteria` 的编辑。
+  Rationale: 当前排名汇总以赛事当前评分维度作为唯一真值；若允许中途改维度，会让旧评分被静默排除并造成后台进度、评委认知与榜单来源分叉。相比做历史评分迁移，MVP 阶段先冻结维度更稳妥。
+  Date/Author: 2026-03-23 / Codex
+
+- Decision: 移除评委时同步删除该评委在当前赛事下的历史评分。
+  Rationale: 赛事级评委资格被撤销后，该评委的评分不应继续参与后台已评分统计、榜单汇总或前台公开排名；同步清理能保持授权状态与汇总结果一致。
+  Date/Author: 2026-03-23 / Codex
+
 ## Outcomes & Retrospective
 
-- 已完成：Step 5 第一版业务闭环已经落地，管理员可以在 `src/app/admin/events/[id]/judging/page.tsx` 分配评委并公开排名，评委可以在 `src/app/judge/page.tsx` 与 `src/app/judge/events/[id]/page.tsx` 完成评分，前台 `src/app/events/[slug]/page.tsx` 会在公开开关打开后展示榜单。
-- 已验证：`bun run lint`、`bun run typecheck`、`bun run test` 全部通过，测试总数为 62。
-- 剩余工作：尚未做完整浏览器 live QA，特别是“真实管理员分配评委 -> 真实评委打分 -> 前台公开榜单”的人工回归还需要后续补跑。
+- 已完成：Step 5 与 Step 6 的首版业务闭环已经全部落地，管理员可以在 `src/app/admin/events/[id]/judging/page.tsx` 分配评委、查看汇总榜单并控制公开排名，评委可以在 `src/app/judge/page.tsx` 与 `src/app/judge/events/[id]/page.tsx` 完成评分，前台 `src/app/events/[slug]/page.tsx` 会按开关展示或隐藏公开榜单。
+- 已修复：pre-landing review 暴露的两个 P1 问题都已关闭，包括“已有评分后仍可修改评分维度”以及“移除评委后旧评分仍继续影响榜单”。
+- 已验证：`bun run lint`、`bun run typecheck`、`bun run test` 全部通过；全量测试现为 17 个测试文件、71 个测试通过。认证态浏览器 live QA 也已完成，真实跑通了管理员分配评委、评委评分、后台汇总、公示开启与关闭的完整链路。
+- 剩余工作：当前主线已从 Step 5/6 转入 Step 7 测试与收尾，后续优先补非评审窗口阻断、多评委榜单 spot check，以及可重复使用的本地 QA 数据准备策略。
 
 ## Context and Orientation
 
@@ -136,3 +148,4 @@ This ExecPlan is a living document. The sections `Progress`, `Surprises & Discov
 
 Change note: 2026-03-23 初版 ExecPlan 建立，用于把 Step 5 的实现范围、约束和验收方式固定下来，避免继续沿用后台首页中的旧占位文案。
 Change note: 2026-03-23 回写实现结果与验证状态，补充了 Prisma 关系名和并列排名两个实现中发现的问题，确保文档与当前代码状态一致。
+Change note: 2026-03-23 晚间补记 review 修复与认证态 live QA 结果，明确 Step 5/6 已闭环，下一阶段转入 Step 7 测试收尾。
