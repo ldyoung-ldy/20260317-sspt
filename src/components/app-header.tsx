@@ -28,7 +28,7 @@ export async function AppHeader() {
     .charAt(0)
     .toUpperCase();
   const linkButtonClassName =
-    "inline-flex h-7 items-center justify-center rounded-[min(var(--radius-md),12px)] bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground transition-colors hover:bg-primary/90";
+    "inline-flex h-7 items-center justify-center rounded-md bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground transition-colors hover:bg-primary/90";
 
   const navItems: { href: string; label: string }[] = [
     { href: "/", label: "首页" },

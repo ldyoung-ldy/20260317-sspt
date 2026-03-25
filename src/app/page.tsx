@@ -32,7 +32,7 @@ export default async function Home() {
               <Link
                 key={event.id}
                 href={`/events/${event.slug}`}
-                className="group flex flex-col gap-4 border border-border bg-card p-5 transition-colors hover:bg-card/80 sm:flex-row sm:items-start sm:gap-6 sm:p-6"
+                className="group flex flex-col gap-4 rounded-md border border-border bg-card p-5 transition-colors hover:bg-card/80 sm:flex-row sm:items-start sm:gap-6 sm:p-6"
               >
                 {/* 左侧：标题 + 描述 + 赛道标签 */}
                 <div className="min-w-0 flex-1">
