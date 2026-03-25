@@ -142,3 +142,6 @@
 | 2026-03-22 | 暗色模式继续延期 | PLAN.md 明确 MVP 不启用暗色模式，统一浅色 |
 | 2026-03-23 | ARIA Landmarks 规范 | 为 header/main/nav/aside 添加语义化 ARIA labels，提升无障碍访问 |
 | 2026-03-23 | 骨架屏加载态 | 首页/赛事详情/管理后台添加 `loading.tsx`，数据加载时显示骨架而非空白 |
+| 2026-03-25 | 修复 --primary 颜色语义错位 | CSS --primary 之前错误使用蓝灰色 oklch(0.68 0.13 46)，现改为铜橘色 oklch(0.65 0.15 42)，与 DESIGN.md 中 #D97757 要求对齐。同步更新 --ring、--chart-1、--sidebar-primary、--sidebar-ring |
+| 2026-03-25 | 分层圆角体系确认 | 审计确认 Button(rounded-md)/Badge(rounded-full)/Dialog/Select(rounded-lg)/Card(直角) 组件圆角已符合分层设计 |
+| 2026-03-25 | Grid-disciplined 布局确认 | AdminSidebar 使用 border border-border bg-muted 模式符合网格分割设计意图 |
