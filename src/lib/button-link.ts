@@ -10,8 +10,8 @@ const variantClassName = {
 };
 
 const sizeClassName = {
-  default: "h-8 gap-1.5 px-2.5",
-  sm: "h-7 gap-1 rounded-md px-2.5 text-[0.8rem]",
+  default: "h-8 min-h-11 w-auto min-w-11 gap-1.5 px-2.5",
+  sm: "h-7 min-h-11 w-auto min-w-11 gap-1 rounded-md px-2.5 text-[0.8rem]",
 };
 
 export function linkButtonClassName(

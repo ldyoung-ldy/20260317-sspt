@@ -86,8 +86,9 @@ export function RegistrationForm({ event, action }: RegistrationFormProps) {
             你正在报名「{event.name}」。提交后状态默认为待审核，管理员审核通过后可在“我的报名”里确认参赛。
           </div>
 
-          <Field label="队伍名称（可选）" error={fieldErrors.teamName?.[0]}>
+          <Field label="队伍名称（可选）" htmlFor="team-name" error={fieldErrors.teamName?.[0]}>
             <Input
+              id="team-name"
               value={values.teamName}
               onChange={(inputEvent) =>
                 setValues((current) => ({
@@ -118,19 +119,24 @@ export function RegistrationForm({ event, action }: RegistrationFormProps) {
             </div>
           ) : (
             <div className="grid gap-4">
-              {event.customFields.map((field, index) => (
-                <Field
-                  key={field.id}
-                  label={field.required ? `${field.label} *` : field.label}
-                  error={fieldErrors[`answer-${index}`]?.[0]}
-                >
-                  {renderField(
-                    field,
-                    getAnswerValue(values.answers, field.id),
-                    (value) => updateAnswer(field.id, value)
-                  )}
-                </Field>
-              ))}
+              {event.customFields.map((field, index) => {
+                const fieldId = `field-${field.id}`;
+                return (
+                  <Field
+                    key={field.id}
+                    label={field.required ? `${field.label} *` : field.label}
+                    error={fieldErrors[`answer-${index}`]?.[0]}
+                    htmlFor={fieldId}
+                  >
+                    {renderField(
+                      field,
+                      getAnswerValue(values.answers, field.id),
+                      (value) => updateAnswer(field.id, value),
+                      fieldId
+                    )}
+                  </Field>
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -166,14 +172,16 @@ function Field({
   label,
   error,
   children,
+  htmlFor,
 }: {
   label: string;
   error?: string;
   children: ReactNode;
+  htmlFor?: string;
 }) {
   return (
     <div>
-      <Label>{label}</Label>
+      <Label htmlFor={htmlFor}>{label}</Label>
       <div className="mt-2">{children}</div>
       {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
     </div>
@@ -183,16 +191,18 @@ function Field({
 function renderField(
   field: EventCustomFieldInput,
   value: string,
-  onChange: (value: string) => void
+  onChange: (value: string) => void,
+  fieldId: string
 ) {
   if (field.type === "textarea") {
-    return <Textarea value={value} onChange={(event) => onChange(event.target.value)} />;
+    return <Textarea id={fieldId} value={value} onChange={(event) => onChange(event.target.value)} />;
   }
 
   if (field.type === "select") {
     return (
       <select
-        className="flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        id={fieldId}
+        className="flex h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
@@ -208,6 +218,7 @@ function renderField(
 
   return (
     <Input
+      id={fieldId}
       type={field.type === "url" ? "url" : "text"}
       value={value}
       onChange={(event) => onChange(event.target.value)}

@@ -122,9 +122,10 @@ export function ProjectForm({
         </CardHeader>
         <CardContent className="space-y-5">
           {event.tracks.length > 0 ? (
-            <Field label="参赛赛道" error={fieldErrors.track?.[0]}>
+            <Field label="参赛赛道" error={fieldErrors.track?.[0]} htmlFor="project-track">
               <select
-                className="flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                id="project-track"
+                className="flex h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 value={values.track}
                 onChange={(event_) => updateValue("track", event_.target.value)}
               >
@@ -242,14 +243,16 @@ function Field({
   label,
   error,
   children,
+  htmlFor,
 }: {
   label: string;
   error?: string;
   children: ReactNode;
+  htmlFor?: string;
 }) {
   return (
     <div>
-      <Label>{label}</Label>
+      <Label htmlFor={htmlFor}>{label}</Label>
       <div className="mt-2">{children}</div>
       {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
     </div>

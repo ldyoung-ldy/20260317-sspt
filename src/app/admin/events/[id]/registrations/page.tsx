@@ -90,20 +90,22 @@ export default async function AdminEventRegistrationsPage({
       <section className="border border-border bg-card p-5 lg:p-6">
         <form className="grid gap-4 md:grid-cols-[1.4fr_0.8fr_auto_auto]">
           <div>
-            <label className="text-sm font-medium">搜索报名人 / 邮箱 / 队伍</label>
+            <label htmlFor="registration-search" className="text-sm font-medium">搜索报名人 / 邮箱 / 队伍</label>
             <input
+              id="registration-search"
               name="query"
               defaultValue={filters.query}
               placeholder="例如：张三、team、example@company.com"
-              className="mt-2 flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
           <div>
-            <label className="text-sm font-medium">状态筛选</label>
+            <label htmlFor="registration-status-filter" className="text-sm font-medium">状态筛选</label>
             <select
+              id="registration-status-filter"
               name="status"
               defaultValue={filters.status ?? ""}
-              className="mt-2 flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <option value="">全部状态</option>
               {registrationStatuses.map((status) => (
