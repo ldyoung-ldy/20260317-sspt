@@ -27,7 +27,7 @@
 - [x] 管理员分配评委 → 双评委评分 → 后台汇总 → 前台公示 spec 已编写
 - [x] 非评审窗口阻断验证已并入评审 spec
 - [x] 多评委同赛事榜单汇总 spot check 已并入评审 spec
-- [ ] 本地 Playwright 实跑完成
+- [x] 本地 Playwright 实跑完成（2026-04-27 通过 Neon `neondb_e2e` branch + `E2E_DATABASE_URL` 注入机制；3/3 spec 通过，耗时 1.9 分钟）
 
 ## 4. CI
 
@@ -44,4 +44,13 @@
 
 ## 6. 本地 E2E 说明
 
-本地 E2E 需要隔离测试库（数据库名含 `test` 或 `e2e`）。当前 `.env.local` 的 `neondb` 受保护逻辑阻止，reset/seed 不会执行。
+本地 E2E 需要隔离测试库（数据库名含 `test` 或 `e2e`）。
+
+推荐做法：在 `.env.local` 中保留开发库 `DATABASE_URL`，并额外配置一个独立测试库 `E2E_DATABASE_URL`（推荐：Neon 测试 branch `neondb_e2e`，详细操作指引见 `acceptance/step-7-e2e-local-setup.md`）：
+
+- `bun run e2e:reset` 会优先使用 `E2E_DATABASE_URL`，连不上时才回退到 `DATABASE_URL`
+- `bun run test:e2e` 启动的 Next dev server 也会被自动注入 `DATABASE_URL=E2E_DATABASE_URL`
+- 两层都仍保留"非 CI 环境名称必须含 test/e2e"的安全断言；不设置 `E2E_DATABASE_URL` 时若 `DATABASE_URL` 仍是开发库（如 `neondb`），脚本会拒绝执行
+- CI 不设置 `E2E_DATABASE_URL`，行为保持原样（直接读 `DATABASE_URL=postgresql://...sspt_e2e`）
+
+新增测试库后首次需要执行 `bunx prisma migrate deploy` 或 `bun run db:push` 应用 schema。

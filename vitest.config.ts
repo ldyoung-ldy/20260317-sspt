@@ -7,6 +7,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    include: [
+      "src/**/*.{test,spec}.{ts,tsx}",
+      "e2e/helpers/**/*.{test,spec}.{ts,tsx}",
+    ],
   },
 });

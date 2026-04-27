@@ -1,13 +1,17 @@
 import { PrismaClient, type Prisma } from "@prisma/client";
-import { assertSafeE2EDatabaseUrl, getRequiredEnv } from "./env";
+import { assertSafeE2EDatabaseUrl, getE2EDatabaseUrl } from "./env";
 import { E2E_USERS } from "./users";
 
 let prisma: PrismaClient | null = null;
 
 function getE2EPrismaClient() {
   if (!prisma) {
-    assertSafeE2EDatabaseUrl(getRequiredEnv("DATABASE_URL"));
-    prisma = new PrismaClient();
+    const url = assertSafeE2EDatabaseUrl(getE2EDatabaseUrl());
+    prisma = new PrismaClient({
+      datasources: {
+        db: { url },
+      },
+    });
   }
 
   return prisma;

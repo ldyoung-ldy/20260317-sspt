@@ -3,15 +3,16 @@
 ## 当前状态
 
 - 自动化范围：Vitest 缺口已补齐，Playwright 三条主流程与 GitHub Actions workflow 已编写完成
-- 当前阻塞：本地默认 `.env.local` 指向的数据库名为 `neondb`，不满足 E2E reset/seed 的安全约束，因此本地还未执行真正的浏览器实跑
-- 当前建议：优先在 CI 的 PostgreSQL service container 中完成首次全量验证；若需要本地调试，再准备一条数据库名包含 `test` 或 `e2e` 的测试库连接串
+- 本地 E2E 隔离：已通过 `E2E_DATABASE_URL` 环境变量覆盖机制解锁——开发库 `DATABASE_URL` 与 E2E 测试库可并存，互不干扰
+- 当前建议：本地实跑前先准备一条数据库名包含 `test` 或 `e2e` 的测试库连接串，并写入 `.env.local` 的 `E2E_DATABASE_URL`
 
 ## 本地执行前置条件
 
 1. 已安装依赖：`bun install`
-2. 已准备隔离测试数据库，数据库名包含 `test` 或 `e2e`
+2. 已准备隔离测试数据库，数据库名包含 `test` 或 `e2e`（推荐：Neon 测试 branch 命名 `neondb_e2e`，或本地 Docker PostgreSQL `sspt_e2e`）
 3. 已配置最少环境变量：
-   - `DATABASE_URL`
+   - `DATABASE_URL`（开发库，可与测试库不同）
+   - `E2E_DATABASE_URL`（指向上面准备的测试库，可选；若不设置则回退到 `DATABASE_URL`，仍受 test/e2e 名称保护）
    - `AUTH_SECRET`
    - `ADMIN_EMAILS=admin-e2e@example.com`
 4. OAuth provider 不是必需项，E2E 登录通过 Auth.js session cookie 注入完成
@@ -26,7 +27,8 @@
 ### 准备测试库
 
 1. `bunx prisma generate`
-2. `bunx prisma migrate deploy`
+2. `E2E_DATABASE_URL="$E2E_DATABASE_URL" bunx prisma migrate deploy --schema prisma/schema.prisma`
+   （或 `DATABASE_URL=$E2E_DATABASE_URL bunx prisma migrate deploy`，确保 schema 应用到测试库而非开发库）
 3. `bun run e2e:reset`
 
 ### 运行浏览器自动化
