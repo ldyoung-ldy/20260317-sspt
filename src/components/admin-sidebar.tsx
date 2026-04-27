@@ -18,6 +18,13 @@ const items = [
   },
 ];
 
+export function isAdminNavItemActive(pathname: string, href: string): boolean {
+  if (href === "/admin") {
+    return pathname === "/admin";
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function AdminSidebar() {
   const pathname = usePathname();
 
@@ -33,8 +40,7 @@ export function AdminSidebar() {
       <nav className="space-y-1">
         {items.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isActive = isAdminNavItemActive(pathname, item.href);
 
           return (
             <Link
