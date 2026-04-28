@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 const baseClassName =
-  "inline-flex shrink-0 items-center justify-center rounded-[10px] border text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex shrink-0 items-center justify-center rounded-md border text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50";
 
 const variantClassName = {
   default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/90",
@@ -10,8 +10,8 @@ const variantClassName = {
 };
 
 const sizeClassName = {
-  default: "h-8 gap-1.5 px-2.5",
-  sm: "h-7 gap-1 rounded-[10px] px-2.5 text-[0.8rem]",
+  default: "h-8 min-h-11 w-auto min-w-11 gap-1.5 px-2.5",
+  sm: "h-7 min-h-11 w-auto min-w-11 gap-1 rounded-md px-2.5 text-[0.8rem]",
 };
 
 export function linkButtonClassName(

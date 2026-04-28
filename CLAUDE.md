@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `bun run db:generate` | 生成 Prisma Client |
 | `bun run db:migrate` | 创建并应用迁移 |
 | `bun run db:push` | 直接推送 schema 到数据库 |
-| `bun run db:studio` | 打开 Prisma Studio |
+| `bun run db:studio` | 打开 Prisma Studio 查看数据 |
 
 ## 技术栈
 
@@ -72,10 +72,51 @@ src/app/admin/
     ├── new/page.tsx           # 新建赛事
     └── [id]/
         ├── edit/page.tsx      # 编辑赛事
+        ├── judging/page.tsx   # 评审管理（含排名）
         └── registrations/
             ├── page.tsx       # 报名列表
             └── export/route.ts # 导出 CSV
 ```
+
+### Judge 评审页面
+
+```
+src/app/judge/
+├── page.tsx                  # 评委首页（分配的赛事列表）
+├── actions.ts                # 评分 Server Actions
+└── events/[id]/page.tsx      # 评审项目列表
+```
+
+### 用户个人中心
+
+```
+src/app/my/
+├── registrations/page.tsx    # 我的报名
+└── projects/page.tsx         # 我的项目
+```
+
+### 赛事阶段系统
+
+赛事阶段定义在 `src/lib/events/phase.ts`：
+
+| 阶段 | 条件 | 可操作 |
+|------|------|--------|
+| DRAFT | 未发布 | 编辑 |
+| UPCOMING | 已发布但报名未开始 | 查看 |
+| REGISTRATION | 报名时间内 | 报名 |
+| SUBMISSION_PENDING | 报名结束但提交未开始 | - |
+| SUBMISSION | 提交时间内 | 提交项目 |
+| REVIEW_PENDING | 提交结束但评审未开始 | - |
+| REVIEW | 评审时间内 | 评委评分 |
+| COMPLETED | 评审结束 | 查看排名（需开启）|
+
+### 评分与排名系统
+
+评分体系定义在 `src/lib/reviews/schema.ts`，排名计算在 `src/lib/reviews/ranking.ts`：
+- 每个赛事有独立的评分维度（scoringCriteria）
+- 评委对每个项目提交分数（ProjectScore），包含多个维度的得分和评语
+- 排名按总分降序，多个评委的平均分作为项目总分
+- `rankingsPublished` 字段控制是否公开排名
 
 ## 关键文件
 
@@ -89,6 +130,8 @@ src/app/admin/
 | `src/lib/events/phase.ts` | 赛事阶段计算逻辑 |
 | `src/lib/events/schema.ts` | 赛事相关 Zod Schema |
 | `src/lib/registrations/schema.ts` | 报名相关 Zod Schema |
+| `src/lib/reviews/ranking.ts` | 评分排名计算逻辑 |
+| `src/lib/reviews/queries.ts` | 评委/评审数据查询 |
 
 ## 环境变量
 
@@ -99,7 +142,8 @@ src/app/admin/
 
 ## 项目约定
 
-- 使用 `logger`（项目内置）而非 `console.log` 调试
 - 所有 API 响应必须包含明确错误处理
 - 新增后台页面保留双层鉴权防护
 - 测试文件与实现文件相邻放置: `src/lib/foo.ts` → `src/lib/foo.test.ts`
+
+@AGENTS.md

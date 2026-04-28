@@ -47,7 +47,7 @@ export default async function AdminEventsPage() {
         <MetricCard label="草稿" value={String(draftCount)} standalone />
       </section>
 
-      <section className="overflow-hidden border border-border bg-card">
+      <section className="border border-border bg-card">
         {events.length === 0 ? (
           <div className="border border-dashed border-border px-6 py-12 text-center">
             <h2 className="text-lg font-semibold">还没有赛事</h2>
@@ -59,108 +59,184 @@ export default async function AdminEventsPage() {
             </Link>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>赛事</TableHead>
-                <TableHead>阶段</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>时间</TableHead>
-                <TableHead>配置</TableHead>
-                <TableHead className="text-right">操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            {/* Mobile card list view */}
+            <div className="flex flex-col gap-4 p-4 md:hidden">
               {events.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell className="max-w-sm whitespace-normal">
-                    <div className="space-y-1">
-                      <p className="font-medium text-foreground">{event.name}</p>
-                      <p className="text-xs text-muted-foreground">/{event.slug}</p>
-                      <p className="line-clamp-2 text-sm text-muted-foreground">
-                        {event.description}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
+                <article key={event.id} className="space-y-3 border border-border bg-background p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-medium text-foreground">{event.name}</h3>
                     <EventPhaseBadge phase={event.phase} />
-                  </TableCell>
-                  <TableCell>
                     <Badge variant={event.published ? "default" : "outline"}>
                       {event.published ? "已发布" : "草稿"}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="whitespace-normal text-sm text-muted-foreground">
-                    <div>{formatDateRange(event.startDate, event.endDate)}</div>
-                    <div className="mt-1 text-xs">报名截止：{formatDate(event.registrationEnd)}</div>
-                  </TableCell>
-                  <TableCell className="whitespace-normal text-sm text-muted-foreground">
-                    <div>{event.tracks.length} 个赛道</div>
-                    <div>{event.prizes.length} 个奖项</div>
-                    <div>{event.scoringCriteria.length} 个评分维度</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap justify-end gap-2">
+                  </div>
+                  <p className="text-xs text-muted-foreground">/{event.slug}</p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span>报名截止：{formatDate(event.registrationEnd)}</span>
+                    <span>{event.tracks.length} 赛道</span>
+                    <span>{event.prizes.length} 奖项</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <Link
+                      href={`/admin/events/${event.id}/edit`}
+                      className={linkButtonClassName("outline", "sm")}
+                    >
+                      编辑
+                    </Link>
+                    <Link
+                      href={`/admin/events/${event.id}/registrations`}
+                      className={linkButtonClassName("outline", "sm")}
+                    >
+                      报名
+                    </Link>
+                    <Link
+                      href={`/admin/events/${event.id}/projects`}
+                      className={linkButtonClassName("outline", "sm")}
+                    >
+                      作品
+                    </Link>
+                    {event.published ? (
                       <Link
-                        href={`/admin/events/${event.id}/edit`}
+                        href={`/events/${event.slug}`}
                         className={linkButtonClassName("outline", "sm")}
                       >
-                        编辑
+                        预览
                       </Link>
-                      <Link
-                        href={`/admin/events/${event.id}/registrations`}
-                        className={linkButtonClassName("outline", "sm")}
-                      >
-                        报名管理
-                      </Link>
-                      <Link
-                        href={`/admin/events/${event.id}/projects`}
-                        className={linkButtonClassName("outline", "sm")}
-                      >
-                        作品管理
-                      </Link>
-                      <Link
-                        href={`/admin/events/${event.id}/judging`}
-                        className={linkButtonClassName("outline", "sm")}
-                      >
-                        评审管理
-                      </Link>
-                      {event.published ? (
-                        <Link
-                          href={`/events/${event.slug}`}
-                          className={linkButtonClassName("outline", "sm")}
-                        >
-                          预览
-                        </Link>
-                      ) : (
-                        <span className={linkButtonClassName("outline", "sm", "pointer-events-none opacity-60")}>
-                          待发布
-                        </span>
-                      )}
-                      <form
-                        action={async () => {
-                          "use server";
-                          const result = await togglePublish({
-                            eventId: event.id,
-                            published: !event.published,
-                          });
+                    ) : (
+                      <span className={linkButtonClassName("outline", "sm", "pointer-events-none opacity-60")}>
+                        待发布
+                      </span>
+                    )}
+                    <form
+                      action={async () => {
+                        "use server";
+                        const result = await togglePublish({
+                          eventId: event.id,
+                          published: !event.published,
+                        });
 
-                          if (!result.success) {
-                            throw new Error(result.error.message);
-                          }
-                        }}
-                      >
-                        <Button type="submit" variant="outline" size="sm">
-                          {event.published ? "取消发布" : "发布"}
-                        </Button>
-                      </form>
-                      {!event.published ? <EventDeleteButton eventId={event.id} /> : null}
-                    </div>
-                  </TableCell>
-                </TableRow>
+                        if (!result.success) {
+                          throw new Error(result.error.message);
+                        }
+                      }}
+                    >
+                      <Button type="submit" variant="outline" size="sm">
+                        {event.published ? "取消发布" : "发布"}
+                      </Button>
+                    </form>
+                    {!event.published ? <EventDeleteButton eventId={event.id} /> : null}
+                  </div>
+                </article>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden overflow-hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>赛事</TableHead>
+                    <TableHead>阶段</TableHead>
+                    <TableHead>状态</TableHead>
+                    <TableHead>时间</TableHead>
+                    <TableHead>配置</TableHead>
+                    <TableHead className="text-right">操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {events.map((event) => (
+                    <TableRow key={event.id}>
+                      <TableCell className="max-w-sm whitespace-normal">
+                        <div className="space-y-1">
+                          <p className="font-medium text-foreground">{event.name}</p>
+                          <p className="text-xs text-muted-foreground">/{event.slug}</p>
+                          <p className="line-clamp-2 text-sm text-muted-foreground">
+                            {event.description}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <EventPhaseBadge phase={event.phase} />
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={event.published ? "default" : "outline"}>
+                          {event.published ? "已发布" : "草稿"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-normal text-sm text-muted-foreground">
+                        <div>{formatDateRange(event.startDate, event.endDate)}</div>
+                        <div className="mt-1 text-xs">报名截止：{formatDate(event.registrationEnd)}</div>
+                      </TableCell>
+                      <TableCell className="whitespace-normal text-sm text-muted-foreground">
+                        <div>{event.tracks.length} 个赛道</div>
+                        <div>{event.prizes.length} 个奖项</div>
+                        <div>{event.scoringCriteria.length} 个评分维度</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Link
+                            href={`/admin/events/${event.id}/edit`}
+                            className={linkButtonClassName("outline", "sm")}
+                          >
+                            编辑
+                          </Link>
+                          <Link
+                            href={`/admin/events/${event.id}/registrations`}
+                            className={linkButtonClassName("outline", "sm")}
+                          >
+                            报名管理
+                          </Link>
+                          <Link
+                            href={`/admin/events/${event.id}/projects`}
+                            className={linkButtonClassName("outline", "sm")}
+                          >
+                            作品管理
+                          </Link>
+                          <Link
+                            href={`/admin/events/${event.id}/judging`}
+                            className={linkButtonClassName("outline", "sm")}
+                          >
+                            评审管理
+                          </Link>
+                          {event.published ? (
+                            <Link
+                              href={`/events/${event.slug}`}
+                              className={linkButtonClassName("outline", "sm")}
+                            >
+                              预览
+                            </Link>
+                          ) : (
+                            <span className={linkButtonClassName("outline", "sm", "pointer-events-none opacity-60")}>
+                              待发布
+                            </span>
+                          )}
+                          <form
+                            action={async () => {
+                              "use server";
+                              const result = await togglePublish({
+                                eventId: event.id,
+                                published: !event.published,
+                              });
+
+                              if (!result.success) {
+                                throw new Error(result.error.message);
+                              }
+                            }}
+                          >
+                            <Button type="submit" variant="outline" size="sm">
+                              {event.published ? "取消发布" : "发布"}
+                            </Button>
+                          </form>
+                          {!event.published ? <EventDeleteButton eventId={event.id} /> : null}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
       </section>
     </div>

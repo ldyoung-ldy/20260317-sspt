@@ -106,3 +106,42 @@
 - 解决方案：将移除评委改为事务操作，先删除该评委在当前赛事下的 `ProjectScore`，再删除 `EventJudge` 分配记录；同时在后台评委面板补充说明文案，并把验收清单与手工脚本补充到“移除后不再影响榜单”的验证点。
 - 验证：新增 `src/app/admin/events/actions.test.ts` 覆盖移除评委时会同步删除赛事评分记录；执行 `bun run lint && bun run typecheck && bun run test` 全部通过。
 - 涉及文件：`src/app/admin/events/actions.ts`、`src/app/admin/events/actions.test.ts`、`src/components/reviews/judge-assignment-panel.tsx`、`acceptance/step-5-review-ranking-checklist.md`、`acceptance/step-5-review-ranking-manual-script.md`
+
+## 2026-04-27 — 历史验收赛事 `管理员流程回归赛 2026` 残留在开发库
+
+- 现象：Step 2 验收期间留下的赛事 `管理员流程回归赛 2026`（slug `2026`，published=true）一直保留在 dev 库，PLAN.md 中作为非阻塞遗留项跟踪，会污染本地开发与后续 QA 数据。
+- 根因：该赛事是为完成"已发布状态拦截删除"等回归校验创造的样本，验收完成后未清理，又因为 `published=true` 不能直接走前台删除按钮。
+- 解决方案：编写一次性脚本通过 Prisma 查询确认关联数据为零（0 个报名/作品/评委/评分），再直接通过 Prisma `event.delete` 清理目标记录，并在执行前重新校验关联计数避免误删。
+- 验证：脚本输出确认仅有 1 条目标赛事且关联计数全为 0，删除后再次查询返回"无"；脚本执行完即从仓库移除。
+- 涉及文件：（一次性清理脚本，不入库）
+
+## 2026-04-27 — 本地 E2E 受 `DATABASE_URL=neondb` 安全约束阻塞，无法实跑
+
+- 现象：本地 `.env.local` 的 `DATABASE_URL` 指向 dev 库 `neondb`，`bun run e2e:reset` / `bun run test:e2e` 因 `assertSafeE2EDatabaseUrl` 拒绝执行；要本地实跑 Playwright 必须临时修改 `.env.local` 或绕过保护逻辑，风险高。
+- 根因：E2E 工具只读 `DATABASE_URL`，开发库与测试库共用一条环境变量；`assertSafeE2EDatabaseUrl` 的"名称必须含 test/e2e"保护是必要的，但缺少独立测试库通道。
+- 解决方案：引入 `E2E_DATABASE_URL` 覆盖机制——`e2e/helpers/env.ts` 新增 `getE2EDatabaseUrl()`，优先返回 `E2E_DATABASE_URL`，否则回退 `DATABASE_URL`；`e2e/helpers/db.ts` 在构造 `PrismaClient` 时显式传入 `datasources.db.url`；`playwright.config.ts` 在 `webServer.env` 中把 `E2E_DATABASE_URL` 注入为 `DATABASE_URL`，让 Next dev server 与 reset/seed 共享同一个测试库。安全断言保留，CI 行为不变（不设 `E2E_DATABASE_URL` 即可）。
+- 验证：新增 `e2e/helpers/env.test.ts`（6 用例，覆盖优先级、回退、缺失抛错、test/e2e 名称放行、非测试库拒绝、CI 短路）；`bun run lint && bun run typecheck && bun run test` 通过（87 tests）；本地手动跑过 4 个关键用例 + CI 短路均符合预期；2026-04-27 在 Neon 测试 branch `neondb_e2e` + `E2E_DATABASE_URL` 注入机制下完成本地 Playwright 实跑 3/3 全通过。
+- 涉及文件：`e2e/helpers/env.ts`、`e2e/helpers/env.test.ts`、`e2e/helpers/db.ts`、`playwright.config.ts`、`vitest.config.ts`、`.env.sample`、`acceptance/step-7-testing-checklist.md`、`acceptance/step-7-testing-manual-script.md`、`acceptance/step-7-e2e-local-setup.md`
+
+## 2026-04-27 — 本地 Playwright dev server 因 ADMIN_EMAILS 未注入导致 admin 流程全部 403
+
+- 现象：`E2E_DATABASE_URL` 隔离机制就绪后首次本地实跑 Playwright，3 条主流程全部失败：admin spec 找不到表单字段、registration spec 报名后未跳 my/registrations、review spec 找不到分配评委的输入框；表象都是 admin 路由被重定向。Playwright session 截图显示用户为"E2E Admin普通用户"——cookie 中的 ADMIN role 未生效。
+- 根因：`src/auth.config.ts` 的 jwt callback 永远以 `getRoleForEmail(email)` 重写 role，只有当邮箱命中 `ADMIN_EMAILS` 才返回 ADMIN。本地 `.env.local` 的 `ADMIN_EMAILS=lidiyang1993@gmail.com` 不包含 E2E admin `admin-e2e@example.com`；Playwright 启动的 dev server 继承了 `.env.local`，导致 E2E admin 一直被识别为普通用户。
+- 解决方案：扩展 `playwright.config.ts` 的 `webServer.env`：当检测到 `E2E_DATABASE_URL` 时，同步注入 `ADMIN_EMAILS=admin-e2e@example.com`（与 `.github/workflows/ci.yml` 里 CI 行为对齐），并支持通过 `E2E_ADMIN_EMAILS` 环境变量覆盖。同时把 Playwright 全局 `timeout` 调到本地 120s/CI 60s，`expect.timeout` 调到 10s——dev 模式 Turbopack 首次编译会让单条 spec 超过默认 30s。
+- 验证：本地 reset 测试库 + 重启 dev server + Playwright 实跑，3/3 spec 通过（admin-publish 19s / registration-submission 26.7s / review-ranking 1.1m，总 1.9 分钟）。
+- 涉及文件：`playwright.config.ts`
+
+## 2026-04-27 — Admin 侧边栏"概览"和"赛事管理"在子路径下双高亮
+
+- 现象：进入 `/admin/events`、`/admin/events/new`、`/admin/events/[id]/edit` 等任一子路径时，左侧导航栏中"概览"和"赛事管理"两个 tab 同时显示为激活状态（边框 + 文字均为 primary 色），无法判断当前位置。
+- 根因：`src/components/admin-sidebar.tsx` 的 `isActive` 判断使用 `pathname === item.href || pathname.startsWith(\`${item.href}/\`)`，但 `概览` 的 href 是 `/admin`，对子路径 `/admin/events` 也满足 `startsWith("/admin/")`，导致根路径项错误命中所有 admin 子页面。
+- 解决方案：抽出纯函数 `isAdminNavItemActive(pathname, href)`，对 `/admin` 改为严格 `pathname === "/admin"` 精确匹配，其他项保持 prefix 匹配；并加 `pathname.startsWith(\`${href}/\`)` 末尾的 `/` 防御 `/admin/eventsx` 这类前缀陷阱。
+- 验证：新增 `src/components/admin-sidebar.test.ts`（4 用例：精确匹配 / 子路径 prefix / 前缀陷阱防御 / 非 admin 路径），4/4 通过；`bun run lint && bun run typecheck` 通过。
+- 涉及文件：`src/components/admin-sidebar.tsx`、`src/components/admin-sidebar.test.ts`
+
+## 2026-04-27 — gstack qa 探索式 QA 发现 10 个真实可优化项（不阻塞）
+
+- 现象：在 Playwright 主流程通过后，借助 `agent-browser` 按 gstack qa 流程做了一轮探索式 QA，覆盖匿名首页、登录态后台、报名表单、错误页、移动端、控制台等场景。
+- 结果：综合健康分 85/100，发现 10 个 issues（全部归档到 `.gstack/qa-reports/qa-report-localhost-2026-04-27.md`），其中 3 个 High（报名表单 stale validation、`window.confirm/alert` 替代为 AlertDialog、404/SignIn/Admin 首页占位文案）、3 个 Medium、4 个 Low；不阻塞核心流程使用。
+- 验证：控制台干净，关键流程（创建赛事 → 发布 → 报名 → 录取 → 确认 → 提交 → 评审 → 排名）端到端可用。
+- 涉及文件：`.gstack/qa-reports/qa-report-localhost-2026-04-27.md`、`.gstack/qa-reports/screenshots/*`

@@ -152,20 +152,22 @@ export default async function AdminEventProjectsPage({
       <section className="border border-border bg-card p-5 lg:p-6">
         <form className="grid gap-4 md:grid-cols-[1.2fr_0.7fr_0.7fr_auto_auto]">
           <div>
-            <label className="text-sm font-medium">搜索作品 / 提交者 / 邮箱 / 队伍</label>
+            <label htmlFor="project-search" className="text-sm font-medium">搜索作品 / 提交者 / 邮箱 / 队伍</label>
             <input
+              id="project-search"
               name="query"
               defaultValue={filters.query}
               placeholder="例如：Factory、张三、team、example@company.com"
-              className="mt-2 flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
           <div>
-            <label className="text-sm font-medium">状态筛选</label>
+            <label htmlFor="project-status-filter" className="text-sm font-medium">状态筛选</label>
             <select
+              id="project-status-filter"
               name="status"
               defaultValue={filters.status ?? ""}
-              className="mt-2 flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <option value="">全部状态</option>
               <option value="DRAFT">{getProjectStatusLabel("DRAFT")}</option>
@@ -173,11 +175,12 @@ export default async function AdminEventProjectsPage({
             </select>
           </div>
           <div>
-            <label className="text-sm font-medium">赛道筛选</label>
+            <label htmlFor="project-track-filter" className="text-sm font-medium">赛道筛选</label>
             <select
+              id="project-track-filter"
               name="track"
               defaultValue={filters.track ?? ""}
-              className="mt-2 flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-2 flex h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <option value="">全部赛道</option>
               {data.event.tracks.map((track) => (

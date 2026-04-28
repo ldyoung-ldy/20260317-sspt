@@ -621,13 +621,12 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 
 #### 当前非阻塞遗留 / 延期项
 
-- 数据库中仍保留一条历史验收赛事 `管理员流程回归赛 2026`（已发布），需决定保留还是清理
-- 上述遗留项不影响当前系统使用，按当前决策延期到 Step 3 开发完成后处理
+- ~~数据库中仍保留一条历史验收赛事 `管理员流程回归赛 2026`（已发布），需决定保留还是清理~~ — 2026-04-27 已通过 Prisma 一次性脚本清理（关联数据为零，安全删除），归档至 `RESOLVED_ISSUES.md`
 
 #### 下一步最高优先级
 
 1. 进入 Step 3 报名流程开发
-2. Step 3 完成后再回头处理历史验收赛事 `管理员流程回归赛 2026` 的去留
+2. ~~Step 3 完成后再回头处理历史验收赛事 `管理员流程回归赛 2026` 的去留~~ — 已于 2026-04-27 清理
 3. 若 Step 3 开发中产生新的验收数据，再统一整理 Step 2 / Step 3 的测试数据清理策略
 
 #### 旧计划校正（与实际代码 / 验收记录对齐）
@@ -802,13 +801,19 @@ MVP 为**单租户**模式，多租户隔离推迟到 Phase 1.5。
 
 **目标**: E2E 测试覆盖完整流程，CI 配置，补齐测试漏洞。
 
-- [ ] 安装配置 Playwright (E2E)
-- [ ] E2E 测试:
-  - [ ] 管理员创建赛事 → 发布
-  - [ ] 用户报名 → 管理员接受 → 用户确认
-  - [ ] 用户提交作品
-  - [ ] 评委评分 → 查看排名
-- [ ] 验证: 所有测试通过，覆盖核心流程
+- [x] 安装配置 Playwright (E2E)
+- [x] E2E 测试:
+  - [x] 管理员创建赛事 → 发布 → 前台可见
+  - [x] 用户报名 → 管理员接受 → 用户确认 → 提交作品
+  - [x] 评委评分 → 排名计算 → 管理员发布 → 前台可见（含非评审窗口阻断 + 多评委榜单 spot check）
+- [x] CI 配置 (GitHub Actions): push 时自动运行 lint + typecheck + Vitest + Playwright
+- [x] 验证: 所有测试通过，CI Run 23422018389 全量绿灯
+
+**Step 7 当前进度（2026-03-23，项目进度存档）**
+
+1. 已完成：Playwright 依赖与配置、`e2e/helpers/` 工具层（cookie 注入/reset-seed/phase-shift/UI）、3 条主流程 spec、Vitest 补强（81 tests）、GitHub Actions workflow（PostgreSQL service container `sspt_e2e`）、Step 5 边界项关闭、Step 7 验收文档
+2. CI 全量绿灯：lint ✓ typecheck ✓ Vitest 81 tests ✓ Playwright 3 specs ✓
+3. 本地 E2E 实跑需隔离测试库（数据库名含 `test` 或 `e2e`）；2026-04-27 已通过新增 `E2E_DATABASE_URL` 覆盖机制解锁——开发库 `DATABASE_URL` 可保持 `neondb` 不变，`E2E_DATABASE_URL` 单独指向测试库，`bun run e2e:reset` 与 `bun run test:e2e` 都会切换到测试库，CI 行为不变
 
 ### Step 8: 部署上线 (Day 8)
 

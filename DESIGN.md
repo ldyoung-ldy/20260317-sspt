@@ -70,10 +70,36 @@
 - **Grid:** 1 col (mobile) / 2 col (md) / 3-4 col (xl) for card grids
 - **Admin:** Fixed sidebar 220px + fluid content area
 - **Max content width:** 1152px (72rem)
-- **Border radius:** 统一 4px
-  - 默认: 4px（`rounded` / `rounded-sm`）— 按钮、输入框、卡片、badge、dialog 均适用
-  - 头像: 保持 `rounded-full`（圆形头像）
-  - 图片: 可使用 4-8px，UI 元素保持 4px
+- **Border radius:** 分层圆角体系（开发时必须严格遵循）
+  - **设计原则:** 网格容器保持直角以强化 Grid-disciplined 美学，交互元素用圆角增加亲和力，浮层用大圆角暗示层级
+  - **第一层 — 直角（0px）— 网格容器 & 结构性边框:**
+    - 统计卡片（MetricCard）: 直角 — 网格数据展示，保持冷静克制
+    - 表格外层容器（`overflow-hidden border`）: 直角 — 数据密集型，锐利专业
+    - PageHeaderCard / 内容区块容器: 直角 — 作为页面结构性骨架
+    - 信息块（`border border-border bg-background/60`）: 直角 — 嵌套在卡片内的子块
+    - 加载骨架容器: 直角 — 与目标组件保持一致
+    - 示例: `border border-border bg-card p-6` ✅（不加 rounded）
+  - **第二层 — 小圆角 `rounded-md`（6px）— 操作按钮 & 表单控件:**
+    - 按钮（Button）: `rounded-md` — 所有尺寸统一，包括 sm/xs/icon 变体
+    - 链接按钮（linkButtonClassName）: `rounded-md` — 与 Button 完全一致
+    - 输入框（Input / Textarea）: `rounded-md` — 表单控件
+    - Select trigger: `rounded-md`
+    - 首页赛事卡片: `rounded-md` — 独立可点击卡片，区别于结构容器
+    - 示例: 编辑、报名管理、取消发布等操作按钮均为 `rounded-md`
+  - **第三层 — 胶囊 `rounded-full` — 标签 & 状态指示:**
+    - Badge（所有 variant）: `rounded-full` — 已发布/草稿/报名中等状态标签
+    - EventPhaseBadge: `rounded-full` — 赛事阶段标签
+    - 用户信息胶囊: `rounded-full` — 右上角用户区域
+    - 头像: `rounded-full` — 圆形
+  - **第四层 — 大圆角 `rounded-lg`（8px）— 浮层 & 弹出:**
+    - Dialog / Modal: `rounded-lg` — 浮层暗示高于页面层级
+    - DropdownMenu popup: `rounded-lg`
+    - Select popup: `rounded-lg`
+    - Tabs list 容器: `rounded-lg`
+  - **⚠️ 禁止事项:**
+    - 禁止同一行操作按钮圆角不一致（Button 和 linkButtonClassName 必须统一）
+    - 禁止给网格容器加 rounded（破坏 Grid-disciplined 美学）
+    - 禁止自行发明圆角值（如 `rounded-[10px]`、`rounded-[12px]`），只用 Tailwind 预设
 - **Navigation:** Fixed top, `backdrop-filter: blur(12px)`, 半透明背景 `rgba(250,248,245,0.85)`
 
 ## Accessibility
@@ -116,3 +142,6 @@
 | 2026-03-22 | 暗色模式继续延期 | PLAN.md 明确 MVP 不启用暗色模式，统一浅色 |
 | 2026-03-23 | ARIA Landmarks 规范 | 为 header/main/nav/aside 添加语义化 ARIA labels，提升无障碍访问 |
 | 2026-03-23 | 骨架屏加载态 | 首页/赛事详情/管理后台添加 `loading.tsx`，数据加载时显示骨架而非空白 |
+| 2026-03-25 | 修复 --primary 颜色语义错位 | CSS --primary 之前错误使用蓝灰色 oklch(0.68 0.13 46)，现改为铜橘色 oklch(0.65 0.15 42)，与 DESIGN.md 中 #D97757 要求对齐。同步更新 --ring、--chart-1、--sidebar-primary、--sidebar-ring |
+| 2026-03-25 | 分层圆角体系确认 | 审计确认 Button(rounded-md)/Badge(rounded-full)/Dialog/Select(rounded-lg)/Card(直角) 组件圆角已符合分层设计 |
+| 2026-03-25 | Grid-disciplined 布局确认 | AdminSidebar 使用 border border-border bg-muted 模式符合网格分割设计意图 |

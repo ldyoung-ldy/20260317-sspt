@@ -487,9 +487,10 @@ export function EventForm({
                       }
                     />
                   </Field>
-                  <Field label="字段类型">
+                  <Field label="字段类型" htmlFor={`custom-field-type-${index}`}>
                     <select
-                      className="flex h-8 w-full border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                      id={`custom-field-type-${index}`}
+                      className="flex h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                       value={field.type}
                       onChange={(event) =>
                         updateArrayItem("customFields", index, {
@@ -569,15 +570,17 @@ function Field({
   error,
   className,
   children,
+  htmlFor,
 }: {
   label: string;
   error?: string;
   className?: string;
   children: ReactNode;
+  htmlFor?: string;
 }) {
   return (
     <div className={className}>
-      <Label>{label}</Label>
+      <Label htmlFor={htmlFor}>{label}</Label>
       <div className="mt-2">{children}</div>
       {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
     </div>

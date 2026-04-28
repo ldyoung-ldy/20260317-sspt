@@ -28,7 +28,7 @@ export async function AppHeader() {
     .charAt(0)
     .toUpperCase();
   const linkButtonClassName =
-    "inline-flex h-7 items-center justify-center rounded-[min(var(--radius-md),12px)] bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground transition-colors hover:bg-primary/90";
+    "inline-flex h-7 items-center justify-center rounded-md bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground transition-colors hover:bg-primary/90";
 
   const navItems: { href: string; label: string }[] = [
     { href: "/", label: "首页" },
@@ -92,17 +92,17 @@ export async function AppHeader() {
           />
           {session?.user ? (
             <>
-              <div className="hidden items-center gap-3 border border-border bg-card px-2 py-1.5 md:flex">
-                <div className="flex size-8 items-center justify-center bg-primary/10 text-xs font-semibold text-primary">
+              <div className="hidden items-center gap-2.5 rounded-full border border-border/60 bg-card py-1 pl-1 pr-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:flex">
+                <div className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                   {initials}
                 </div>
-                <div className="pr-2 text-sm">
-                  <div className="font-medium text-foreground">
+                <div className="text-sm leading-tight">
+                  <span className="font-medium text-foreground">
                     {getUserLabel(session.user.name, session.user.email)}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
+                  </span>
+                  <span className="ml-1.5 text-xs text-muted-foreground">
                     {session.user.role === "ADMIN" ? "管理员" : "普通用户"}
-                  </div>
+                  </span>
                 </div>
               </div>
 
@@ -112,7 +112,7 @@ export async function AppHeader() {
                   await signOut({ redirectTo: "/" });
                 }}
               >
-                <Button type="submit" variant="outline" size="sm">
+                <Button type="submit" variant="ghost" size="sm" className="rounded-full text-muted-foreground hover:text-foreground">
                   退出登录
                 </Button>
               </form>

@@ -119,106 +119,187 @@ export function AdminRegistrationReviewTable({
         </div>
       ) : null}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-10">
-              <input
-                type="checkbox"
-                checked={allPendingSelected}
-                onChange={(event) => toggleAllPending(event.target.checked)}
-                aria-label="全选待处理报名"
-                className="size-4 rounded border-border text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
-              />
-            </TableHead>
-            <TableHead>报名人</TableHead>
-            <TableHead>队伍</TableHead>
-            <TableHead>补充信息</TableHead>
-            <TableHead>状态</TableHead>
-            <TableHead>时间</TableHead>
-            <TableHead className="text-right">操作</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {registrations.map((registration) => {
-            const selectable = registration.status === "PENDING";
+      {/* Mobile card list view */}
+      <div className="flex flex-col gap-4 md:hidden">
+        {registrations.map((registration) => {
+          const selectable = registration.status === "PENDING";
 
-            return (
-              <TableRow key={registration.id}>
-                <TableCell>
-                  <input
-                    type="checkbox"
-                    disabled={!selectable}
-                    checked={selectedIds.includes(registration.id)}
-                    onChange={(event) => toggleSelection(registration.id, event.target.checked)}
-                    aria-label={`选择报名 ${registration.id}`}
-                    className="size-4 rounded border-border text-primary focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                </TableCell>
-                <TableCell className="whitespace-normal">
-                  <div className="space-y-1">
+          return (
+            <article key={registration.id} className="space-y-3 border border-border bg-background p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  {selectable && (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(registration.id)}
+                      onChange={(event) => toggleSelection(registration.id, event.target.checked)}
+                      aria-label={`选择报名 ${registration.user.name ?? registration.user.email}`}
+                      className="size-4 rounded border-border text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
+                    />
+                  )}
+                  <div>
                     <p className="font-medium text-foreground">
                       {registration.user.name ?? registration.user.email ?? "未命名用户"}
                     </p>
                     <p className="text-xs text-muted-foreground">{registration.user.email ?? "未提供邮箱"}</p>
                   </div>
-                </TableCell>
-                <TableCell className="whitespace-normal text-sm text-muted-foreground">
-                  {registration.teamName || "个人参赛"}
-                </TableCell>
-                <TableCell className="max-w-md whitespace-normal text-sm text-muted-foreground">
-                  {registration.answers.length === 0 ? (
-                    "无"
-                  ) : (
-                    <div className="space-y-1">
-                      {registration.answers.map((answer) => (
-                        <p key={`${registration.id}-${answer.label}`}>
-                          <span className="font-medium text-foreground">{answer.label}：</span>
-                          {answer.value || "未填写"}
-                        </p>
-                      ))}
-                    </div>
+                </div>
+                <RegistrationStatusBadge status={registration.status} />
+              </div>
+
+              <div className="text-sm text-muted-foreground">
+                {registration.teamName ? `队伍：${registration.teamName}` : "个人参赛"}
+              </div>
+
+              {registration.answers.length > 0 && (
+                <div className="space-y-1 border border-dashed border-border bg-muted/50 p-3 text-sm">
+                  {registration.answers.slice(0, 2).map((answer) => (
+                    <p key={`${registration.id}-${answer.label}`} className="text-muted-foreground">
+                      <span className="font-medium text-foreground">{answer.label}：</span>
+                      {answer.value || "未填写"}
+                    </p>
+                  ))}
+                  {registration.answers.length > 2 && (
+                    <p className="text-xs text-muted-foreground">+{registration.answers.length - 2} 项</p>
                   )}
-                </TableCell>
-                <TableCell>
-                  <RegistrationStatusBadge status={registration.status} />
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {formatDate(registration.createdAt)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap justify-end gap-2">
-                    {selectable ? (
-                      <>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          disabled={isPending}
-                          onClick={() => submit("ACCEPTED", [registration.id])}
-                        >
-                          接受
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="destructive"
-                          disabled={isPending}
-                          onClick={() => submit("REJECTED", [registration.id])}
-                        >
-                          拒绝
-                        </Button>
-                      </>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">无需处理</span>
-                    )}
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                <span className="text-xs text-muted-foreground">{formatDate(registration.createdAt)}</span>
+                {selectable ? (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={isPending}
+                      onClick={() => submit("ACCEPTED", [registration.id])}
+                    >
+                      接受
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      disabled={isPending}
+                      onClick={() => submit("REJECTED", [registration.id])}
+                    >
+                      拒绝
+                    </Button>
                   </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                ) : (
+                  <span className="text-xs text-muted-foreground">无需处理</span>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      {/* Desktop table view */}
+      <div className="hidden overflow-hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">
+                <input
+                  type="checkbox"
+                  checked={allPendingSelected}
+                  onChange={(event) => toggleAllPending(event.target.checked)}
+                  aria-label="全选待处理报名"
+                  className="size-4 rounded border-border text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
+                />
+              </TableHead>
+              <TableHead>报名人</TableHead>
+              <TableHead>队伍</TableHead>
+              <TableHead>补充信息</TableHead>
+              <TableHead>状态</TableHead>
+              <TableHead>时间</TableHead>
+              <TableHead className="text-right">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {registrations.map((registration) => {
+              const selectable = registration.status === "PENDING";
+
+              return (
+                <TableRow key={registration.id}>
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      disabled={!selectable}
+                      checked={selectedIds.includes(registration.id)}
+                      onChange={(event) => toggleSelection(registration.id, event.target.checked)}
+                      aria-label={`选择报名 ${registration.id}`}
+                      className="size-4 rounded border-border text-primary focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </TableCell>
+                  <TableCell className="whitespace-normal">
+                    <div className="space-y-1">
+                      <p className="font-medium text-foreground">
+                        {registration.user.name ?? registration.user.email ?? "未命名用户"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{registration.user.email ?? "未提供邮箱"}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="whitespace-normal text-sm text-muted-foreground">
+                    {registration.teamName || "个人参赛"}
+                  </TableCell>
+                  <TableCell className="max-w-md whitespace-normal text-sm text-muted-foreground">
+                    {registration.answers.length === 0 ? (
+                      "无"
+                    ) : (
+                      <div className="space-y-1">
+                        {registration.answers.map((answer) => (
+                          <p key={`${registration.id}-${answer.label}`}>
+                            <span className="font-medium text-foreground">{answer.label}：</span>
+                            {answer.value || "未填写"}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <RegistrationStatusBadge status={registration.status} />
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatDate(registration.createdAt)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {selectable ? (
+                        <>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            disabled={isPending}
+                            onClick={() => submit("ACCEPTED", [registration.id])}
+                          >
+                            接受
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            disabled={isPending}
+                            onClick={() => submit("REJECTED", [registration.id])}
+                          >
+                            拒绝
+                          </Button>
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">无需处理</span>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
