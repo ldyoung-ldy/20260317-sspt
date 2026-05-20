@@ -3,6 +3,7 @@ import {
   getEventLandingPageByEventId,
   getEventLandingPageById,
 } from "@/lib/ai/queries";
+import { extractHtmlDocument } from "@/lib/ai/html-sanitize";
 
 export default async function AdminLandingPreviewPage({
   params,
@@ -22,7 +23,7 @@ export default async function AdminLandingPreviewPage({
     notFound();
   }
 
-  const html = landingPage.content;
+  const html = extractHtmlDocument(landingPage.content);
 
   return (
     <iframe

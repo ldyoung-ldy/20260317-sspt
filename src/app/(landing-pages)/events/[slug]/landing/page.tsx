@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getPublishedEventBySlug } from "@/lib/events/queries";
+import { extractHtmlDocument } from "@/lib/ai/html-sanitize";
 
 export default async function EventLandingPage({
   params,
@@ -30,7 +31,7 @@ export default async function EventLandingPage({
     );
   }
 
-  const html = landingPageData.content;
+  const html = extractHtmlDocument(landingPageData.content);
 
   return (
     <iframe

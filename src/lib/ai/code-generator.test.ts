@@ -265,6 +265,48 @@ describe("generateLandingPageStream", () => {
     expect(doneEvents).toHaveLength(1);
   });
 
+  it("DeepSeek reasoning_content 应直接发送 thinking 事件，content 进入代码阶段", async () => {
+    const aiChunks = [
+      'data: {"id":"1","choices":[{"delta":{"reasoning_content":"我会先梳理赛事资料和视觉方向。"},"finish_reason":null}]}\n',
+      'data: {"id":"2","choices":[{"delta":{"content":"```html\\n<!DOCTYPE html>"},"finish_reason":null}]}\n',
+      'data: {"id":"3","choices":[{"delta":{"content":"<html><body>ok</body></html>"},"finish_reason":"stop"}]}\ndata: [DONE]\n',
+    ];
+    globalThis.fetch = vi.fn().mockResolvedValue(createMockAIResponse(aiChunks));
+
+    const { generateLandingPageStream } = await import("@/lib/ai/code-generator");
+    const stream = generateLandingPageStream({
+      eventData: {
+        name: "测试",
+        description: "描述",
+        startDate: "2026-04-01",
+        endDate: "2026-06-30",
+        registrationStart: "2026-04-01",
+        registrationEnd: "2026-05-15",
+        submissionStart: "2026-05-16",
+        submissionEnd: "2026-06-15",
+        reviewStart: "2026-06-16",
+        reviewEnd: "2026-06-30",
+        tracks: [],
+        challenges: [],
+        prizes: [],
+        scoringCriteria: [],
+      },
+      styleHint: "简约",
+      eventSlug: "test-slug",
+    });
+
+    const events = await collectSSEEvents(stream);
+    const thinkingEvents = events.filter((e) => e.type === "thinking");
+    const phaseEvents = events.filter((e) => e.type === "phase");
+    const codeEvents = events.filter((e) => e.type === "code");
+    const doneEvent = events.find((e) => e.type === "done");
+
+    expect(thinkingEvents.some((e) => e.data.includes("视觉方向"))).toBe(true);
+    expect(phaseEvents[0].data).toBe('{"phase":"code"}');
+    expect(codeEvents.some((e) => e.data.includes("<!DOCTYPE html>"))).toBe(true);
+    expect(doneEvent?.data).not.toContain("```html");
+  });
+
   it("保存到 done 的 HTML 应剥离结尾代码围栏", async () => {
     const aiChunks = [
       'data: {"id":"1","choices":[{"delta":{"content":"```html\\n<!DOCTYPE html>"},"finish_reason":null}]}\n',
@@ -298,6 +340,42 @@ describe("generateLandingPageStream", () => {
     const doneEvent = events.find((e) => e.type === "done");
 
     expect(doneEvent?.data).toContain("<!DOCTYPE html>");
+    expect(doneEvent?.data).not.toContain("```");
+  });
+
+  it("保存到 done 的 HTML 应剥离 </html> 后的分析文字", async () => {
+    const aiChunks = [
+      'data: {"id":"1","choices":[{"delta":{"content":"```html\\n<!DOCTYPE html><html><body>ok</body></html>\\n```\\n### 视觉亮点：这些文字不应进入页面"},"finish_reason":"stop"}]}\ndata: [DONE]\n',
+    ];
+    globalThis.fetch = vi.fn().mockResolvedValue(createMockAIResponse(aiChunks));
+
+    const { generateLandingPageStream } = await import("@/lib/ai/code-generator");
+    const stream = generateLandingPageStream({
+      eventData: {
+        name: "测试",
+        description: "描述",
+        startDate: "2026-04-01",
+        endDate: "2026-06-30",
+        registrationStart: "2026-04-01",
+        registrationEnd: "2026-05-15",
+        submissionStart: "2026-05-16",
+        submissionEnd: "2026-06-15",
+        reviewStart: "2026-06-16",
+        reviewEnd: "2026-06-30",
+        tracks: [],
+        challenges: [],
+        prizes: [],
+        scoringCriteria: [],
+      },
+      styleHint: "简约",
+      eventSlug: "test-slug",
+    });
+
+    const events = await collectSSEEvents(stream);
+    const doneEvent = events.find((e) => e.type === "done");
+
+    expect(doneEvent?.data).toContain("</html>");
+    expect(doneEvent?.data).not.toContain("视觉亮点");
     expect(doneEvent?.data).not.toContain("```");
   });
 

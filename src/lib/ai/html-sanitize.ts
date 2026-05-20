@@ -1,8 +1,24 @@
 const HTML_CODE_FENCE_START = /^\s*```(?:html)?\s*/i;
 const HTML_CODE_FENCE_END = /\s*```\s*$/;
+const HTML_DOCUMENT_END = /<\/html\s*>/gi;
 
 export function stripHtmlCodeFence(html: string): string {
   return html.replace(HTML_CODE_FENCE_START, "").replace(HTML_CODE_FENCE_END, "");
+}
+
+export function extractHtmlDocument(html: string): string {
+  const unfencedHtml = stripHtmlCodeFence(html);
+  const endMatches = [...unfencedHtml.matchAll(HTML_DOCUMENT_END)];
+  const lastEndMatch = endMatches.at(-1);
+
+  if (!lastEndMatch?.index) {
+    return unfencedHtml;
+  }
+
+  return unfencedHtml.slice(
+    0,
+    lastEndMatch.index + lastEndMatch[0].length
+  );
 }
 
 export function findHtmlStart(text: string):

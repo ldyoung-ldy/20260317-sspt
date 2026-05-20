@@ -4,6 +4,19 @@ export const CODE_VIEW_MASK_IMAGE =
 export const THINKING_PANEL_CLASS_NAME =
   "flex flex-none flex-col overflow-hidden border-b border-border";
 
+export const GENERATION_ATTACHMENT_LABELS = [
+  "赛事资料",
+  "风格要求",
+  "Frontend Design Skill",
+  "landing-page.html",
+] as const;
+
+export const GENERATION_PROGRESS_GRID_CLASS_NAME =
+  "grid min-h-0 flex-1 overflow-hidden lg:grid-cols-[280px_minmax(0,1fr)]";
+
+export const GENERATION_REASONING_SECTION_CLASS_NAME =
+  "flex flex-none flex-col overflow-hidden border-b border-border bg-background";
+
 export const GENERATING_PAGE_CLASS_NAME =
   "flex h-[calc(100dvh-8rem)] min-h-0 flex-col overflow-hidden border border-border bg-[#111111]";
 

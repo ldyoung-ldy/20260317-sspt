@@ -6,21 +6,21 @@ import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  CODE_PANEL_CLASS_NAME,
-  CODE_SCROLL_CLASS_NAME,
   COMPLETED_GENERATION_ACTIONS,
-  CODE_VIEW_MASK_IMAGE,
+  GENERATION_ATTACHMENT_LABELS,
   GENERATING_PAGE_CLASS_NAME,
-  THINKING_PANEL_CLASS_NAME,
 } from "@/components/events/generating-page-layout";
+import {
+  LandingGenerationProgress,
+  type GenerationAttachment,
+  type GenerationStatus,
+} from "@/components/events/landing-generation-progress";
 
 interface GeneratingPageContentProps {
   eventId: string;
   eventName: string;
   initialStyleHint?: string;
 }
-
-type GenerationStatus = "idle" | "connecting" | "thinking" | "code" | "completed" | "error";
 
 const STYLE_HINTS = [
   { id: "minimal", label: "简约", description: "简洁大方，大量留白，清晰层次" },
@@ -35,6 +35,59 @@ function formatTimer(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function getStyleHint(selectedHint: string, customHint: string) {
+  return (
+    customHint ||
+    STYLE_HINTS.find((hint) => hint.id === selectedHint)?.label ||
+    selectedHint
+  );
+}
+
+function createGenerationAttachments(
+  status: GenerationStatus
+): GenerationAttachment[] {
+  return [
+    {
+      id: "event-data",
+      type: "file",
+      filename: GENERATION_ATTACHMENT_LABELS[0],
+      mediaType: "application/json",
+      url: "",
+      status: "ready",
+    },
+    {
+      id: "style-hint",
+      type: "file",
+      filename: GENERATION_ATTACHMENT_LABELS[1],
+      mediaType: "text/plain",
+      url: "",
+      status: "ready",
+    },
+    {
+      id: "frontend-design-skill",
+      type: "source-document",
+      sourceId: "frontend-design-skill",
+      title: GENERATION_ATTACHMENT_LABELS[2],
+      filename: "SKILL.md",
+      mediaType: "text/markdown",
+      status: "ready",
+    },
+    {
+      id: "landing-page-html",
+      type: "file",
+      filename: GENERATION_ATTACHMENT_LABELS[3],
+      mediaType: "text/html",
+      url: "",
+      status:
+        status === "completed"
+          ? "complete"
+          : status === "code"
+            ? "streaming"
+            : "ready",
+    },
+  ];
 }
 
 export function GeneratingPageContent({
@@ -61,8 +114,13 @@ export function GeneratingPageContent({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const typewriterFrameRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
-  const thinkingEndRef = useRef<number>(0);
-  const codeScrollRef = useRef<HTMLDivElement>(null);
+
+  const cancelTypewriter = useCallback(() => {
+    if (typewriterFrameRef.current !== null) {
+      cancelAnimationFrame(typewriterFrameRef.current);
+      typewriterFrameRef.current = null;
+    }
+  }, []);
 
   const flushPendingCode = useCallback(() => {
     if (typewriterFrameRef.current !== null) return;
@@ -88,18 +146,13 @@ export function GeneratingPageContent({
     typewriterFrameRef.current = requestAnimationFrame(tick);
   }, []);
 
-  const cancelTypewriter = useCallback(() => {
-    if (typewriterFrameRef.current !== null) {
-      cancelAnimationFrame(typewriterFrameRef.current);
-      typewriterFrameRef.current = null;
-    }
-  }, []);
-
   const startTimer = useCallback(() => {
     startTimeRef.current = Date.now();
     setElapsedSeconds(0);
     timerRef.current = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - (startTimeRef.current ?? Date.now())) / 1000);
+      const elapsed = Math.floor(
+        (Date.now() - (startTimeRef.current ?? Date.now())) / 1000
+      );
       setElapsedSeconds(elapsed);
     }, 1000);
   }, []);
@@ -110,6 +163,16 @@ export function GeneratingPageContent({
       timerRef.current = null;
     }
   }, []);
+
+  const finalizeCodeDisplay = useCallback((finalHtml?: string) => {
+    cancelTypewriter();
+    pendingCodeRef.current = "";
+    if (finalHtml !== undefined) {
+      codeRef.current = finalHtml;
+    }
+    displayedCodeRef.current = codeRef.current;
+    setCodeContent(codeRef.current);
+  }, [cancelTypewriter]);
 
   useEffect(() => {
     return () => {
@@ -130,16 +193,15 @@ export function GeneratingPageContent({
     setIsThinkingCollapsed(false);
     setCompletedVersion(null);
 
-    const styleHint =
-      customHint || STYLE_HINTS.find((h) => h.id === selectedHint)?.label || selectedHint;
-
     try {
       const response = await fetch(
         `/api/admin/events/${eventId}/generate-landing`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ styleHint }),
+          body: JSON.stringify({
+            styleHint: getStyleHint(selectedHint, customHint),
+          }),
         }
       );
       if (!response.ok) {
@@ -185,9 +247,8 @@ export function GeneratingPageContent({
             try {
               const parsed = JSON.parse(eventData);
               setThinkingChunks((prev) => [...prev, parsed.chunk]);
-              thinkingEndRef.current = Date.now();
             } catch {
-              // ignore
+              // Ignore malformed stream chunks.
             }
           } else if (eventType === "phase" && eventData) {
             try {
@@ -197,7 +258,7 @@ export function GeneratingPageContent({
                 setStatus("code");
               }
             } catch {
-              // ignore
+              // Ignore malformed stream chunks.
             }
           } else if (eventType === "code" && eventData) {
             try {
@@ -206,12 +267,13 @@ export function GeneratingPageContent({
               pendingCodeRef.current += parsed.chunk;
               flushPendingCode();
             } catch {
-              // ignore
+              // Ignore malformed stream chunks.
             }
           } else if (eventType === "done" && eventData) {
             try {
               const parsed = JSON.parse(eventData);
               fullHtmlRef.current = parsed.html;
+              finalizeCodeDisplay(parsed.html);
               setStatus("completed");
               stopTimer();
             } catch {
@@ -236,6 +298,7 @@ export function GeneratingPageContent({
         if (!fullHtmlRef.current) {
           fullHtmlRef.current = codeRef.current;
         }
+        finalizeCodeDisplay();
         setStatus("completed");
         stopTimer();
       }
@@ -253,6 +316,7 @@ export function GeneratingPageContent({
     startTimer,
     stopTimer,
     flushPendingCode,
+    finalizeCodeDisplay,
   ]);
 
   useEffect(() => {
@@ -261,32 +325,17 @@ export function GeneratingPageContent({
     }
   }, [initialStyleHint, status, handleGenerate]);
 
-  useEffect(() => {
-    if (status !== "code" && status !== "completed") return;
-
-    const frame = requestAnimationFrame(() => {
-      if (!codeScrollRef.current) return;
-      codeScrollRef.current.scrollTop = codeScrollRef.current.scrollHeight;
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [codeContent, status]);
-
   const handleSave = async () => {
     try {
-      const styleHint =
-        customHint || STYLE_HINTS.find((h) => h.id === selectedHint)?.label || selectedHint;
-
       const html = fullHtmlRef.current || codeRef.current;
-
-      const response = await fetch(
-        `/api/admin/events/${eventId}/save-landing`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ html, styleHint }),
-        }
-      );
+      const response = await fetch(`/api/admin/events/${eventId}/save-landing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          html,
+          styleHint: getStyleHint(selectedHint, customHint),
+        }),
+      });
 
       if (!response.ok) {
         const data = await response.json();
@@ -295,9 +344,9 @@ export function GeneratingPageContent({
 
       const data = await response.json();
       setCompletedVersion(data.landingPage?.version ?? null);
-
-      // 保存后跳转到赛事编辑页（带版本提示）
-      router.push(`/admin/events/${eventId}/edit?landingVersion=${data.landingPage?.version}`);
+      router.push(
+        `/admin/events/${eventId}/edit?landingVersion=${data.landingPage?.version}`
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存失败");
     }
@@ -338,10 +387,11 @@ export function GeneratingPageContent({
   };
 
   const showTimer = status !== "idle" && status !== "error";
+  const thinkingText = thinkingChunks.join("");
+  const attachments = createGenerationAttachments(status);
 
   return (
     <div className={GENERATING_PAGE_CLASS_NAME}>
-      {/* Header */}
       <div className="flex items-center justify-between border-b border-border bg-muted px-4 py-2">
         <div className="flex items-center gap-3">
           <Link
@@ -396,14 +446,14 @@ export function GeneratingPageContent({
         </div>
       </div>
 
-      {/* Content area */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Style selection (idle only) */}
         {status === "idle" && (
           <div className="flex flex-1 items-center justify-center">
             <div className="w-full max-w-2xl space-y-8">
               <div className="text-center">
-                <h1 className="text-2xl font-bold">为「{eventName}」生成赛事页</h1>
+                <h1 className="text-2xl font-bold">
+                  为「{eventName}」生成赛事页
+                </h1>
                 <p className="mt-2 text-muted-foreground">
                   选择风格方向，AI 将为你生成一个独特的赛事落地页
                 </p>
@@ -458,84 +508,23 @@ export function GeneratingPageContent({
           </div>
         )}
 
-        {/* Thinking phase - chat bubble style */}
-        {(status === "thinking" || status === "code") && thinkingChunks.length > 0 && (
-          <div className={THINKING_PANEL_CLASS_NAME}>
-            <div className="flex items-center justify-between border-b border-border bg-muted px-4 py-1">
-              <span className="text-xs text-muted-foreground">思考过程</span>
-              <button
-                onClick={() => setIsThinkingCollapsed(!isThinkingCollapsed)}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                {isThinkingCollapsed ? "展开" : "折叠"}
-              </button>
-            </div>
-            {!isThinkingCollapsed && (
-              <div
-                className="flex-1 overflow-y-auto p-4"
-                style={{ maxHeight: "200px" }}
-              >
-                <div className="space-y-3">
-                  {thinkingChunks.map((chunk, i) => (
-                    <div
-                      key={i}
-                      className="rounded-lg border border-border bg-background p-3 text-sm"
-                    >
-                      <span className="text-muted-foreground">AI：</span>
-                      {chunk}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Code phase - typewriter with edge blur */}
         {(status === "thinking" || status === "code" || status === "completed") && (
-          <div className={CODE_PANEL_CLASS_NAME}>
-            {/* Edge gradient for immersion */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-12 bg-gradient-to-b from-[#111111] to-transparent" />
-
-            {/* Code display with mask */}
-            <div
-              ref={codeScrollRef}
-              className={CODE_SCROLL_CLASS_NAME}
-              style={{
-                maskImage: CODE_VIEW_MASK_IMAGE,
-                WebkitMaskImage: CODE_VIEW_MASK_IMAGE,
-              }}
-            >
-              {status === "thinking" && thinkingChunks.length === 0 && (
-                <div className="flex h-full items-center justify-center">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="h-3 w-3 animate-pulse rounded-full bg-primary" />
-                    <span>AI 正在思考...</span>
-                  </div>
-                </div>
-              )}
-              {(status === "code" || status === "completed") && codeContent && (
-                <pre className="whitespace-pre-wrap break-all text-[#e6e6e6]">{codeContent}</pre>
-              )}
-              {status === "code" && !codeContent && (
-                <div className="flex h-full items-center justify-center">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="h-3 w-3 animate-pulse rounded-full bg-primary" />
-                    <span>开始生成代码...</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <LandingGenerationProgress
+            status={status}
+            attachments={attachments}
+            thinkingText={thinkingText}
+            codeContent={codeContent}
+            isReasoningOpen={!isThinkingCollapsed}
+            onReasoningOpenChange={(open) => setIsThinkingCollapsed(!open)}
+          />
         )}
       </div>
 
-      {/* Error state */}
       {status === "error" && (
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
             <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center border-4 border-destructive bg-destructive/10">
-              <span className="text-4xl">✕</span>
+              <span className="text-4xl">×</span>
             </div>
 
             <h2 className="text-2xl font-bold text-destructive">生成失败</h2>

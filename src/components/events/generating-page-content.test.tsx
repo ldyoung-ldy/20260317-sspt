@@ -5,6 +5,9 @@ import {
   COMPLETED_GENERATION_ACTIONS,
   CODE_VIEW_MASK_IMAGE,
   GENERATING_PAGE_CLASS_NAME,
+  GENERATION_ATTACHMENT_LABELS,
+  GENERATION_PROGRESS_GRID_CLASS_NAME,
+  GENERATION_REASONING_SECTION_CLASS_NAME,
   THINKING_PANEL_CLASS_NAME,
 } from "@/components/events/generating-page-layout";
 
@@ -185,6 +188,29 @@ describe("edge gradient CSS logic", () => {
   it("keeps the thinking panel sized to content instead of filling the page", () => {
     expect(THINKING_PANEL_CLASS_NAME).toContain("flex-none");
     expect(THINKING_PANEL_CLASS_NAME).not.toContain("flex-1");
+  });
+});
+
+describe("AI workspace progress layout", () => {
+  it("defines attachment labels for the generation inputs and output", () => {
+    expect(GENERATION_ATTACHMENT_LABELS).toEqual([
+      "赛事资料",
+      "风格要求",
+      "Frontend Design Skill",
+      "landing-page.html",
+    ]);
+  });
+
+  it("uses a two-pane workbench grid for attachments and the stream", () => {
+    expect(GENERATION_PROGRESS_GRID_CLASS_NAME).toContain("grid");
+    expect(GENERATION_PROGRESS_GRID_CLASS_NAME).toContain(
+      "lg:grid-cols-[280px_minmax(0,1fr)]"
+    );
+  });
+
+  it("keeps the reasoning section collapsible and content-sized", () => {
+    expect(GENERATION_REASONING_SECTION_CLASS_NAME).toContain("border-b");
+    expect(GENERATION_REASONING_SECTION_CLASS_NAME).toContain("flex-none");
   });
 });
 

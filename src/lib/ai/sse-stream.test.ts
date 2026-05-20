@@ -36,7 +36,24 @@ describe("parseOpenAIChunk", () => {
   it("解析正常的内容 chunk", () => {
     const line =
       'data: {"id":"chatcmpl-123","choices":[{"delta":{"content":"<div>"},"finish_reason":null}]}';
-    expect(parseOpenAIChunk(line)).toBe("<div>");
+    expect(parseOpenAIChunk(line)).toEqual({ content: "<div>" });
+  });
+
+  it("parses DeepSeek reasoning_content chunks", () => {
+    const line =
+      'data: {"id":"deepseek-123","choices":[{"delta":{"reasoning_content":"分析赛事信息"},"finish_reason":null}]}';
+    expect(parseOpenAIChunk(line)).toEqual({
+      reasoningContent: "分析赛事信息",
+    });
+  });
+
+  it("keeps DeepSeek reasoning_content and content from the same chunk", () => {
+    const line =
+      'data: {"id":"deepseek-123","choices":[{"delta":{"reasoning_content":"确认页面结构","content":"<!DOCTYPE html>"},"finish_reason":null}]}';
+    expect(parseOpenAIChunk(line)).toEqual({
+      content: "<!DOCTYPE html>",
+      reasoningContent: "确认页面结构",
+    });
   });
 
   it("解析 [DONE] 信号", () => {
@@ -108,6 +125,19 @@ describe("createSSEStream", () => {
     expect(events[1]).toContain("<body>");
     expect(events[events.length - 1]).toContain("event: done");
     expect(events[events.length - 1]).toContain("<html><body></body></html>");
+  });
+
+  it("converts DeepSeek reasoning_content into thinking SSE events", async () => {
+    const aiChunks = [
+      'data: {"id":"1","choices":[{"delta":{"reasoning_content":"分析赛事定位"},"finish_reason":null}]}\n',
+      'data: {"id":"2","choices":[{"delta":{"content":"<html>"},"finish_reason":null}]}\ndata: [DONE]\n',
+    ];
+    const stream = createSSEStream(createMockAIStream(aiChunks));
+    const events = await collectStream(stream);
+
+    expect(events.some((event) => event.includes("event: thinking"))).toBe(true);
+    expect(events.some((event) => event.includes("分析赛事定位"))).toBe(true);
+    expect(events.some((event) => event.includes("event: code"))).toBe(true);
   });
 
   it("处理空响应", async () => {

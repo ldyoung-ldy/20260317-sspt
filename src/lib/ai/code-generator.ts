@@ -1,7 +1,12 @@
 import { getAIConfig } from "./config";
 import { buildPrompts, type EventData } from "./prompt-builder";
-import { findHtmlStart, stripHtmlCodeFence } from "./html-sanitize";
-import { formatSSE, parseOpenAIChunk, parseAnthropicChunk } from "./sse-stream";
+import { extractHtmlDocument, findHtmlStart } from "./html-sanitize";
+import {
+  formatSSE,
+  parseOpenAIChunk,
+  parseAnthropicChunk,
+  type ParsedAIChunk,
+} from "./sse-stream";
 
 export type { EventData };
 
@@ -10,6 +15,12 @@ export interface GenerateLandingPageOptions {
   styleHint: string;
   eventSlug: string;
   timeoutMs?: number;
+}
+
+function normalizeParsedChunk(
+  result: string | ParsedAIChunk
+): ParsedAIChunk {
+  return typeof result === "string" ? { content: result } : result;
 }
 
 export function generateLandingPageStream(
@@ -101,7 +112,6 @@ export function generateLandingPageStream(
           return;
         }
 
-        // 直接读取 AI 响应流，不做嵌套
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let fullHtml = "";
@@ -116,6 +126,33 @@ export function generateLandingPageStream(
           }
         };
 
+        const handleContent = (content: string) => {
+          if (!inCodePhase) {
+            const textToCheck = thinkingBuffer + content;
+            const htmlStart = findHtmlStart(textToCheck);
+            if (htmlStart) {
+              const thinkingPart = textToCheck.slice(0, htmlStart.index);
+              if (thinkingPart.length > 0) {
+                write({ type: "thinking", chunk: thinkingPart });
+              }
+              inCodePhase = true;
+              write({ type: "phase", phase: "code" });
+              const codePart = textToCheck.slice(htmlStart.contentStart);
+              if (codePart.length > 0) {
+                fullHtml += codePart;
+                write({ type: "code", chunk: codePart });
+              }
+              thinkingBuffer = "";
+            } else {
+              thinkingBuffer += content;
+            }
+            return;
+          }
+
+          fullHtml += content;
+          write({ type: "code", chunk: content });
+        };
+
         try {
           while (true) {
             const { done, value } = await reader.read();
@@ -125,55 +162,38 @@ export function generateLandingPageStream(
             const lines = buffer.split("\n");
             buffer = lines.pop() ?? "";
 
-            const parseChunk = isAnthropicFormat ? parseAnthropicChunk : parseOpenAIChunk;
+            const parseChunk = isAnthropicFormat
+              ? parseAnthropicChunk
+              : parseOpenAIChunk;
 
             for (const line of lines) {
               const result = parseChunk(line);
               if (result === "done") {
-                // flush any remaining thinking
                 if (!inCodePhase && thinkingBuffer.length > 0) {
                   flushThinking();
                 }
-                write({ type: "done", html: stripHtmlCodeFence(fullHtml) });
+                write({ type: "done", html: extractHtmlDocument(fullHtml) });
                 controller.close();
                 return;
               }
-              if (result !== null) {
-                if (!inCodePhase) {
-                  // 检查是否进入 code 阶段
-                  const textToCheck = thinkingBuffer + result;
-                  const htmlStart = findHtmlStart(textToCheck);
-                  if (htmlStart) {
-                    const thinkingPart = textToCheck.slice(0, htmlStart.index);
-                    if (thinkingPart.length > 0) {
-                      write({ type: "thinking", chunk: thinkingPart });
-                    }
-                    inCodePhase = true;
-                    write({ type: "phase", phase: "code" });
-                    const codePart = textToCheck.slice(htmlStart.contentStart);
-                    if (codePart.length > 0) {
-                      fullHtml += codePart;
-                      write({ type: "code", chunk: codePart });
-                    }
-                    thinkingBuffer = "";
-                  } else {
-                    // 还在 thinking 阶段
-                    thinkingBuffer += result;
-                  }
-                } else {
-                  // code 阶段
-                  fullHtml += result;
-                  write({ type: "code", chunk: result });
-                }
+              if (result === null) {
+                continue;
+              }
+
+              const parsedChunk = normalizeParsedChunk(result);
+              if (parsedChunk.reasoningContent) {
+                write({ type: "thinking", chunk: parsedChunk.reasoningContent });
+              }
+              if (parsedChunk.content) {
+                handleContent(parsedChunk.content);
               }
             }
           }
 
-          // 流结束时 flush remaining thinking
           if (!inCodePhase && thinkingBuffer.length > 0) {
             flushThinking();
           }
-          write({ type: "done", html: stripHtmlCodeFence(fullHtml) });
+          write({ type: "done", html: extractHtmlDocument(fullHtml) });
           controller.close();
         } catch (readError) {
           const msg =

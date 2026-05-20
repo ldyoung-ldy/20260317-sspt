@@ -5,6 +5,11 @@ export type SSEEvent =
   | { type: "thinking"; chunk: string }
   | { type: "phase"; phase: string };
 
+export interface ParsedAIChunk {
+  content?: string;
+  reasoningContent?: string;
+}
+
 export function formatSSE(event: SSEEvent): string {
   switch (event.type) {
     case "code":
@@ -23,12 +28,12 @@ export function formatSSE(event: SSEEvent): string {
 interface OpenAIChunk {
   id: string;
   choices: Array<{
-    delta: { content?: string };
+    delta: { content?: string; reasoning_content?: string };
     finish_reason: string | null;
   }>;
 }
 
-export function parseOpenAIChunk(line: string): string | null | "done" {
+export function parseOpenAIChunk(line: string): ParsedAIChunk | null | "done" {
   const trimmed = line.trim();
   if (!trimmed.startsWith("data: ")) return null;
 
@@ -37,8 +42,18 @@ export function parseOpenAIChunk(line: string): string | null | "done" {
 
   try {
     const chunk: OpenAIChunk = JSON.parse(dataStr);
-    const content = chunk.choices?.[0]?.delta?.content;
-    return content ?? null;
+    const delta = chunk.choices?.[0]?.delta;
+    if (!delta) return null;
+
+    const parsed: ParsedAIChunk = {};
+    if (delta.content) {
+      parsed.content = delta.content;
+    }
+    if (delta.reasoning_content) {
+      parsed.reasoningContent = delta.reasoning_content;
+    }
+
+    return parsed.content || parsed.reasoningContent ? parsed : null;
   } catch {
     return null;
   }
@@ -97,10 +112,17 @@ export function createSSEStream(
               controller.close();
               return;
             }
-            if (result !== null) {
-              fullHtml += result;
+            if (result?.reasoningContent) {
               controller.enqueue(
-                encoder.encode(formatSSE({ type: "code", chunk: result }))
+                encoder.encode(
+                  formatSSE({ type: "thinking", chunk: result.reasoningContent })
+                )
+              );
+            }
+            if (result?.content) {
+              fullHtml += result.content;
+              controller.enqueue(
+                encoder.encode(formatSSE({ type: "code", chunk: result.content }))
               );
             }
           }

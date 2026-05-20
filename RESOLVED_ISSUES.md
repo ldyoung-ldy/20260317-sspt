@@ -201,3 +201,11 @@
 - 解决方案：后台预览页 `/admin/events/[id]/landing-preview` 增加 `landingPageId` 查询参数支持；传入时用 `getEventLandingPageById()` 读取指定版本，并校验该版本的 `event.id` 与路由赛事 ID 一致；版本列表每行“查看”改为链接到 `/admin/events/[eventId]/landing-preview?landingPageId=[landingPageId]`。不带参数的顶部“查看落地页”仍保持预览当前激活版本。
 - 验证结果：新增/更新组件与查询测试，覆盖每个版本生成独立预览链接以及按 ID 加载版本时包含所属赛事；`bunx vitest run src/components/events/event-landing-versions.test.tsx src/lib/ai/queries.test.ts` 通过（2 个测试文件，10 个用例），`bun run typecheck`、`bun run lint` 通过。
 - 涉及文件：`src/components/events/event-landing-versions.tsx`、`src/components/events/event-landing-versions.test.tsx`、`src/app/(admin-landing)/admin/events/[id]/landing-preview/page.tsx`、`src/app/(app)/admin/events/[id]/edit/page.tsx`、`src/lib/ai/queries.ts`、`src/lib/ai/queries.test.ts`、`acceptance/step-9-landing-page-activation-checklist.md`
+
+## 2026-05-20 — 生成完成后底部残留分析文字，思考区不贴底且无法折叠
+
+- 现象：后台生成赛事落地页完成后，页面底部可能显示 `### 视觉亮点`、`设计思路分析` 等非 HTML 分析文字；思考流式输出时，思考区域不会持续滚动到最新内容；生成完成或流式过程中点击思考区折叠按钮后，折叠状态会被自动打开逻辑覆盖。
+- 根因：AI 在 `</html>` 后继续输出的总结文字被当作代码阶段内容保存在 `fullHtml` / `codeRef` 中，`stripHtmlCodeFence` 只剥离首尾代码围栏，没有截断 HTML 文档后的内容；前端完成态仍用未清洗的 `codeRef` 刷新代码展示；`Reasoning` 组件受控使用时仍会在 `isStreaming` 下自动 `setIsOpen(true)`，覆盖用户点击折叠；思考内容容器没有在 `thinkingText` 更新后同步滚动到底。
+- 解决方案：新增 `extractHtmlDocument()`，在发送 `done` 事件前截断到最后一个 `</html>`，剥离其后的 Markdown 围栏和分析文字；公开落地页和后台版本预览读取旧 `EventLandingPage.content` 时也套用同一清洗函数，避免历史版本必须重新生成；前端收到 `done` 后用后端返回的清洗版 HTML 覆盖 `codeRef` 和完成态代码展示；为思考内容容器增加 ref 和 `requestAnimationFrame` 贴底滚动；限制 `Reasoning` 的自动打开逻辑只在非受控用法中生效，受控折叠由父组件状态决定。
+- 验证结果：新增回归用例覆盖 `</html>` 后追加 `### 视觉亮点` 时不会进入最终 `done.html`；`bunx vitest run src/lib/ai/code-generator.test.ts src/components/events/generating-page-content.test.tsx` 通过（40 个用例），`bun run typecheck`、`bun run lint`、`bun run test` 通过（30 个测试文件，176 个用例）。本地浏览器打开 `http://localhost:3000/admin/events` 被未登录会话按预期重定向到 Auth.js 登录页，控制台无前端错误。
+- 涉及文件：`src/lib/ai/html-sanitize.ts`、`src/lib/ai/code-generator.ts`、`src/lib/ai/code-generator.test.ts`、`src/app/(landing-pages)/events/[slug]/landing/page.tsx`、`src/app/(admin-landing)/admin/events/[id]/landing-preview/page.tsx`、`src/components/events/generating-page-content.tsx`、`src/components/events/landing-generation-progress.tsx`、`src/components/ai-elements/reasoning.tsx`、`RESOLVED_ISSUES.md`
