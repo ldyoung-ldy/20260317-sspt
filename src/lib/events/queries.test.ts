@@ -68,6 +68,8 @@ describe("event queries", () => {
             select: {
               id: true,
               version: true,
+              templateId: true,
+              modules: true,
               styleHint: true,
               isActive: true,
               createdAt: true,

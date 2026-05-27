@@ -40,6 +40,8 @@ const validInput: EventFormInput & { eventId: string } = {
   eventId: "11111111-1111-4111-8111-111111111111",
   name: "AI Hackathon 2026",
   description: "面向企业创新团队的 AI 赛事，覆盖报名、提交与评审全流程。",
+  eligibility: "面向全国高校学生",
+  requirements: "每队 1-5 人",
   startDate: "2026-04-01T09:00",
   endDate: "2026-04-20T18:00",
   registrationStart: "2026-04-01T09:00",
@@ -55,6 +57,7 @@ const validInput: EventFormInput & { eventId: string } = {
     { name: "创新性", maxScore: 10, weight: 40 },
     { name: "完成度", maxScore: 10, weight: 35 },
   ],
+  organizers: [{ name: "XX大学", role: "主办方" }],
   customFields: [],
 };
 

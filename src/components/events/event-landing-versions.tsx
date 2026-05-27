@@ -3,11 +3,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { linkButtonClassName } from "@/lib/button-link";
 import { formatDate } from "@/lib/format";
+import { getTemplateById } from "@/lib/ai/templates/registry";
 
 export type EventLandingVersion = {
   id: string;
   version: number;
   isActive: boolean;
+  templateId: string;
+  modules: unknown;
   styleHint: string;
   createdAt: Date;
   updatedAt: Date;
@@ -56,54 +59,69 @@ export function EventLandingVersions({
         </div>
       ) : (
         <div className="divide-y divide-border">
-          {landingPages.map((landingPage) => (
-            <div
-              key={landingPage.id}
-              className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between"
-            >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-medium text-foreground">
-                    Version {landingPage.version}
-                  </h3>
-                  {landingPage.isActive ? (
-                    <Badge>当前激活</Badge>
-                  ) : (
-                    <Badge variant="outline">未激活</Badge>
-                  )}
-                  <span className="border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                    {landingPage.styleHint}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  生成时间：{formatDate(landingPage.createdAt)}
-                </p>
-              </div>
+          {landingPages.map((landingPage) => {
+            const template = getTemplateById(landingPage.templateId);
+            const moduleNames = Array.isArray(landingPage.modules)
+              ? (landingPage.modules as string[]).length
+              : 0;
 
-              <div className="flex flex-wrap gap-2 md:justify-end">
-                <Link
-                  href={`/admin/events/${eventId}/landing-preview?landingPageId=${landingPage.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={linkButtonClassName("outline", "sm")}
-                >
-                  查看
-                </Link>
-                {landingPage.isActive ? null : (
-                  <form action={activateAction}>
-                    <input
-                      type="hidden"
-                      name="landingPageId"
-                      value={landingPage.id}
-                    />
-                    <Button type="submit" variant="outline" size="sm">
-                      激活
-                    </Button>
-                  </form>
-                )}
+            return (
+              <div
+                key={landingPage.id}
+                className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-medium text-foreground">
+                      Version {landingPage.version}
+                    </h3>
+                    {landingPage.isActive ? (
+                      <Badge>当前激活</Badge>
+                    ) : (
+                      <Badge variant="outline">未激活</Badge>
+                    )}
+                    <span className="border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                      {template?.name ?? landingPage.templateId}
+                    </span>
+                    <span className="border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                      {moduleNames} 个模块
+                    </span>
+                    {landingPage.styleHint ? (
+                      <span className="border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        AI 调整
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    生成时间：{formatDate(landingPage.createdAt)}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  <Link
+                    href={`/admin/events/${eventId}/landing-preview?landingPageId=${landingPage.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={linkButtonClassName("outline", "sm")}
+                  >
+                    查看
+                  </Link>
+                  {landingPage.isActive ? null : (
+                    <form action={activateAction}>
+                      <input
+                        type="hidden"
+                        name="landingPageId"
+                        value={landingPage.id}
+                      />
+                      <Button type="submit" variant="outline" size="sm">
+                        激活
+                      </Button>
+                    </form>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

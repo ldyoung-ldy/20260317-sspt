@@ -39,7 +39,6 @@ export async function getEventLandingPageBySlug(slug: string) {
 }
 
 export async function getEventLandingPageByEventId(eventId: string) {
-  // Get the latest active landing page for an event
   const prisma = getPrismaClient();
   return prisma.eventLandingPage.findFirst({
     where: { eventId, isActive: true },
@@ -55,14 +54,19 @@ export async function getEventLandingPageByEventId(eventId: string) {
   });
 }
 
+interface CreateLandingPageInput {
+  templateId: string;
+  modules: string[];
+  styleHint: string;
+  content: string;
+}
+
 export async function createEventLandingPage(
   eventId: string,
-  styleHint: string,
-  content: string
+  input: CreateLandingPageInput
 ) {
   const prisma = getPrismaClient();
 
-  // Find the max version for this event
   const existingPages = await prisma.eventLandingPage.findMany({
     where: { eventId },
     select: { version: true },
@@ -77,8 +81,10 @@ export async function createEventLandingPage(
       eventId,
       version: newVersion,
       isActive: false,
-      styleHint,
-      content,
+      templateId: input.templateId,
+      modules: input.modules,
+      styleHint: input.styleHint,
+      content: input.content,
     },
   });
 }
@@ -94,7 +100,6 @@ export async function getEventLandingPages(eventId: string) {
 export async function activateLandingPage(landingPageId: string) {
   const prisma = getPrismaClient();
 
-  // Find the landing page to get its eventId
   const landingPage = await prisma.eventLandingPage.findUnique({
     where: { id: landingPageId },
   });
@@ -103,7 +108,6 @@ export async function activateLandingPage(landingPageId: string) {
     throw new Error("落地页不存在");
   }
 
-  // Deactivate all other pages for this event
   await prisma.eventLandingPage.updateMany({
     where: {
       eventId: landingPage.eventId,
@@ -112,7 +116,6 @@ export async function activateLandingPage(landingPageId: string) {
     data: { isActive: false },
   });
 
-  // Activate the target page
   await prisma.eventLandingPage.update({
     where: { id: landingPageId },
     data: { isActive: true },

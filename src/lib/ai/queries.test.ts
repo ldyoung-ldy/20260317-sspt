@@ -36,14 +36,21 @@ describe("createEventLandingPage", () => {
       eventId,
       version: 3,
       isActive: false,
-      styleHint: "简约",
+      templateId: "minimal",
+      modules: ["intro", "cta"],
+      styleHint: "",
       content: "<html>...</html>",
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
     const { createEventLandingPage } = await import("@/lib/ai/queries");
-    const result = await createEventLandingPage(eventId, "简约", "<html>...</html>");
+    const result = await createEventLandingPage(eventId, {
+      templateId: "minimal",
+      modules: ["intro", "cta"],
+      styleHint: "",
+      content: "<html>...</html>",
+    });
 
     expect(mockPrismaClient.eventLandingPage.findMany).toHaveBeenCalledWith({
       where: { eventId },
@@ -55,7 +62,9 @@ describe("createEventLandingPage", () => {
         eventId,
         version: 3,
         isActive: false,
-        styleHint: "简约",
+        templateId: "minimal",
+        modules: ["intro", "cta"],
+        styleHint: "",
         content: "<html>...</html>",
       },
     });
@@ -72,14 +81,21 @@ describe("createEventLandingPage", () => {
       eventId,
       version: 1,
       isActive: false,
-      styleHint: "科技感",
+      templateId: "tech",
+      modules: ["intro", "tracks", "cta"],
+      styleHint: "",
       content: "<html>...</html>",
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
     const { createEventLandingPage } = await import("@/lib/ai/queries");
-    const result = await createEventLandingPage(eventId, "科技感", "<html>...</html>");
+    const result = await createEventLandingPage(eventId, {
+      templateId: "tech",
+      modules: ["intro", "tracks", "cta"],
+      styleHint: "",
+      content: "<html>...</html>",
+    });
 
     expect(mockPrismaClient.eventLandingPage.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ version: 1 }) })

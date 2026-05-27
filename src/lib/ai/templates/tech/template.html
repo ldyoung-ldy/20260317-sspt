@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>{{eventName}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #141414;
+      --bg-elevated: #1a1a1a;
+      --border: #27272a;
+      --border-hover: #3f3f46;
+      --primary: #6366f1;
+      --primary-end: #8b5cf6;
+      --accent: #22d3ee;
+      --accent-dim: rgba(34, 211, 238, 0.15);
+      --text: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+      --gradient-accent: linear-gradient(135deg, #6366f1, #8b5cf6, #22d3ee);
+      --glow-primary: 0 0 30px rgba(99, 102, 241, 0.3);
+      --glow-accent: 0 0 30px rgba(139, 92, 246, 0.2);
+      --font-display: "JetBrains Mono", "Noto Sans SC", monospace;
+      --font-body: "Noto Sans SC", "JetBrains Mono", system-ui, sans-serif;
+      --max-width: 1120px;
+      --section-padding: 96px;
+      --section-padding-mobile: 56px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Background grid pattern */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 79px,
+          rgba(255, 255, 255, 0.02) 79px,
+          rgba(255, 255, 255, 0.02) 80px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 79px,
+          rgba(255, 255, 255, 0.02) 79px,
+          rgba(255, 255, 255, 0.02) 80px
+        );
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section {
+      padding: var(--section-padding) 0;
+      position: relative;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--text); }
+    a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Section heading style */
+    .section-heading {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--accent);
+      margin-bottom: 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-heading::before {
+      content: "//";
+      color: var(--text-muted);
+    }
+    .section-heading::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    /* MODULE:intro */
+    .hero {
+      padding: 160px 0 120px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: -40%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.06) 40%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      background: linear-gradient(to bottom, transparent, var(--bg));
+      pointer-events: none;
+    }
+    .hero .container { position: relative; z-index: 1; }
+    .hero-label {
+      display: inline-block;
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(34, 211, 238, 0.3);
+      padding: 8px 20px;
+      margin-bottom: 32px;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 24px;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+      font-size: 17px;
+      color: var(--text-secondary);
+      max-width: 640px;
+      margin: 0 auto 48px;
+      line-height: 1.8;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: #fff;
+      background: var(--gradient-primary);
+      padding: 16px 40px;
+      border: none;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.3s, transform 0.2s;
+      cursor: pointer;
+    }
+    .hero-cta:hover {
+      box-shadow: var(--glow-primary), var(--glow-accent);
+      transform: translateY(-2px);
+      color: #fff;
+    }
+    .hero-cta:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 4px;
+    }
+    .hero-cta::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform 0.6s;
+    }
+    .hero-cta:hover::after {
+      transform: translateX(100%);
+    }
+    .hero-cta-arrow {
+      font-size: 18px;
+      transition: transform 0.2s;
+    }
+    .hero-cta:hover .hero-cta-arrow { transform: translateX(4px); }
+    /* /MODULE:intro */
+
+    /* MODULE:eligibility */
+    .eligibility-content {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.9;
+      max-width: 800px;
+    }
+    /* /MODULE:eligibility */
+
+    /* MODULE:requirements */
+    .requirements-content {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.9;
+      max-width: 800px;
+    }
+    /* /MODULE:requirements */
+
+    /* MODULE:tracks */
+    .tracks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .track-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 32px;
+      position: relative;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .track-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gradient-primary);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .track-card:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.08);
+    }
+    .track-card:hover::before { opacity: 1; }
+    .track-card-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+    .track-card h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .track-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    /* /MODULE:tracks */
+
+    /* MODULE:challenges */
+    .challenges-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .challenge-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 28px 32px;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      transition: border-color 0.3s;
+    }
+    .challenge-card:hover { border-color: var(--border-hover); }
+    .challenge-number {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      min-width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      flex-shrink: 0;
+    }
+    .challenge-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .challenge-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    /* /MODULE:challenges */
+
+    /* MODULE:timeline */
+    .timeline {
+      position: relative;
+      padding-left: 40px;
+    }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 8px;
+      bottom: 8px;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--primary), var(--accent), transparent);
+    }
+    .timeline-item {
+      position: relative;
+      padding: 0 0 40px 32px;
+    }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: -40px;
+      top: 6px;
+      width: 15px;
+      height: 15px;
+      background: var(--bg);
+      border: 2px solid var(--primary);
+      z-index: 1;
+    }
+    .timeline-item:first-child .timeline-dot {
+      background: var(--primary);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+    }
+    .timeline-phase {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .timeline-dates {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 4px;
+    }
+    .timeline-arrow {
+      color: var(--text-muted);
+      margin: 0 6px;
+    }
+    .timeline-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    /* /MODULE:timeline */
+
+    /* MODULE:prizes */
+    .prizes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .prize-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 36px 32px;
+      text-align: center;
+      position: relative;
+      transition: border-color 0.3s, transform 0.2s;
+    }
+    .prize-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+    }
+    .prize-rank {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .prize-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .prize-amount {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 800;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+    .prize-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    /* /MODULE:prizes */
+
+    /* MODULE:scoring */
+    .scoring-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .criterion-item {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 24px;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 20px 28px;
+      transition: border-color 0.2s;
+    }
+    .criterion-item:hover { border-color: var(--border-hover); }
+    .criterion-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .criterion-weight {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary);
+      min-width: 48px;
+      text-align: right;
+    }
+    .criterion-score {
+      font-family: var(--font-display);
+      font-size: 13px;
+      color: var(--text-muted);
+      min-width: 72px;
+      text-align: right;
+    }
+    .criterion-bar-track {
+      display: none; /* shown on wider screens */
+    }
+    /* /MODULE:scoring */
+
+    /* MODULE:organizers */
+    .organizers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .organizer-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: border-color 0.3s;
+    }
+    .organizer-card:hover { border-color: var(--border-hover); }
+    .organizer-avatar {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .organizer-info { flex: 1; min-width: 0; }
+    .organizer-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .organizer-role {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    /* /MODULE:organizers */
+
+    /* MODULE:cta */
+    .cta-section {
+      text-align: center;
+      padding: 120px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: "";
+      position: absolute;
+      bottom: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 40%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-section .container { position: relative; z-index: 1; }
+    .cta-heading {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 800;
+      margin-bottom: 16px;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .cta-sub {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+    }
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: #fff;
+      background: var(--gradient-primary);
+      padding: 18px 48px;
+      border: none;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.3s, transform 0.2s;
+      cursor: pointer;
+    }
+    .cta-button:hover {
+      box-shadow: var(--glow-primary), var(--glow-accent);
+      transform: translateY(-2px);
+      color: #fff;
+    }
+    .cta-button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 4px;
+    }
+    .cta-button::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform 0.6s;
+    }
+    .cta-button:hover::after { transform: translateX(100%); }
+    .cta-links {
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+    }
+    .cta-links a {
+      font-size: 13px;
+      color: var(--text-muted);
+      border-bottom: 1px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .cta-links a:hover {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    /* /MODULE:cta */
+
+    /* ===== FOOTER ===== */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+    }
+    .site-footer p {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-display);
+      letter-spacing: 1px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      :root {
+        --section-padding: 72px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --section-padding: var(--section-padding-mobile);
+      }
+      .container { padding: 0 16px; }
+
+      .hero { padding: 100px 0 80px; }
+      .hero-label { font-size: 11px; padding: 6px 16px; }
+
+      .section-heading { margin-bottom: 32px; }
+
+      .tracks-grid { grid-template-columns: 1fr; }
+      .prizes-grid { grid-template-columns: 1fr; }
+      .organizers-grid { grid-template-columns: 1fr; }
+
+      .criterion-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 16px 20px;
+      }
+      .criterion-weight, .criterion-score {
+        text-align: left;
+      }
+
+      .timeline { padding-left: 32px; }
+      .timeline-item { padding-left: 24px; }
+      .timeline-dot { left: -32px; }
+
+      .challenge-card {
+        flex-direction: column;
+        padding: 20px;
+      }
+
+      .cta-links { flex-direction: column; gap: 12px; }
+    }
+
+    @media (max-width: 320px) {
+      .hero h1 { font-size: 28px; }
+      .prize-amount { font-size: 22px; }
+      .cta-button { padding: 14px 28px; font-size: 13px; }
+    }
+
+    /* ===== REDUCED MOTION ===== */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      html { scroll-behavior: auto; }
+      .hero-cta:hover, .cta-button:hover { transform: none; }
+      .prize-card:hover { transform: none; }
+    }
+
+    /* ===== SCANLINE ANIMATION ===== */
+    @keyframes scanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100vh); }
+    }
+    .scanline-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.15), transparent);
+      z-index: 9999;
+      pointer-events: none;
+      animation: scanline 8s linear infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scanline-overlay" aria-hidden="true"></div>
+
+  <!-- MODULE:intro -->
+  <section class="hero" aria-label="赛事介绍">
+    <div class="container">
+      <div class="hero-label" aria-hidden="true">COMPETITION // 2026</div>
+      <h1>{{eventName}}</h1>
+      <p class="hero-desc">{{eventDescription}}</p>
+      <a href="{{registerUrl}}" class="hero-cta" role="link">
+        立即报名 <span class="hero-cta-arrow" aria-hidden="true">&#8594;</span>
+      </a>
+    </div>
+  </section>
+  <!-- /MODULE:intro -->
+
+  <!-- MODULE:eligibility -->
+  <section class="eligibility" aria-label="参赛对象">
+    <div class="container">
+      <h2 class="section-heading">参赛对象</h2>
+      <div class="eligibility-content">{{eligibilityContent}}</div>
+    </div>
+  </section>
+  <!-- /MODULE:eligibility -->
+
+  <!-- MODULE:requirements -->
+  <section class="requirements" aria-label="参赛要求">
+    <div class="container">
+      <h2 class="section-heading">参赛要求</h2>
+      <div class="requirements-content">{{requirementsContent}}</div>
+    </div>
+  </section>
+  <!-- /MODULE:requirements -->
+
+  <!-- MODULE:tracks -->
+  <section class="tracks" aria-label="赛道介绍">
+    <div class="container">
+      <h2 class="section-heading">赛道介绍</h2>
+      <div class="tracks-grid">
+        <!-- EACH:track -->
+        <div class="track-card">
+          <div class="track-card-icon" aria-hidden="true">&#9670;</div>
+          <h3>{{trackName}}</h3>
+          <p>{{trackDescription}}</p>
+        </div>
+        <!-- /EACH:track -->
+      </div>
+    </div>
+  </section>
+  <!-- /MODULE:tracks -->
+
+  <!-- MODULE:challenges -->
+  <section class="challenges" aria-label="赛题">
+    <div class="container">
+      <h2 class="section-heading">赛题</h2>
+      <div class="challenges-list">
+        <!-- EACH:challenge -->
+        <div class="challenge-card">
+          <div class="challenge-number" aria-hidden="true">&#9670;</div>
+          <div>
+            <h3>{{challengeTitle}}</h3>
+            <p>{{challengeDescription}}</p>
+          </div>
+        </div>
+        <!-- /EACH:challenge -->
+      </div>
+    </div>
+  </section>
+  <!-- /MODULE:challenges -->
+
+  <!-- MODULE:timeline -->
+  <section class="timeline-section" aria-label="赛程时间线">
+    <div class="container">
+      <h2 class="section-heading">赛程</h2>
+      <div class="timeline" role="list">
+        <div class="timeline-item" role="listitem">
+          <div class="timeline-dot" aria-hidden="true"></div>
+          <div class="timeline-phase">报名阶段</div>
+          <div class="timeline-dates">
+            <span>{{registrationStart}}</span>
+            <span class="timeline-arrow" aria-hidden="true">&#8594;</span>
+            <span>{{registrationEnd}}</span>
+          </div>
+          <div class="timeline-desc">完成团队组建与报名信息填写</div>
+        </div>
+        <div class="timeline-item" role="listitem">
+          <div class="timeline-dot" aria-hidden="true"></div>
+          <div class="timeline-phase">提交阶段</div>
+          <div class="timeline-dates">
+            <span>{{submissionStart}}</span>
+            <span class="timeline-arrow" aria-hidden="true">&#8594;</span>
+            <span>{{submissionEnd}}</span>
+          </div>
+          <div class="timeline-desc">完成作品开发与材料提交</div>
+        </div>
+        <div class="timeline-item" role="listitem">
+          <div class="timeline-dot" aria-hidden="true"></div>
+          <div class="timeline-phase">评审阶段</div>
+          <div class="timeline-dates">
+            <span>{{reviewStart}}</span>
+            <span class="timeline-arrow" aria-hidden="true">&#8594;</span>
+            <span>{{reviewEnd}}</span>
+          </div>
+          <div class="timeline-desc">评委评审与排名公示</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- /MODULE:timeline -->
+
+  <!-- MODULE:prizes -->
+  <section class="prizes" aria-label="赛事奖励">
+    <div class="container">
+      <h2 class="section-heading">奖励</h2>
+      <div class="prizes-grid">
+        <!-- EACH:prize -->
+        <div class="prize-card">
+          <div class="prize-rank">AWARD</div>
+          <h3>{{prizeTitle}}</h3>
+          <div class="prize-amount">{{prizeAmount}}</div>
+          <p>{{prizeDescription}}</p>
+        </div>
+        <!-- /EACH:prize -->
+      </div>
+    </div>
+  </section>
+  <!-- /MODULE:prizes -->
+
+  <!-- MODULE:scoring -->
+  <section class="scoring" aria-label="评分标准">
+    <div class="container">
+      <h2 class="section-heading">评分标准</h2>
+      <div class="scoring-list">
+        <!-- EACH:criterion -->
+        <div class="criterion-item">
+          <span class="criterion-name">{{criterionName}}</span>
+          <span class="criterion-weight">{{criterionWeight}}%</span>
+          <span class="criterion-score">满分 {{criterionMaxScore}}</span>
+        </div>
+        <!-- /EACH:criterion -->
+      </div>
+    </div>
+  </section>
+  <!-- /MODULE:scoring -->
+
+  <!-- MODULE:organizers -->
+  <section class="organizers" aria-label="组织单位">
+    <div class="container">
+      <h2 class="section-heading">组织单位</h2>
+      <div class="organizers-grid">
+        <!-- EACH:organizer -->
+        <div class="organizer-card">
+          <div class="organizer-avatar" aria-hidden="true">{{organizerName}}</div>
+          <div class="organizer-info">
+            <div class="organizer-name">{{organizerName}}</div>
+            <div class="organizer-role">{{organizerRole}}</div>
+          </div>
+        </div>
+        <!-- /EACH:organizer -->
+      </div>
+    </div>
+  </section>
+  <!-- /MODULE:organizers -->
+
+  <!-- MODULE:cta -->
+  <section class="cta-section" aria-label="报名入口">
+    <div class="container">
+      <h2 class="cta-heading">准备好参赛了吗？</h2>
+      <p class="cta-sub">立即报名，开启你的赛事之旅</p>
+      <a href="{{registerUrl}}" class="cta-button" role="link">
+        立即报名 <span aria-hidden="true">&#8594;</span>
+      </a>
+      <div class="cta-links">
+        <a href="{{submitUrl}}">提交作品</a>
+        <a href="{{detailUrl}}">查看赛事详情</a>
+      </div>
+    </div>
+  </section>
+  <!-- /MODULE:cta -->
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container">
+      <p>&copy; {{eventName}} &mdash; All Rights Reserved</p>
+    </div>
+  </footer>
+
+</body>
+</html>

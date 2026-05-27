@@ -450,6 +450,7 @@ function mapReviewEvent(event: ReviewEventRecord): ReviewEvent {
       challenges: [],
       prizes: [],
       scoringCriteria: event.scoringCriteria,
+      organizers: [],
       customFields: [],
     }),
     phase: getEventPhase(event),

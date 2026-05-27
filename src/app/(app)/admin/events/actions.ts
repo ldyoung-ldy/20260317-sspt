@@ -103,6 +103,7 @@ export async function updateEvent(input: EventFormInput & { eventId: string }) {
       challenges: [],
       prizes: [],
       scoringCriteria: existingEvent.scoringCriteria,
+      organizers: [],
       customFields: [],
     }).scoringCriteria;
 
@@ -438,6 +439,7 @@ export async function toggleRankingsPublish(input: {
           challenges: [],
           prizes: [],
           scoringCriteria: event.scoringCriteria,
+          organizers: [],
           customFields: [],
         }).scoringCriteria;
 

@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-guards";
 import { getPrismaClient } from "@/lib/prisma";
-import {
-  generateLandingPageStream,
-  type EventData,
-} from "@/lib/ai/code-generator";
+import { renderLandingPage, type TemplateEventData } from "@/lib/ai/template-engine";
+import { adjustLandingPageStyle } from "@/lib/ai/style-adjuster";
 
 export async function POST(
   request: Request,
@@ -15,11 +13,11 @@ export async function POST(
 
     const { id } = await params;
     const body = await request.json();
-    const { styleHint } = body;
+    const { templateId, selectedModules, styleDescription } = body;
 
-    if (!styleHint) {
+    if (!templateId || !Array.isArray(selectedModules)) {
       return NextResponse.json(
-        { error: "请提供风格描述" },
+        { error: "请提供模板 ID 和模块列表" },
         { status: 400 }
       );
     }
@@ -36,38 +34,39 @@ export async function POST(
       );
     }
 
-    const eventData: EventData = {
+    const eventData: TemplateEventData = {
       name: event.name,
       description: event.description,
-      startDate: event.startDate.toISOString(),
-      endDate: event.endDate.toISOString(),
-      registrationStart: event.registrationStart.toISOString(),
-      registrationEnd: event.registrationEnd.toISOString(),
-      submissionStart: event.submissionStart.toISOString(),
-      submissionEnd: event.submissionEnd.toISOString(),
-      reviewStart: event.reviewStart.toISOString(),
-      reviewEnd: event.reviewEnd.toISOString(),
-      tracks: event.tracks as Array<{ name: string; description: string }>,
-      challenges: event.challenges as Array<{
-        title: string;
-        description: string;
-      }>,
-      prizes: event.prizes as Array<{
-        title: string;
-        amount: string;
-        description: string;
-      }>,
-      scoringCriteria: event.scoringCriteria as Array<{
-        name: string;
-        maxScore: number;
-        weight: number;
-      }>,
+      slug: event.slug,
+      eligibility: event.eligibility,
+      requirements: event.requirements,
+      tracks: (event.tracks as Array<{ name: string; description: string }>) ?? [],
+      challenges: (event.challenges as Array<{ title: string; description: string }>) ?? [],
+      prizes: (event.prizes as Array<{ title: string; amount: string; description: string }>) ?? [],
+      scoringCriteria: (event.scoringCriteria as Array<{ name: string; maxScore: number; weight: number }>) ?? [],
+      organizers: (event.organizers as Array<{ name: string; role: string }>) ?? [],
+      registrationStart: event.registrationStart,
+      registrationEnd: event.registrationEnd,
+      submissionStart: event.submissionStart,
+      submissionEnd: event.submissionEnd,
+      reviewStart: event.reviewStart,
+      reviewEnd: event.reviewEnd,
+      startDate: event.startDate,
+      endDate: event.endDate,
     };
 
-    const stream = generateLandingPageStream({
-      eventData,
-      styleHint,
-      eventSlug: event.slug,
+    // Render template with selected modules
+    const filledHtml = renderLandingPage(templateId, eventData, selectedModules);
+
+    if (!styleDescription) {
+      // Direct template fill - return JSON
+      return NextResponse.json({ html: filledHtml });
+    }
+
+    // AI style adjustment - stream the response
+    const stream = adjustLandingPageStyle({
+      html: filledHtml,
+      styleDescription,
     });
 
     return new Response(stream, {

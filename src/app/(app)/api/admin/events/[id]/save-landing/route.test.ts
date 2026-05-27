@@ -34,7 +34,7 @@ describe("POST /api/admin/events/[id]/save-landing", () => {
       id: "landing-2",
       version: 2,
       isActive: false,
-      styleHint: "简约",
+      templateId: "minimal",
       createdAt: new Date("2026-05-14T10:00:00.000Z"),
     });
 
@@ -42,7 +42,7 @@ describe("POST /api/admin/events/[id]/save-landing", () => {
     const request = new Request("http://localhost/api/admin/events/event-1/save-landing", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ html: "<html></html>", styleHint: "简约" }),
+      body: JSON.stringify({ html: "<html></html>", templateId: "minimal", modules: ["intro", "cta"], styleHint: "简约" }),
     });
 
     const response = await POST(request, { params: Promise.resolve({ id: "event-1" }) });
@@ -51,8 +51,12 @@ describe("POST /api/admin/events/[id]/save-landing", () => {
     expect(response.status).toBe(200);
     expect(mockCreateEventLandingPage).toHaveBeenCalledWith(
       "event-1",
-      "简约",
-      "<html></html>"
+      {
+        templateId: "minimal",
+        modules: ["intro", "cta"],
+        styleHint: "简约",
+        content: "<html></html>",
+      }
     );
     expect(json).toEqual({
       success: true,
@@ -61,7 +65,7 @@ describe("POST /api/admin/events/[id]/save-landing", () => {
         id: "landing-2",
         version: 2,
         isActive: false,
-        styleHint: "简约",
+        templateId: "minimal",
         createdAt: "2026-05-14T10:00:00.000Z",
       },
     });

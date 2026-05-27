@@ -120,7 +120,11 @@ export default async function AdminEditEventPage({
 
       <EventForm
         action={submitAction}
-        initialValues={event}
+        initialValues={{
+          ...event,
+          eligibility: event.eligibility ?? "",
+          requirements: event.requirements ?? "",
+        }}
         submitLabel="保存修改"
         helperText={
           event.published

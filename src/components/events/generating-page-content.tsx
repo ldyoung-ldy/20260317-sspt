@@ -1,35 +1,37 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import { Check, ExternalLink, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  COMPLETED_GENERATION_ACTIONS,
-  GENERATION_ATTACHMENT_LABELS,
-  GENERATING_PAGE_CLASS_NAME,
-} from "@/components/events/generating-page-layout";
-import {
-  LandingGenerationProgress,
-  type GenerationAttachment,
-  type GenerationStatus,
-} from "@/components/events/landing-generation-progress";
+import { Input } from "@/components/ui/input";
+import { GENERATING_PAGE_CLASS_NAME } from "@/components/events/generating-page-layout";
+
+interface TemplateInfo {
+  id: string;
+  name: string;
+  description: string;
+  previewHtml?: string;
+}
+
+interface ModuleInfo {
+  id: string;
+  name: string;
+  description: string;
+  locked: boolean;
+  available: boolean;
+}
 
 interface GeneratingPageContentProps {
   eventId: string;
   eventName: string;
-  initialStyleHint?: string;
+  templates: TemplateInfo[];
+  modules: ModuleInfo[];
+  defaultEnabledModuleIds: string[];
 }
 
-const STYLE_HINTS = [
-  { id: "minimal", label: "简约", description: "简洁大方，大量留白，清晰层次" },
-  { id: "tech", label: "科技感", description: "渐变色、几何图形、前沿科技氛围" },
-  { id: "vibrant", label: "活力", description: "色彩丰富、充满动感、激发热情" },
-  { id: "retro", label: "复古未来", description: "赛博朋克、霓虹灯、复古科技" },
-  { id: "luxury", label: "奢华精致", description: "金色点缀、高端质感、优雅排版" },
-  { id: "editorial", label: "杂志风", description: "大图排版、editorial 布局、视觉冲击" },
-];
+type PageStatus = "selecting" | "generating" | "completed" | "adjusting" | "saving" | "error";
 
 function formatTimer(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -37,123 +39,40 @@ function formatTimer(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function getStyleHint(selectedHint: string, customHint: string) {
-  return (
-    customHint ||
-    STYLE_HINTS.find((hint) => hint.id === selectedHint)?.label ||
-    selectedHint
-  );
-}
-
-function createGenerationAttachments(
-  status: GenerationStatus
-): GenerationAttachment[] {
-  return [
-    {
-      id: "event-data",
-      type: "file",
-      filename: GENERATION_ATTACHMENT_LABELS[0],
-      mediaType: "application/json",
-      url: "",
-      status: "ready",
-    },
-    {
-      id: "style-hint",
-      type: "file",
-      filename: GENERATION_ATTACHMENT_LABELS[1],
-      mediaType: "text/plain",
-      url: "",
-      status: "ready",
-    },
-    {
-      id: "frontend-design-skill",
-      type: "source-document",
-      sourceId: "frontend-design-skill",
-      title: GENERATION_ATTACHMENT_LABELS[2],
-      filename: "SKILL.md",
-      mediaType: "text/markdown",
-      status: "ready",
-    },
-    {
-      id: "landing-page-html",
-      type: "file",
-      filename: GENERATION_ATTACHMENT_LABELS[3],
-      mediaType: "text/html",
-      url: "",
-      status:
-        status === "completed"
-          ? "complete"
-          : status === "code"
-            ? "streaming"
-            : "ready",
-    },
-  ];
-}
-
 export function GeneratingPageContent({
   eventId,
   eventName,
-  initialStyleHint,
+  templates,
+  modules,
+  defaultEnabledModuleIds,
 }: GeneratingPageContentProps) {
   const router = useRouter();
-  const [status, setStatus] = useState<GenerationStatus>(
-    initialStyleHint ? "connecting" : "idle"
-  );
+  const [status, setStatus] = useState<PageStatus>("selecting");
   const [error, setError] = useState<string | null>(null);
-  const [selectedHint, setSelectedHint] = useState(initialStyleHint || "minimal");
-  const [customHint, setCustomHint] = useState("");
-  const [thinkingChunks, setThinkingChunks] = useState<string[]>([]);
-  const [codeContent, setCodeContent] = useState("");
-  const [isThinkingCollapsed, setIsThinkingCollapsed] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [enabledModules, setEnabledModules] = useState<Set<string>>(
+    () => new Set(defaultEnabledModuleIds)
+  );
+  const [styleDescription, setStyleDescription] = useState("");
+  const [generatedHtml, setGeneratedHtml] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [completedVersion, setCompletedVersion] = useState<number | null>(null);
-  const codeRef = useRef("");
-  const displayedCodeRef = useRef("");
-  const pendingCodeRef = useRef("");
-  const fullHtmlRef = useRef("");
+  const [adjustThinking, setAdjustThinking] = useState("");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const typewriterFrameRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
 
-  const cancelTypewriter = useCallback(() => {
-    if (typewriterFrameRef.current !== null) {
-      cancelAnimationFrame(typewriterFrameRef.current);
-      typewriterFrameRef.current = null;
-    }
-  }, []);
-
-  const flushPendingCode = useCallback(() => {
-    if (typewriterFrameRef.current !== null) return;
-
-    const tick = () => {
-      const pending = pendingCodeRef.current;
-      if (pending.length === 0) {
-        typewriterFrameRef.current = null;
-        return;
-      }
-
-      const nextChunkSize = Math.min(
-        Math.max(8, Math.ceil(pending.length / 8)),
-        96
-      );
-      const nextChunk = pending.slice(0, nextChunkSize);
-      pendingCodeRef.current = pending.slice(nextChunkSize);
-      displayedCodeRef.current += nextChunk;
-      setCodeContent(displayedCodeRef.current);
-      typewriterFrameRef.current = requestAnimationFrame(tick);
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
     };
-
-    typewriterFrameRef.current = requestAnimationFrame(tick);
   }, []);
 
   const startTimer = useCallback(() => {
     startTimeRef.current = Date.now();
     setElapsedSeconds(0);
     timerRef.current = setInterval(() => {
-      const elapsed = Math.floor(
-        (Date.now() - (startTimeRef.current ?? Date.now())) / 1000
+      setElapsedSeconds(
+        Math.floor((Date.now() - startTimeRef.current) / 1000)
       );
-      setElapsedSeconds(elapsed);
     }, 1000);
   }, []);
 
@@ -164,62 +83,37 @@ export function GeneratingPageContent({
     }
   }, []);
 
-  const finalizeCodeDisplay = useCallback((finalHtml?: string) => {
-    cancelTypewriter();
-    pendingCodeRef.current = "";
-    if (finalHtml !== undefined) {
-      codeRef.current = finalHtml;
+  const toggleModule = useCallback((moduleId: string) => {
+    setEnabledModules((prev) => {
+      const mod = modules.find((m) => m.id === moduleId);
+      if (mod?.locked) return prev;
+
+      const next = new Set(prev);
+      if (next.has(moduleId)) {
+        next.delete(moduleId);
+      } else {
+        next.add(moduleId);
+      }
+      return next;
+    });
+  }, [modules]);
+
+  const handleStyleAdjustStream = useCallback(async (response: Response) => {
+    setStatus("adjusting");
+    setAdjustThinking("");
+
+    if (!response.body) {
+      setStatus("error");
+      setError("未收到响应流");
+      return;
     }
-    displayedCodeRef.current = codeRef.current;
-    setCodeContent(codeRef.current);
-  }, [cancelTypewriter]);
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      cancelTypewriter();
-    };
-  }, [cancelTypewriter]);
-
-  const handleGenerate = useCallback(async () => {
-    setStatus("connecting");
-    setError(null);
-    codeRef.current = "";
-    displayedCodeRef.current = "";
-    pendingCodeRef.current = "";
-    fullHtmlRef.current = "";
-    setThinkingChunks([]);
-    setCodeContent("");
-    setIsThinkingCollapsed(false);
-    setCompletedVersion(null);
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let fullHtml = "";
 
     try {
-      const response = await fetch(
-        `/api/admin/events/${eventId}/generate-landing`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            styleHint: getStyleHint(selectedHint, customHint),
-          }),
-        }
-      );
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "生成失败");
-      }
-
-      if (!response.body) {
-        throw new Error("未收到响应流");
-      }
-
-      setStatus("thinking");
-      startTimer();
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -236,56 +130,34 @@ export function GeneratingPageContent({
           let eventData = "";
 
           for (const line of lines) {
-            if (line.startsWith("event: ")) {
-              eventType = line.slice(7);
-            } else if (line.startsWith("data: ")) {
-              eventData = line.slice(6);
-            }
+            if (line.startsWith("event: ")) eventType = line.slice(7);
+            else if (line.startsWith("data: ")) eventData = line.slice(6);
           }
 
           if (eventType === "thinking" && eventData) {
             try {
               const parsed = JSON.parse(eventData);
-              setThinkingChunks((prev) => [...prev, parsed.chunk]);
-            } catch {
-              // Ignore malformed stream chunks.
-            }
-          } else if (eventType === "phase" && eventData) {
-            try {
-              const parsed = JSON.parse(eventData);
-              if (parsed.phase === "code") {
-                setIsThinkingCollapsed(true);
-                setStatus("code");
-              }
-            } catch {
-              // Ignore malformed stream chunks.
-            }
+              setAdjustThinking((prev) => prev + parsed.chunk);
+            } catch {}
           } else if (eventType === "code" && eventData) {
             try {
               const parsed = JSON.parse(eventData);
-              codeRef.current += parsed.chunk;
-              pendingCodeRef.current += parsed.chunk;
-              flushPendingCode();
-            } catch {
-              // Ignore malformed stream chunks.
-            }
+              fullHtml += parsed.chunk;
+            } catch {}
           } else if (eventType === "done" && eventData) {
             try {
               const parsed = JSON.parse(eventData);
-              fullHtmlRef.current = parsed.html;
-              finalizeCodeDisplay(parsed.html);
+              setGeneratedHtml(parsed.html || fullHtml);
               setStatus("completed");
-              stopTimer();
             } catch {
-              setStatus("error");
-              setError("解析完成事件失败");
+              setGeneratedHtml(fullHtml);
+              setStatus("completed");
             }
           } else if (eventType === "error" && eventData) {
             try {
               const parsed = JSON.parse(eventData);
               setStatus("error");
               setError(parsed.message);
-              stopTimer();
             } catch {
               setStatus("error");
               setError("未知错误");
@@ -294,111 +166,129 @@ export function GeneratingPageContent({
         }
       }
 
-      if (status === "thinking" || status === "code") {
-        if (!fullHtmlRef.current) {
-          fullHtmlRef.current = codeRef.current;
-        }
-        finalizeCodeDisplay();
+      if (status === "adjusting" && fullHtml) {
+        setGeneratedHtml(fullHtml);
         setStatus("completed");
-        stopTimer();
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "流读取错误";
+      setStatus("error");
+      setError(msg);
+    }
+  }, [status]);
+
+  const handleGenerate = useCallback(async () => {
+    if (!selectedTemplate) return;
+
+    setStatus("generating");
+    setError(null);
+    setGeneratedHtml(null);
+    startTimer();
+
+    try {
+      const selectedModules = modules
+        .filter((m) => enabledModules.has(m.id))
+        .map((m) => m.id);
+
+      const response = await fetch(
+        `/api/admin/events/${eventId}/generate-landing`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            templateId: selectedTemplate,
+            selectedModules,
+            styleDescription: styleDescription.trim() || undefined,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "生成失败");
+      }
+
+      if (styleDescription.trim()) {
+        await handleStyleAdjustStream(response);
+      } else {
+        const data = await response.json();
+        setGeneratedHtml(data.html);
+        setStatus("completed");
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setStatus("error");
       setError(err instanceof Error ? err.message : "生成失败，请重试");
+    } finally {
       stopTimer();
     }
-  }, [
-    eventId,
-    selectedHint,
-    customHint,
-    status,
-    startTimer,
-    stopTimer,
-    flushPendingCode,
-    finalizeCodeDisplay,
-  ]);
+  }, [selectedTemplate, modules, enabledModules, eventId, styleDescription, startTimer, stopTimer, handleStyleAdjustStream]);
 
-  useEffect(() => {
-    if (initialStyleHint && status === "connecting") {
-      handleGenerate();
+  const handlePreview = () => {
+    if (!generatedHtml) return;
+    const previewUrl = URL.createObjectURL(
+      new Blob([generatedHtml], { type: "text/html;charset=utf-8" })
+    );
+    const openedWindow = window.open(previewUrl, "_blank", "noopener,noreferrer");
+    if (!openedWindow) {
+      URL.revokeObjectURL(previewUrl);
+      setError("浏览器阻止了预览窗口，请允许弹出窗口后重试");
+    } else {
+      setTimeout(() => URL.revokeObjectURL(previewUrl), 60_000);
     }
-  }, [initialStyleHint, status, handleGenerate]);
+  };
 
   const handleSave = async () => {
+    if (!generatedHtml) return;
+    setStatus("saving");
+    setError(null);
     try {
-      const html = fullHtmlRef.current || codeRef.current;
       const response = await fetch(`/api/admin/events/${eventId}/save-landing`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          html,
-          styleHint: getStyleHint(selectedHint, customHint),
+          html: generatedHtml,
+          templateId: selectedTemplate,
+          modules: modules.filter((m) => enabledModules.has(m.id)).map((m) => m.id),
+          styleHint: styleDescription.trim() || "",
         }),
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         throw new Error(data.error || "保存失败");
       }
 
       const data = await response.json();
-      setCompletedVersion(data.landingPage?.version ?? null);
       router.push(
         `/admin/events/${eventId}/edit?landingVersion=${data.landingPage?.version}`
       );
     } catch (err) {
+      setStatus("completed");
       setError(err instanceof Error ? err.message : "保存失败");
     }
   };
 
-  const handlePreview = () => {
-    const html = fullHtmlRef.current || codeRef.current;
-    if (!html) {
-      setError("暂无可预览的落地页内容");
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(
-      new Blob([html], { type: "text/html;charset=utf-8" })
-    );
-    const openedWindow = window.open(previewUrl, "_blank", "noopener,noreferrer");
-
-    if (!openedWindow) {
-      URL.revokeObjectURL(previewUrl);
-      setError("浏览器阻止了预览窗口，请允许弹出窗口后重试");
-      return;
-    }
-
-    setTimeout(() => URL.revokeObjectURL(previewUrl), 60_000);
-  };
-
   const handleDiscard = () => {
-    setStatus("idle");
-    codeRef.current = "";
-    displayedCodeRef.current = "";
-    pendingCodeRef.current = "";
-    fullHtmlRef.current = "";
-    setThinkingChunks([]);
-    setCodeContent("");
+    setStatus("selecting");
+    setGeneratedHtml(null);
     setError(null);
-    cancelTypewriter();
+    setAdjustThinking("");
     stopTimer();
   };
 
-  const showTimer = status !== "idle" && status !== "error";
-  const thinkingText = thinkingChunks.join("");
-  const attachments = createGenerationAttachments(status);
+  const showTimer = status === "generating" || status === "adjusting";
 
   return (
     <div className={GENERATING_PAGE_CLASS_NAME}>
+      {/* Top bar */}
       <div className="flex items-center justify-between border-b border-border bg-muted px-4 py-2">
         <div className="flex items-center gap-3">
           <Link
-            href="/admin/events"
+            href={`/admin/events/${eventId}/edit`}
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            ← 返回赛事列表
+            ← 返回编辑
           </Link>
           <span className="text-muted-foreground">|</span>
           <span className="text-sm font-medium">{eventName}</span>
@@ -410,138 +300,246 @@ export function GeneratingPageContent({
               {formatTimer(elapsedSeconds)}
             </span>
           )}
-          {status === "connecting" && (
-            <span className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-yellow-500" />
-              连接中...
-            </span>
+          {status === "selecting" && (
+            <Button
+              onClick={handleGenerate}
+              disabled={!selectedTemplate}
+            >
+              生成落地页
+            </Button>
           )}
-          {status === "thinking" && (
+          {status === "generating" && (
             <span className="flex items-center gap-2 text-sm text-primary">
               <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-              AI 思考中...
+              填充模板中...
             </span>
           )}
-          {status === "code" && (
+          {status === "adjusting" && (
             <span className="flex items-center gap-2 text-sm text-primary">
               <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-              生成代码中...
+              AI 调整风格中...
             </span>
           )}
           {status === "completed" && (
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={handlePreview}>
                 <ExternalLink aria-hidden="true" />
-                {COMPLETED_GENERATION_ACTIONS[0]}
+                预览
               </Button>
               <Button variant="outline" size="sm" onClick={handleDiscard}>
-                {COMPLETED_GENERATION_ACTIONS[1]}
+                重新选择
               </Button>
               <Button size="sm" onClick={handleSave}>
-                {COMPLETED_GENERATION_ACTIONS[2]}
-                {completedVersion ? ` v${completedVersion}` : ""}
+                保存
               </Button>
             </div>
+          )}
+          {status === "saving" && (
+            <span className="flex items-center gap-2 text-sm text-primary">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+              保存中...
+            </span>
           )}
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {status === "idle" && (
-          <div className="flex flex-1 items-center justify-center">
-            <div className="w-full max-w-2xl space-y-8">
-              <div className="text-center">
-                <h1 className="text-2xl font-bold">
-                  为「{eventName}」生成赛事页
-                </h1>
-                <p className="mt-2 text-muted-foreground">
-                  选择风格方向，AI 将为你生成一个独特的赛事落地页
-                </p>
+      {/* Content */}
+      <div className="flex flex-1 flex-col overflow-auto">
+        {status === "selecting" && (
+          <div className="mx-auto w-full max-w-4xl space-y-8 p-6">
+            {/* Step 1: Template selection */}
+            <div>
+              <h2 className="mb-1 text-lg font-semibold">第一步：选择模板</h2>
+              <p className="mb-4 text-sm text-muted-foreground">
+                选择一个你喜欢的页面风格作为基础
+              </p>
+              <div className="grid gap-4 md:grid-cols-3">
+                {templates.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    onClick={() => setSelectedTemplate(tpl.id)}
+                    className={`border p-5 text-left transition-all ${
+                      selectedTemplate === tpl.id
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <div className="relative mb-3 h-40 overflow-hidden border border-border bg-background">
+                      {tpl.previewHtml ? (
+                        <div className="pointer-events-none absolute inset-0 origin-top-left scale-[0.25]">
+                          <iframe
+                            srcDoc={tpl.previewHtml}
+                            className="h-225 w-360 border-0"
+                            sandbox=""
+                            title={`${tpl.name} 预览`}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                          {tpl.name}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-medium">{tpl.name}</div>
+                      {selectedTemplate === tpl.id && (
+                        <Check className="h-4 w-4 text-primary" />
+                      )}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {tpl.description}
+                    </div>
+                  </button>
+                ))}
               </div>
+            </div>
 
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold">选择风格</h2>
-                <div className="grid gap-3 md:grid-cols-3">
-                  {STYLE_HINTS.map((hint) => (
+            {/* Step 2: Module selection */}
+            <div>
+              <h2 className="mb-1 text-lg font-semibold">第二步：选择模块</h2>
+              <p className="mb-4 text-sm text-muted-foreground">
+                勾选需要展示在落地页中的内容模块
+              </p>
+              <div className="grid gap-3 md:grid-cols-2">
+                {modules.map((mod) => {
+                  const isEnabled = enabledModules.has(mod.id);
+                  return (
                     <button
-                      key={hint.id}
-                      onClick={() => {
-                        setSelectedHint(hint.id);
-                        setCustomHint("");
-                      }}
-                      className={`border p-4 text-left transition-all ${
-                        selectedHint === hint.id && !customHint
+                      key={mod.id}
+                      onClick={() => toggleModule(mod.id)}
+                      disabled={mod.locked}
+                      className={`flex items-start gap-3 border p-4 text-left transition-all ${
+                        isEnabled
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
-                      }`}
+                          : "border-border"
+                      } ${mod.locked ? "opacity-75 cursor-not-allowed" : "hover:border-primary/50"}`}
                     >
-                      <div className="text-sm font-medium">{hint.label}</div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {hint.description}
+                      <div
+                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border ${
+                          isEnabled
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border"
+                        }`}
+                      >
+                        {isEnabled && <Check className="h-3 w-3" />}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{mod.name}</span>
+                          {mod.locked && (
+                            <span className="text-xs text-muted-foreground">
+                              (固定)
+                            </span>
+                          )}
+                          {!mod.available && (
+                            <span className="flex items-center gap-1 text-xs text-amber-600">
+                              <AlertTriangle className="h-3 w-3" />
+                              暂无数据
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {mod.description}
+                        </span>
                       </div>
                     </button>
-                  ))}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">或自定义风格描述</label>
-                  <textarea
-                    value={customHint}
-                    onChange={(e) => setCustomHint(e.target.value)}
-                    placeholder="例如：暗黑风格，紫色霓虹灯效果，赛博朋克氛围..."
-                    className="w-full border border-border bg-background p-3 text-sm focus:border-primary focus:outline-none"
-                    rows={2}
-                  />
-                </div>
+                  );
+                })}
               </div>
+            </div>
 
-              <div className="flex justify-center gap-4">
+            {/* Step 3: Optional style adjustment */}
+            <div>
+              <h2 className="mb-1 text-lg font-semibold">
+                第三步：风格调整（可选）
+              </h2>
+              <p className="mb-4 text-sm text-muted-foreground">
+                不满意模板的默认风格？描述你想要的调整方向，AI 会帮你调整
+              </p>
+              <Input
+                value={styleDescription}
+                onChange={(e) => setStyleDescription(e.target.value)}
+                placeholder="例如：把主色调换成深蓝色，字体更粗犷一些，增加一些动效"
+              />
+            </div>
+          </div>
+        )}
+
+        {status === "generating" && (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto mb-6 h-16 w-16 animate-spin border-4 border-primary border-t-transparent" />
+              <h2 className="text-xl font-semibold">正在生成落地页</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                将赛事数据填充到模板中...
+              </p>
+              <p className="mt-1 font-mono text-sm text-muted-foreground">
+                {formatTimer(elapsedSeconds)}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {status === "adjusting" && (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="w-full max-w-lg text-center">
+              <div className="mx-auto mb-6 h-16 w-16 animate-spin border-4 border-primary border-t-transparent" />
+              <h2 className="text-xl font-semibold">AI 正在调整风格</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {styleDescription}
+              </p>
+              <p className="mt-1 font-mono text-sm text-muted-foreground">
+                {formatTimer(elapsedSeconds)}
+              </p>
+              {adjustThinking && (
+                <div className="mx-auto mt-4 max-w-md border border-border bg-muted/50 p-4 text-left text-xs text-muted-foreground">
+                  {adjustThinking}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {(status === "completed" || status === "saving") && generatedHtml && (
+          <div className="flex flex-1 flex-col p-4">
+            <div className="mb-3 text-center">
+              <h2 className="text-lg font-semibold">落地页已生成</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                点击「预览」查看效果，满意后点击「保存」
+              </p>
+            </div>
+            <div className="flex-1 border border-border">
+              <iframe
+                srcDoc={generatedHtml}
+                className="h-full w-full"
+                sandbox="allow-scripts allow-same-origin"
+                title="落地页预览"
+              />
+            </div>
+          </div>
+        )}
+
+        {status === "error" && (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center border-4 border-destructive bg-destructive/10">
+                <span className="text-4xl">×</span>
+              </div>
+              <h2 className="text-2xl font-bold text-destructive">生成失败</h2>
+              <p className="mt-2 text-muted-foreground">{error}</p>
+              <div className="mt-8 flex justify-center gap-4">
                 <Button
                   variant="outline"
-                  onClick={() => router.push("/admin/events")}
+                  onClick={() => router.push(`/admin/events/${eventId}/edit`)}
                 >
-                  跳过，稍后生成
+                  返回编辑
                 </Button>
-                <Button onClick={handleGenerate}>开始生成</Button>
+                <Button onClick={handleDiscard}>重新选择</Button>
               </div>
             </div>
           </div>
         )}
-
-        {(status === "thinking" || status === "code" || status === "completed") && (
-          <LandingGenerationProgress
-            status={status}
-            attachments={attachments}
-            thinkingText={thinkingText}
-            codeContent={codeContent}
-            isReasoningOpen={!isThinkingCollapsed}
-            onReasoningOpenChange={(open) => setIsThinkingCollapsed(!open)}
-          />
-        )}
       </div>
-
-      {status === "error" && (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center border-4 border-destructive bg-destructive/10">
-              <span className="text-4xl">×</span>
-            </div>
-
-            <h2 className="text-2xl font-bold text-destructive">生成失败</h2>
-            <p className="mt-2 text-muted-foreground">{error}</p>
-
-            <div className="mt-8 flex justify-center gap-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push("/admin/events")}
-              >
-                返回列表
-              </Button>
-              <Button onClick={handleGenerate}>重试</Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

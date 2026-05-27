@@ -74,6 +74,7 @@ export async function upsertProjectScore(input: JudgeScoreActionInput) {
         challenges: [],
         prizes: [],
         scoringCriteria: event.scoringCriteria,
+        organizers: [],
         customFields: [],
       }).scoringCriteria,
       payload.scores

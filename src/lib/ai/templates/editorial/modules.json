@@ -1,0 +1,14 @@
+{
+  "modules": {
+    "intro": { "startMarker": "<!-- MODULE:intro -->", "endMarker": "<!-- /MODULE:intro -->" },
+    "eligibility": { "startMarker": "<!-- MODULE:eligibility -->", "endMarker": "<!-- /MODULE:eligibility -->" },
+    "requirements": { "startMarker": "<!-- MODULE:requirements -->", "endMarker": "<!-- /MODULE:requirements -->" },
+    "tracks": { "startMarker": "<!-- MODULE:tracks -->", "endMarker": "<!-- /MODULE:tracks -->" },
+    "challenges": { "startMarker": "<!-- MODULE:challenges -->", "endMarker": "<!-- /MODULE:challenges -->" },
+    "timeline": { "startMarker": "<!-- MODULE:timeline -->", "endMarker": "<!-- /MODULE:timeline -->" },
+    "prizes": { "startMarker": "<!-- MODULE:prizes -->", "endMarker": "<!-- /MODULE:prizes -->" },
+    "scoring": { "startMarker": "<!-- MODULE:scoring -->", "endMarker": "<!-- /MODULE:scoring -->" },
+    "organizers": { "startMarker": "<!-- MODULE:organizers -->", "endMarker": "<!-- /MODULE:organizers -->" },
+    "cta": { "startMarker": "<!-- MODULE:cta -->", "endMarker": "<!-- /MODULE:cta -->" }
+  }
+}

@@ -10,6 +10,8 @@ const eventDetailsSelect = {
   description: true,
   published: true,
   rankingsPublished: true,
+  eligibility: true,
+  requirements: true,
   startDate: true,
   endDate: true,
   registrationStart: true,
@@ -22,6 +24,7 @@ const eventDetailsSelect = {
   challenges: true,
   prizes: true,
   scoringCriteria: true,
+  organizers: true,
   customFields: true,
   createdAt: true,
   updatedAt: true,
@@ -30,6 +33,8 @@ const eventDetailsSelect = {
     select: {
       id: true,
       version: true,
+      templateId: true,
+      modules: true,
       styleHint: true,
       isActive: true,
       createdAt: true,
@@ -45,6 +50,8 @@ type EventDetailsRecord = Prisma.EventGetPayload<{ select: typeof eventDetailsSe
 type LandingPageInfo = {
   id: string;
   version: number;
+  templateId: string;
+  modules: unknown;
   styleHint: string;
   isActive: boolean;
   createdAt: Date;
@@ -57,6 +64,7 @@ export type EventDetails = Omit<
   | "challenges"
   | "prizes"
   | "scoringCriteria"
+  | "organizers"
   | "customFields"
   | "landingPages"
 > &

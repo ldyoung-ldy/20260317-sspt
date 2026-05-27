@@ -12,7 +12,7 @@ export async function POST(
 
     const { id } = await params;
     const body = await request.json();
-    const { html, styleHint } = body;
+    const { html, templateId, modules, styleHint } = body;
 
     if (!html) {
       return NextResponse.json(
@@ -21,9 +21,9 @@ export async function POST(
       );
     }
 
-    if (!styleHint) {
+    if (!templateId) {
       return NextResponse.json(
-        { error: "请提供风格描述" },
+        { error: "请提供模板 ID" },
         { status: 400 }
       );
     }
@@ -40,7 +40,12 @@ export async function POST(
       );
     }
 
-    const landingPage = await createEventLandingPage(id, styleHint, html);
+    const landingPage = await createEventLandingPage(id, {
+      templateId,
+      modules: modules ?? [],
+      styleHint: styleHint ?? "",
+      content: html,
+    });
 
     return NextResponse.json({
       success: true,
@@ -49,7 +54,7 @@ export async function POST(
         id: landingPage.id,
         version: landingPage.version,
         isActive: landingPage.isActive,
-        styleHint: landingPage.styleHint,
+        templateId: landingPage.templateId,
         createdAt: landingPage.createdAt,
       },
     });
