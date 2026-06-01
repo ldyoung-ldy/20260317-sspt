@@ -10,6 +10,8 @@ const eventDetailsSelect = {
   description: true,
   published: true,
   rankingsPublished: true,
+  eligibility: true,
+  requirements: true,
   startDate: true,
   endDate: true,
   registrationStart: true,
@@ -22,19 +24,53 @@ const eventDetailsSelect = {
   challenges: true,
   prizes: true,
   scoringCriteria: true,
+  organizers: true,
   customFields: true,
   createdAt: true,
   updatedAt: true,
+  landingPages: {
+    where: { isActive: true },
+    select: {
+      id: true,
+      version: true,
+      templateId: true,
+      modules: true,
+      styleHint: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    orderBy: { version: "desc" },
+    take: 1,
+  },
 } satisfies Prisma.EventSelect;
 
 type EventDetailsRecord = Prisma.EventGetPayload<{ select: typeof eventDetailsSelect }>;
 
+type LandingPageInfo = {
+  id: string;
+  version: number;
+  templateId: string;
+  modules: unknown;
+  styleHint: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+} | null;
+
 export type EventDetails = Omit<
   EventDetailsRecord,
-  "tracks" | "challenges" | "prizes" | "scoringCriteria" | "customFields"
+  | "tracks"
+  | "challenges"
+  | "prizes"
+  | "scoringCriteria"
+  | "organizers"
+  | "customFields"
+  | "landingPages"
 > &
   ReturnType<typeof parseEventJsonFields> & {
     phase: EventPhase;
+    landingPage?: LandingPageInfo;
   };
 
 export async function listAdminEvents() {
@@ -123,9 +159,12 @@ export async function getAdminEventById(id: string) {
 }
 
 function mapEventDetails(event: EventDetailsRecord): EventDetails {
+  const { landingPages, ...eventDetails } = event;
+
   return {
-    ...event,
-    ...parseEventJsonFields(event),
-    phase: getEventPhase(event),
+    ...eventDetails,
+    ...parseEventJsonFields(eventDetails),
+    phase: getEventPhase(eventDetails),
+    landingPage: landingPages[0] ?? null,
   };
 }

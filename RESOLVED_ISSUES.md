@@ -145,3 +145,67 @@
 - 结果：综合健康分 85/100，发现 10 个 issues（全部归档到 `.gstack/qa-reports/qa-report-localhost-2026-04-27.md`），其中 3 个 High（报名表单 stale validation、`window.confirm/alert` 替代为 AlertDialog、404/SignIn/Admin 首页占位文案）、3 个 Medium、4 个 Low；不阻塞核心流程使用。
 - 验证：控制台干净，关键流程（创建赛事 → 发布 → 报名 → 录取 → 确认 → 提交 → 评审 → 排名）端到端可用。
 - 涉及文件：`.gstack/qa-reports/qa-report-localhost-2026-04-27.md`、`.gstack/qa-reports/screenshots/*`
+
+## 2026-05-14 — 生成落地页进度页代码区与思考区间隔过大，且代码流没有贴底显示
+
+- 现象：后台生成赛事落地页时，“思考过程”区域和下面代码显示区之间出现大块空白；进入代码生成阶段后，代码内容没有自动保持在滚动容器底部；代码区上下两端都被透明渐隐处理，底部内容也会被淡化。
+- 根因：`src/components/events/generating-page-content.tsx` 中思考过程容器使用 `flex-1` 占满剩余空间，导致代码区被推到页面下方；代码滚动容器没有在 `codeContent` 更新后同步设置 `scrollTop`；代码 mask 使用上下对称的 `linear-gradient(transparent 0%, black 15%, black 85%, transparent 100%)`。
+- 解决方案：抽出 `generating-page-layout.ts` 保存布局契约；将思考过程容器改为 `flex-none`，让代码区紧跟其后；为代码滚动容器增加 ref，并在代码内容追加或状态完成时用 `requestAnimationFrame` 滚动到底；将代码 mask 改为仅顶部渐隐的 `linear-gradient(transparent 0%, black 8%, black 100%)`，并移除底部渐隐层。
+- 验证结果：先新增/更新 `src/components/events/generating-page-content.test.tsx` 覆盖“只顶部渐隐”和“思考区不占满页面”的布局行为，确认红灯后实现修复；`bunx vitest run src/components/events/generating-page-content.test.tsx`、`bun run typecheck`、`bun run lint` 均通过。本地浏览器打开生成页时因未登录被 Auth 重定向到登录页，未完成真实登录态视觉截图。
+- 涉及文件：`src/components/events/generating-page-content.tsx`、`src/components/events/generating-page-layout.ts`、`src/components/events/generating-page-content.test.tsx`
+
+## 2026-05-14 — 生成落地页保存接口 500 且完成态缺少预览按钮
+
+- 现象：生成完成后点击保存，请求 `POST /api/admin/events/[id]/save-landing` 返回 500；生成完成态只显示“丢弃 / 保存”，没有 PRD 要求的“预览”按钮。
+- 根因：`schema.prisma` 已改为多版本 `EventLandingPage`，但迁移目录缺少创建/升级 `EventLandingPage` 表的 migration，当前开发库可能没有 `version` / `isActive` 等字段或表结构；保存接口响应也没有按 PRD 暴露顶层 `version` 和 `isActive`；完成态 UI 没有实现预览动作。
+- 解决方案：新增版本化落地页迁移，兼容旧开发库中可能已存在的一页一赛事旧表，移除旧 `eventId` 唯一索引并创建 `(eventId, version)` 唯一索引；保存接口返回 `version`、`landingPage.isActive`；生成完成态增加“预览”按钮，用 Blob URL 在新标签页打开当前未保存 HTML。
+- 验证结果：先新增保存接口测试和完成态动作测试并确认红灯，再实现修复；`bunx vitest run src/app/(app)/api/admin/events/[id]/save-landing/route.test.ts`、`bunx vitest run src/components/events/generating-page-content.test.tsx`、`bun run lint`、`bun run typecheck`、`bun run test` 均通过。`bun run db:migrate` 被既有 `20260510023345_add_performance_indexes` 中 `CREATE INDEX CONCURRENTLY` 的 shadow DB 事务限制挡住；已用 `bunx prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20260514154800_add_event_landing_page_versions/migration.sql` 将本次表结构应用到当前开发库，并查询确认 `version` / `isActive` 字段存在且与 schema 对齐。
+- 涉及文件：`prisma/migrations/20260514154800_add_event_landing_page_versions/migration.sql`、`src/app/(app)/api/admin/events/[id]/save-landing/route.ts`、`src/app/(app)/api/admin/events/[id]/save-landing/route.test.ts`、`src/components/events/generating-page-content.tsx`、`src/components/events/generating-page-layout.ts`、`src/components/events/generating-page-content.test.tsx`
+
+## 2026-05-14 — 赛事列表缺少“查看落地页”入口
+
+- 现象：首页赛事列表和后台赛事列表没有显示 PRD 要求的“查看落地页”按钮，管理员或参赛者需要绕到详情或编辑页才可能找到落地页入口。
+- 根因：`listAdminEvents()` / `listPublishedEvents()` 复用的 `eventDetailsSelect` 没有读取 `EventLandingPage` 的激活版本；页面虽然已有 `event.landingPage` 的使用场景，但列表查询返回的数据里始终没有当前激活落地页。
+- 解决方案：在赛事查询层统一选择 `landingPages where isActive=true`，映射为页面使用的单个 `landingPage`；首页卡片增加“查看详情”和有激活版本时的“查看落地页”按钮；后台列表移动端与桌面操作区显示“查看落地页”或“未生成”。
+- 验证结果：先新增 `src/lib/events/queries.test.ts` 复现查询未取激活落地页的红灯，再修复到绿灯；`bunx vitest run src/lib/events/queries.test.ts` 和 `bun run typecheck` 均通过。
+- 涉及文件：`src/lib/events/queries.ts`、`src/lib/events/queries.test.ts`、`src/app/(app)/page.tsx`、`src/app/(app)/admin/events/page.tsx`
+
+## 2026-05-15 — 多个已保存落地页没有激活入口，首页卡片没有直达激活落地页
+
+- 现象：数据库中已保存多条 `EventLandingPage` 记录，但 `isActive` 全为 `false` 时，后台编辑页没有地方选择激活展示哪个版本；首页赛事列表也只能进入赛事详情或旧按钮入口，不能点击赛事卡片直达激活落地页。
+- 根因：赛事编辑页只根据 `event.landingPage` 判断是否已有落地页，而该字段只映射当前激活版本；没有激活版本时即使数据库已有多个保存版本，UI 也会把它们当作不存在。首页卡片本身也没有根据激活版本切换主链接。
+- 解决方案：编辑页改为读取该赛事全部落地页版本，新增 `EventLandingVersions` 区块展示 version、风格、生成时间和激活状态，并通过服务端表单调用 `activateLandingPage` 后刷新相关路径；首页赛事卡片改为有激活版本时整卡链接到 `/events/[slug]/landing`，否则保持进入赛事详情。
+- 验证结果：先新增首页卡片链接测试和落地页版本列表组件测试确认红灯，再实现修复；`bunx vitest run "src/app/(app)/page.test.tsx" "src/components/events/event-landing-versions.test.tsx" src/lib/ai/queries.test.ts "src/app/(app)/api/admin/events/[id]/landing-pages/route.test.ts"`、`bun run lint`、`bun run typecheck` 均通过。
+- 涉及文件：`src/app/(app)/admin/events/[id]/edit/page.tsx`、`src/app/(app)/page.tsx`、`src/components/events/event-landing-versions.tsx`、`src/app/(app)/page.test.tsx`、`src/components/events/event-landing-versions.test.tsx`、`acceptance/step-9-landing-page-activation-checklist.md`
+
+## 2026-05-19 — 生成落地页左上角显示 ```html 字符串
+
+- 现象：查看 AI 生成的赛事落地页时，页面左上角会出现 Markdown 代码块标记 ` ```html`，影响前台展示。
+- 根因：`src/lib/ai/code-generator.ts` 在流式解析 AI 响应时把 ` ```html` 识别为代码阶段起点，但随后用 `textToCheck.slice(markerPos)` 把代码围栏本身也追加进 `fullHtml`；保存后的 `EventLandingPage.content` 因此包含非 HTML 文本，iframe `srcDoc` 会把它渲染到页面左上角。
+- 解决方案：新增 `src/lib/ai/html-sanitize.ts`，将代码阶段起点拆成“边界位置”和“HTML 内容起点”，遇到 ` ```html` 时从围栏之后开始收集 HTML；发送 `done` 事件前统一剥离开头/结尾 Markdown 代码围栏。同时将 AI 生成提示词调整为遵循 Web Design Engineer 工作流，强调视觉方向、设计系统、自检和最终可保存内容不得包含代码围栏。
+- 验证结果：新增回归断言覆盖 ` ```html` 起始围栏和结尾 ` ``` ` 剥离；`bunx vitest run src/lib/ai/code-generator.test.ts src/lib/ai/prompt-builder.test.ts` 通过（2 个测试文件，20 个用例）。
+- 涉及文件：`src/lib/ai/html-sanitize.ts`、`src/lib/ai/code-generator.ts`、`src/lib/ai/prompt-builder.ts`、`src/lib/ai/code-generator.test.ts`、`src/lib/ai/prompt-builder.test.ts`、`acceptance/step-9-landing-page-activation-checklist.md`
+
+## 2026-05-19 — 落地页生成过程代码区撑出页面滚动且显示发白、输出跳段
+
+- 现象：后台生成赛事落地页时，代码块内容过长会让浏览器页面本身出现上下滚动条；代码区大面积透明发白导致内容看不清；代码展示按 SSE 网络 chunk 一段一段跳出，不够流畅。
+- 根因：`GeneratingPageContent` 根容器使用 `h-[calc(100vh-64px)]`，但该页面实际嵌套在带 `py-8` 的 admin layout 内，生成页高度加外层 padding 会超过视口；代码区同时使用顶部渐变层和 mask，视觉上把整块内容洗浅；前端收到 `code` 事件后直接把完整 chunk 拼进 React state，展示节奏取决于网络包大小。
+- 解决方案：抽取生成页布局常量，根容器改为 `h-[calc(100dvh-8rem)] min-h-0 overflow-hidden`，让代码区内部滚动；代码 panel 与滚动层改为不透明深色底，只保留顶部渐隐 mask；新增 `pendingCodeRef` / `displayedCodeRef` / `requestAnimationFrame` 打字机缓冲，让收到的代码按帧逐步展示。
+- 验证结果：新增布局约束回归断言覆盖视口高度、内部滚动、不透明代码底和仅顶部渐隐；`bunx vitest run src/components/events/generating-page-content.test.tsx` 通过（26 个用例），`bun run typecheck`、`bun run lint` 通过。尝试用本地浏览器打开 `http://localhost:3000/admin/events` 时被当前未登录会话重定向到 Auth.js 登录页，因此未完成后台生成页截图验收。
+- 涉及文件：`src/components/events/generating-page-content.tsx`、`src/components/events/generating-page-layout.ts`、`src/components/events/generating-page-content.test.tsx`、`acceptance/step-9-landing-page-activation-checklist.md`
+
+## 2026-05-19 — 后台落地页版本列表查看任意版本都显示当前激活版本
+
+- 现象：在管理后台赛事编辑页的落地页版本列表中，点击不同版本的“查看”，打开后看到的都是当前激活落地页，无法检查对应历史版本内容。
+- 根因：`EventLandingVersions` 每行“查看”都链接到公开前台路由 `/events/[slug]/landing`；该路由按设计只读取 `isActive=true` 的当前激活版本，没有携带或使用具体 `EventLandingPage.id`。
+- 解决方案：后台预览页 `/admin/events/[id]/landing-preview` 增加 `landingPageId` 查询参数支持；传入时用 `getEventLandingPageById()` 读取指定版本，并校验该版本的 `event.id` 与路由赛事 ID 一致；版本列表每行“查看”改为链接到 `/admin/events/[eventId]/landing-preview?landingPageId=[landingPageId]`。不带参数的顶部“查看落地页”仍保持预览当前激活版本。
+- 验证结果：新增/更新组件与查询测试，覆盖每个版本生成独立预览链接以及按 ID 加载版本时包含所属赛事；`bunx vitest run src/components/events/event-landing-versions.test.tsx src/lib/ai/queries.test.ts` 通过（2 个测试文件，10 个用例），`bun run typecheck`、`bun run lint` 通过。
+- 涉及文件：`src/components/events/event-landing-versions.tsx`、`src/components/events/event-landing-versions.test.tsx`、`src/app/(admin-landing)/admin/events/[id]/landing-preview/page.tsx`、`src/app/(app)/admin/events/[id]/edit/page.tsx`、`src/lib/ai/queries.ts`、`src/lib/ai/queries.test.ts`、`acceptance/step-9-landing-page-activation-checklist.md`
+
+## 2026-05-20 — 生成完成后底部残留分析文字，思考区不贴底且无法折叠
+
+- 现象：后台生成赛事落地页完成后，页面底部可能显示 `### 视觉亮点`、`设计思路分析` 等非 HTML 分析文字；思考流式输出时，思考区域不会持续滚动到最新内容；生成完成或流式过程中点击思考区折叠按钮后，折叠状态会被自动打开逻辑覆盖。
+- 根因：AI 在 `</html>` 后继续输出的总结文字被当作代码阶段内容保存在 `fullHtml` / `codeRef` 中，`stripHtmlCodeFence` 只剥离首尾代码围栏，没有截断 HTML 文档后的内容；前端完成态仍用未清洗的 `codeRef` 刷新代码展示；`Reasoning` 组件受控使用时仍会在 `isStreaming` 下自动 `setIsOpen(true)`，覆盖用户点击折叠；思考内容容器没有在 `thinkingText` 更新后同步滚动到底。
+- 解决方案：新增 `extractHtmlDocument()`，在发送 `done` 事件前截断到最后一个 `</html>`，剥离其后的 Markdown 围栏和分析文字；公开落地页和后台版本预览读取旧 `EventLandingPage.content` 时也套用同一清洗函数，避免历史版本必须重新生成；前端收到 `done` 后用后端返回的清洗版 HTML 覆盖 `codeRef` 和完成态代码展示；为思考内容容器增加 ref 和 `requestAnimationFrame` 贴底滚动；限制 `Reasoning` 的自动打开逻辑只在非受控用法中生效，受控折叠由父组件状态决定。
+- 验证结果：新增回归用例覆盖 `</html>` 后追加 `### 视觉亮点` 时不会进入最终 `done.html`；`bunx vitest run src/lib/ai/code-generator.test.ts src/components/events/generating-page-content.test.tsx` 通过（40 个用例），`bun run typecheck`、`bun run lint`、`bun run test` 通过（30 个测试文件，176 个用例）。本地浏览器打开 `http://localhost:3000/admin/events` 被未登录会话按预期重定向到 Auth.js 登录页，控制台无前端错误。
+- 涉及文件：`src/lib/ai/html-sanitize.ts`、`src/lib/ai/code-generator.ts`、`src/lib/ai/code-generator.test.ts`、`src/app/(landing-pages)/events/[slug]/landing/page.tsx`、`src/app/(admin-landing)/admin/events/[id]/landing-preview/page.tsx`、`src/components/events/generating-page-content.tsx`、`src/components/events/landing-generation-progress.tsx`、`src/components/ai-elements/reasoning.tsx`、`RESOLVED_ISSUES.md`

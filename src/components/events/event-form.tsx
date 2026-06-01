@@ -31,6 +31,7 @@ type EventFormProps = {
   initialValues?: EventFormInitialValues;
   submitLabel?: string;
   helperText?: string;
+  showGenerateLanding?: boolean;
 };
 
 type ArrayFieldName =
@@ -38,6 +39,7 @@ type ArrayFieldName =
   | "challenges"
   | "prizes"
   | "scoringCriteria"
+  | "organizers"
   | "customFields";
 
 export function EventForm({
@@ -45,6 +47,7 @@ export function EventForm({
   initialValues,
   submitLabel = "创建赛事",
   helperText = "创建后默认保存为草稿，可回到列表页发布。",
+  showGenerateLanding = false,
 }: EventFormProps) {
   const router = useRouter();
   const [values, setValues] = useState<EventFormInput>(() =>
@@ -55,6 +58,7 @@ export function EventForm({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[] | undefined>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [shouldGenerateLanding, setShouldGenerateLanding] = useState(false);
 
   function updateValue<Key extends keyof EventFormInput>(key: Key, value: EventFormInput[Key]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -103,7 +107,11 @@ export function EventForm({
         return;
       }
 
-      router.push("/admin/events");
+      if (shouldGenerateLanding && result.success) {
+        router.push(`/admin/events/${result.data.id}/generating`);
+      } else {
+        router.push("/admin/events");
+      }
       router.refresh();
     });
   }
@@ -132,6 +140,28 @@ export function EventForm({
               />
             </Field>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border border-border">
+        <CardHeader>
+          <CardTitle>参赛信息</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Field label="参赛对象" error={fieldErrors.eligibility?.[0]}>
+            <Textarea
+              value={values.eligibility}
+              onChange={(event) => updateValue("eligibility", event.target.value)}
+              placeholder="例如：面向全国高校在校学生，不限专业和年级"
+            />
+          </Field>
+          <Field label="参赛要求" error={fieldErrors.requirements?.[0]}>
+            <Textarea
+              value={values.requirements}
+              onChange={(event) => updateValue("requirements", event.target.value)}
+              placeholder="例如：每队 1-5 人，需提交完整项目代码和演示视频"
+            />
+          </Field>
         </CardContent>
       </Card>
 
@@ -450,6 +480,63 @@ export function EventForm({
       </ArraySection>
 
       <ArraySection
+        title="组织单位"
+        description="赛事的主办方、承办方等组织信息。"
+        error={fieldErrors.organizers?.[0]}
+        action={
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => addArrayItem("organizers", { name: "", role: "" })}
+          >
+            <Plus />
+            添加单位
+          </Button>
+        }
+      >
+        {values.organizers.length === 0 ? (
+          <EmptyArrayState text="暂未添加组织单位。" />
+        ) : (
+          <div className="space-y-3">
+            {values.organizers.map((org, index) => (
+              <ArrayItemCard
+                key={`organizer-${index}`}
+                title={`单位 ${index + 1}`}
+                onRemove={() => removeArrayItem("organizers", index)}
+              >
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="单位名称">
+                    <Input
+                      value={org.name}
+                      onChange={(event) =>
+                        updateArrayItem("organizers", index, {
+                          ...org,
+                          name: event.target.value,
+                        })
+                      }
+                    />
+                  </Field>
+                  <Field label="角色">
+                    <Input
+                      value={org.role}
+                      onChange={(event) =>
+                        updateArrayItem("organizers", index, {
+                          ...org,
+                          role: event.target.value,
+                        })
+                      }
+                      placeholder="例如：主办方、承办方、协办方"
+                    />
+                  </Field>
+                </div>
+              </ArrayItemCard>
+            ))}
+          </div>
+        )}
+      </ArraySection>
+
+      <ArraySection
         title="报名表单字段"
         description="可选配置用户报名时需要额外填写的信息。"
         error={fieldErrors.customFields?.[0]}
@@ -554,10 +641,27 @@ export function EventForm({
             <Button type="button" variant="outline" onClick={() => router.push("/admin/events")}>
               取消
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? <LoaderCircle className="animate-spin" /> : null}
-              {isPending ? "提交中..." : submitLabel}
-            </Button>
+            {showGenerateLanding ? (
+              <>
+                <Button type="submit" disabled={isPending} onClick={() => setShouldGenerateLanding(false)}>
+                  {isPending && !shouldGenerateLanding ? <LoaderCircle className="animate-spin" /> : null}
+                  {isPending && !shouldGenerateLanding ? "保存中..." : "仅保存"}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  onClick={() => setShouldGenerateLanding(true)}
+                >
+                  {isPending && shouldGenerateLanding ? <LoaderCircle className="animate-spin" /> : null}
+                  {isPending && shouldGenerateLanding ? "保存中..." : "保存并生成赛事页"}
+                </Button>
+              </>
+            ) : (
+              <Button type="submit" disabled={isPending}>
+                {isPending ? <LoaderCircle className="animate-spin" /> : null}
+                {isPending ? "提交中..." : submitLabel}
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -660,6 +764,7 @@ function cloneEventFormValues(values: EventFormInput): EventFormInput {
     challenges: values.challenges.map((item) => ({ ...item })),
     prizes: values.prizes.map((item) => ({ ...item })),
     scoringCriteria: values.scoringCriteria.map((item) => ({ ...item })),
+    organizers: values.organizers.map((item) => ({ ...item })),
     customFields: values.customFields.map((item) => cloneCustomField(item)),
   };
 }

@@ -54,6 +54,18 @@ export const eventScoringCriterionSchema = z
     weight,
   }));
 
+export const eventOrganizerSchema = z
+  .object({
+    name: requiredText("组织单位名称"),
+    role: optionalText,
+  })
+  .transform(({ name, role }) => ({
+    name: name.trim(),
+    role: role.trim(),
+  }));
+
+export const eventOrganizerListSchema = z.array(eventOrganizerSchema).default([]);
+
 export const eventCustomFieldSchema = z
   .object({
     id: z.string().trim().min(1).optional(),
@@ -110,6 +122,8 @@ export const eventFormSchema = z
   .object({
     name: z.string().trim().min(2, "赛事名称至少 2 个字符。"),
     description: z.string().trim().min(10, "赛事描述至少 10 个字符。"),
+    eligibility: optionalText,
+    requirements: optionalText,
     startDate: dateTimeField,
     endDate: dateTimeField,
     registrationStart: dateTimeField,
@@ -122,6 +136,7 @@ export const eventFormSchema = z
     challenges: eventChallengeListSchema,
     prizes: eventPrizeListSchema,
     scoringCriteria: eventScoringCriteriaSchema,
+    organizers: eventOrganizerListSchema,
     customFields: eventCustomFieldListSchema,
   })
   .superRefine((value, ctx) => {
@@ -225,6 +240,9 @@ export type EventFormInitialValues = Omit<
   submissionEnd: string | Date;
   reviewStart: string | Date;
   reviewEnd: string | Date;
+  eligibility?: string | null;
+  requirements?: string | null;
+  organizers?: Array<{ name: string; role: string }>;
 };
 
 export function getDefaultEventFormValues(now = new Date()): EventFormInput {
@@ -238,6 +256,8 @@ export function getDefaultEventFormValues(now = new Date()): EventFormInput {
   return {
     name: "",
     description: "",
+    eligibility: "",
+    requirements: "",
     startDate: toDateTimeLocalValue(registrationStart),
     endDate: toDateTimeLocalValue(reviewEnd),
     registrationStart: toDateTimeLocalValue(registrationStart),
@@ -254,6 +274,7 @@ export function getDefaultEventFormValues(now = new Date()): EventFormInput {
       { name: "完成度", maxScore: 10, weight: 35 },
       { name: "落地价值", maxScore: 10, weight: 25 },
     ],
+    organizers: [],
     customFields: [],
   };
 }
@@ -262,6 +283,8 @@ export function normalizeEventFormValues(input: EventFormInitialValues): EventFo
   return {
     name: input.name,
     description: input.description,
+    eligibility: input.eligibility ?? "",
+    requirements: input.requirements ?? "",
     startDate: toDateTimeLocalValue(toDate(input.startDate)),
     endDate: toDateTimeLocalValue(toDate(input.endDate)),
     registrationStart: toDateTimeLocalValue(toDate(input.registrationStart)),
@@ -274,6 +297,7 @@ export function normalizeEventFormValues(input: EventFormInitialValues): EventFo
     challenges: input.challenges,
     prizes: input.prizes,
     scoringCriteria: input.scoringCriteria,
+    organizers: input.organizers ?? [],
     customFields: input.customFields,
   };
 }
@@ -282,6 +306,8 @@ export function toEventMutationData(input: EventFormInput) {
   return {
     name: input.name.trim(),
     description: input.description.trim(),
+    eligibility: input.eligibility.trim() || null,
+    requirements: input.requirements.trim() || null,
     startDate: new Date(input.startDate),
     endDate: new Date(input.endDate),
     registrationStart: new Date(input.registrationStart),
@@ -294,6 +320,7 @@ export function toEventMutationData(input: EventFormInput) {
     challenges: input.challenges,
     prizes: input.prizes,
     scoringCriteria: input.scoringCriteria,
+    organizers: input.organizers,
     customFields: input.customFields,
   };
 }
@@ -326,6 +353,7 @@ export function parseEventJsonFields(input: {
   challenges: unknown;
   prizes: unknown;
   scoringCriteria: unknown;
+  organizers: unknown;
   customFields: unknown;
 }) {
   return {
@@ -333,6 +361,7 @@ export function parseEventJsonFields(input: {
     challenges: parseJsonField(eventChallengeListSchema, input.challenges, []),
     prizes: parseJsonField(eventPrizeListSchema, input.prizes, []),
     scoringCriteria: parseJsonField(eventScoringCriteriaSchema, input.scoringCriteria, []),
+    organizers: parseJsonField(eventOrganizerListSchema, input.organizers, []),
     customFields: parseJsonField(eventCustomFieldListSchema, input.customFields, []),
   };
 }

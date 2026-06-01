@@ -14,6 +14,8 @@ function createValidInput(): EventFormInput {
   return {
     name: "AI Hackathon 2026",
     description: "面向企业创新团队的 AI 赛事，覆盖报名、提交与评审全流程。",
+    eligibility: "面向全国高校学生",
+    requirements: "每队 1-5 人",
     startDate: "2026-04-01T09:00",
     endDate: "2026-04-20T18:00",
     registrationStart: "2026-04-01T09:00",
@@ -26,6 +28,7 @@ function createValidInput(): EventFormInput {
     challenges: [{ title: "流程自动化", description: "优化审批与运营流程" }],
     prizes: [{ title: "一等奖", description: "现金奖励", amount: "¥20,000" }],
     scoringCriteria: [{ name: "创新性", maxScore: 10, weight: 40 }],
+    organizers: [{ name: "XX大学", role: "主办方" }],
     customFields: [
       { id: "team-site", label: "团队官网", type: "url", required: false, options: [] },
     ],
@@ -70,6 +73,7 @@ describe("event schema", () => {
         challenges: null,
         prizes: "x",
         scoringCriteria: 1,
+        organizers: undefined,
         customFields: undefined,
       })
     ).toEqual({
@@ -77,6 +81,7 @@ describe("event schema", () => {
       challenges: [],
       prizes: [],
       scoringCriteria: [],
+      organizers: [],
       customFields: [],
     });
   });
@@ -87,6 +92,7 @@ describe("event schema", () => {
       challenges: [],
       prizes: [],
       scoringCriteria: [{ name: "创新性", maxScore: 10, weight: 40 }],
+      organizers: [],
       customFields: [{ label: "团队官网", type: "url", required: false, options: [] }],
     });
 
