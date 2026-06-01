@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "Event" ADD COLUMN "organizers" TEXT[] NOT NULL DEFAULT '{}';
+ALTER TABLE "Event" ADD COLUMN "organizers" JSONB NOT NULL DEFAULT '[]';
